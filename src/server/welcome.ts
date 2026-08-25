@@ -40,7 +40,13 @@ export type WelcomeOutcome =
   | { status: "not_active" }
   | { status: "no_member" }
   | { status: "no_address" }
-  /** The transport refused. The claim was released; it will be tried again. */
+  /**
+   * The transport refused, or a database read/write failed. Logged
+   * server-side either way. The claim was released or never taken, so the
+   * next visit tries again -- which recovers a transient failure and, for a
+   * persistent one (a schema mismatch, a revoked grant), repeats the same
+   * logged failure on every visit rather than going quiet after the first.
+   */
   | { status: "failed" };
 
 export const sendWelcomeEmail = createServerFn({ method: "POST" })
@@ -63,7 +69,12 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
       )
       .eq("user_id", context.userId)
       .maybeSingle();
-    if (found.error) throw new Error(found.error.message);
+    if (found.error) {
+      console.error(
+        `[welcome] Could not read member for user ${context.userId}: ${found.error.message}`,
+      );
+      return { status: "failed" };
+    }
 
     const member = found.data;
     if (!member) return { status: "no_member" };
@@ -83,7 +94,10 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
       .is("welcome_email_sent_at", null)
       .eq("status", "active")
       .select("id");
-    if (claim.error) throw new Error(claim.error.message);
+    if (claim.error) {
+      console.error(`[welcome] Could not claim send for member ${member.id}: ${claim.error.message}`);
+      return { status: "failed" };
+    }
     if (!claim.data || claim.data.length === 0) return { status: "already_sent" };
 
     const built = buildWelcomeEmail(
