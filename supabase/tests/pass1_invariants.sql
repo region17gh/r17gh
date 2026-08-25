@@ -576,6 +576,37 @@ BEGIN
     log := log || E'\nFAIL  erasure recorded as conduct';
   END IF;
 
+  -- 12c. Erasure clears the gender row too -----------------------------------
+  -- The case this file was missing: section 10 gave m_a a member_gender row,
+  -- pseudonymize_member() DELETEs it, but nothing above ever checked that the
+  -- row is actually gone. A break here would be silent -- section 12's other
+  -- checks all read public.members, which would look identical whether or not
+  -- the DELETE ran.
+  --
+  -- Can't check it as service_role, even though this whole section is running
+  -- as service_role: 20260825220000 revoked SELECT on member_gender from
+  -- service_role deliberately (it maintains the row, it does not read it), so
+  -- SELECT here would raise "permission denied", not report a clean FAIL --
+  -- exactly the trap this case exists to avoid falling into. Every other
+  -- elevated read in this file switches to a role that genuinely has the
+  -- grant it needs (service_role, reached via set_config); no such role
+  -- exists here by design, so this one instead uses RESET ROLE to drop back
+  -- to the connecting role this whole function runs under, which owns these
+  -- tables and isn't subject to the grant at all.
+  --
+  -- Also confirms, by running rather than by reasoning about grants, that
+  -- pseudonymize_member() erasing the row does not depend on service_role
+  -- being able to SELECT it: the function is SECURITY DEFINER owned by
+  -- postgres, so its internal DELETE runs with the owner's privileges, not
+  -- the caller's -- the revoke above never touched this path.
+  RESET ROLE;
+  SELECT count(*) INTO cnt FROM public.member_gender WHERE member_id = m_a;
+  IF cnt = 0 THEN
+    log := log || E'\nPASS  erasure cleared the gender row';
+  ELSE
+    log := log || E'\nFAIL  gender row survived erasure';
+  END IF;
+
   PERFORM set_config('role', 'authenticated', true);
 
   -- 13. Every member table denies anonymous reads ----------------------------
