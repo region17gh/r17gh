@@ -14,11 +14,43 @@
 -- exception message. A register whose entire value is accuracy must not carry
 -- test rows.
 --
+-- Role discipline: FIXTURES (state that merely has to exist) are written as
+-- service_role, matching how they're actually created in production --
+-- reserve_member_number() and register_member() are both SECURITY DEFINER
+-- running as service_role internally, and GoTrue alone owns auth.users.
+-- ASSERTIONS (the thing each case is testing) run as authenticated, because a
+-- check performed by an elevated role proves nothing about what a signed-in
+-- member can actually do. A connection with BYPASSRLS or superuser sails past
+-- RLS regardless of what role the harness claims to switch to, which is how
+-- this harness ran for its entire history before it started connecting
+-- through a path that enforces RLS for real: two real bugs (an RLS gap on
+-- number_reservations exposure, and enforce_member_rules() not being
+-- SECURITY DEFINER) were passing silently the whole time, because nothing
+-- had ever exercised authenticated's actual privileges. Every role switch
+-- below is commented with which of the two it is and why.
+--
 -- Adding a case: append to the `check` calls below. The known invariant
 -- collision this harness caught (erasure clearing the handle tripping the
 -- once-only handle rule) is exactly the class of bug that reappears whenever
 -- a new rule is added, so err towards adding cases for rule interactions,
 -- not just rules.
+--
+-- A recurring bug shape, named here because it has hit this file three times
+-- and will hit it again: an assertion that passes or fails for a reason
+-- other than the thing under test. Section 1 originally paired the JWT claim
+-- and the role switch in one BEGIN block, so a refused role switch silently
+-- reverted the JWT claim too, and every case below it passed for "not signed
+-- in" instead of the reservation rule it existed to prove. Section 7 checked
+-- member B's row while still claiming to be member A, so the RLS-scoped
+-- UPDATE matched zero rows and reported a false FAIL instead of exercising
+-- the immutability trigger. Sections 8 and 9 treated "no exception raised"
+-- as proof a write was refused, but a zero-row UPDATE or DELETE succeeds
+-- trivially in Postgres -- it doesn't raise -- so both looked identical
+-- whether the write was genuinely blocked or the row was simply invisible
+-- under RLS. Different mechanisms, same shape: check the actual outcome
+-- (the row's state, who's really signed in, which role really executed),
+-- never just the absence of an error. The next case written here will reach
+-- for the same shortcut unless this is read first.
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION pg_temp.run_register_invariants()
@@ -31,6 +63,7 @@ DECLARE
   uid_a uuid := gen_random_uuid();
   uid_b uuid := gen_random_uuid();
   uid_c uuid := gen_random_uuid();
+  uid_d uuid := gen_random_uuid();
   m_a uuid;
   m_b uuid;
   m_c uuid;
@@ -41,25 +74,22 @@ DECLARE
   cnt integer;
   t text;
 BEGIN
-  ----------------------------------------------------------------------------
-  -- helper: local macro via inline blocks. Each check appends to `log`.
-  ----------------------------------------------------------------------------
+  -- [service_role] fixtures: every number_reservations row the whole harness
+  -- needs. number_reservations has RLS enabled with NO POLICIES at all --
+  -- deliberately: "trusted server code only." Nothing can write it as
+  -- authenticated, so these rows can only be seeded elevated.
+  PERFORM set_config('role', 'service_role', true);
+  INSERT INTO public.number_reservations (member_number, expires_at) VALUES
+    (999002, now() - interval '1 hour'),   -- expired, for the register_member refusal case
+    (999003, now() + interval '1 hour'),   -- harness member A
+    (999004, now() + interval '1 hour'),   -- harness member B
+    (999005, now() + interval '1 hour');   -- the age-gate case
+
+  -- [authenticated] from here on, unless a comment says otherwise.
+  PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+  PERFORM set_config('role', 'authenticated', true);
 
   -- 1. Registration requires a live reservation ------------------------------
-  -- Separate blocks on purpose. A GUC set inside a block is reverted when that
-  -- block raises, so pairing these meant a refused SET ROLE also undid the JWT
-  -- claim, leaving auth.uid() null and every case below passing for the wrong
-  -- reason: register_member refused with 'Sign in required.' rather than for
-  -- the missing reservation the case exists to prove.
-  BEGIN
-    PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-  BEGIN
-    PERFORM set_config('role', 'authenticated', true);
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-
   -- unreserved number
   BEGIN
     PERFORM public.register_member(999001);
@@ -69,8 +99,6 @@ BEGIN
   END;
 
   -- expired reservation
-  INSERT INTO public.number_reservations (member_number, expires_at)
-  VALUES (999002, now() - interval '1 hour');
   BEGIN
     PERFORM public.register_member(999002);
     log := log || E'\nFAIL  register_member accepted an expired reservation';
@@ -140,35 +168,35 @@ BEGIN
   END IF;
 
   -- 3. Two members, created the sanctioned way -------------------------------
-  INSERT INTO public.number_reservations (member_number, expires_at)
-  VALUES (999003, now() + interval '1 hour'), (999004, now() + interval '1 hour');
+  -- Genuinely sanctioned this time: through register_member(), SECURITY
+  -- DEFINER, called by each member as themselves -- not a raw INSERT. This
+  -- also proves authenticated really can register despite holding no INSERT
+  -- grant on members: the function bypasses it, a browser PATCH can't.
+  SELECT r.member_id, r.member_number, r.credential_id INTO m_a, n_a, cred_a
+    FROM public.register_member(999003, 'A', NULL, NULL, 'harnessa', 'a@example.test',
+                                 1::smallint, 1990::smallint, NULL, NULL, 'UTC') r;
 
-  INSERT INTO public.members (user_id, member_number, credential_id, handle,
-    first_name, email, birth_month, birth_year, timezone)
-  VALUES (uid_a, 999003, public.credential_id(2026, 999003), 'harnessa',
-    'A', 'a@example.test', 1::smallint, 1990::smallint, 'UTC')
-  RETURNING id, member_number, credential_id INTO m_a, n_a, cred_a;
-
-  INSERT INTO public.members (user_id, member_number, credential_id, handle,
-    first_name, email, birth_month, birth_year, timezone)
-  VALUES (uid_b, 999004, public.credential_id(2026, 999004), 'harnessbb',
-    'B', 'b@example.test', 1::smallint, 1990::smallint, 'UTC')
-  RETURNING id INTO m_b;
+  PERFORM set_config('request.jwt.claim.sub', uid_b::text, true);
+  SELECT r.member_id INTO m_b
+    FROM public.register_member(999004, 'B', NULL, NULL, 'harnessbb', 'b@example.test',
+                                 1::smallint, 1990::smallint, NULL, NULL, 'UTC') r;
+  PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
 
   log := log || E'\nINFO  credential for 999003 = ' || cred_a;
 
   -- 4. Age gate --------------------------------------------------------------
+  -- Runs through register_member(), same as section 3: the age trigger is
+  -- what's under test, and register_member is the only path a real signed-in
+  -- member has to a members row, so that's the path this needs to prove.
+  PERFORM set_config('request.jwt.claim.sub', uid_d::text, true);
   BEGIN
-    INSERT INTO public.number_reservations (member_number, expires_at)
-    VALUES (999005, now() + interval '1 hour');
-    INSERT INTO public.members (user_id, member_number, credential_id,
-      birth_month, birth_year)
-    VALUES (gen_random_uuid(), 999005, public.credential_id(2026, 999005),
-      1::smallint, (EXTRACT(YEAR FROM now())::int - 17)::smallint);
+    PERFORM public.register_member(999005, NULL, NULL, NULL, NULL, NULL,
+                                    1::smallint, (EXTRACT(YEAR FROM now())::int - 17)::smallint);
     log := log || E'\nFAIL  under-18 insert accepted';
   EXCEPTION WHEN OTHERS THEN
     log := log || E'\nPASS  under-18 insert refused: ' || SQLERRM;
   END;
+  PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
 
   -- 5. Reserved handles ------------------------------------------------------
   SELECT handle::text INTO t FROM public.reserved_handles
@@ -183,7 +211,28 @@ BEGIN
   END IF;
 
   -- 6. Handle may be changed once, and the old one is retired ----------------
-  UPDATE public.members SET handle = 'harnessb' WHERE id = m_a;
+  -- Two assertions, not one: that the change itself succeeds, and separately
+  -- that the retired handle actually lands in reserved_handles. The change
+  -- runs inside its own BEGIN block rather than bare, because an RLS refusal
+  -- inside the trigger aborts the whole triggering UPDATE -- a bare statement
+  -- here would have crashed the entire harness rather than reporting a clean
+  -- FAIL, which is exactly what happened before enforce_member_rules() was
+  -- made SECURITY DEFINER. A case that only checked the change succeeded
+  -- would have passed even with the retirement insert silently swallowed --
+  -- it wasn't swallowed, it aborted the statement, but the principle is the
+  -- same: check the outcome that matters, not just the absence of an error.
+  BEGIN
+    UPDATE public.members SET handle = 'harnessb' WHERE id = m_a;
+    SELECT handle::text INTO tmp FROM public.members WHERE id = m_a;
+    IF tmp = 'harnessb' THEN
+      log := log || E'\nPASS  first handle change succeeded';
+    ELSE
+      log := log || E'\nFAIL  handle after change is ' || COALESCE(tmp, 'null') || ', not harnessb';
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    log := log || E'\nFAIL  first handle change raised: ' || SQLERRM;
+  END;
+
   SELECT count(*) INTO cnt FROM public.reserved_handles
    WHERE handle = 'harnessa'::citext AND reason = 'released';
   IF cnt = 1 THEN
@@ -200,22 +249,43 @@ BEGIN
   END;
 
   -- 7. Member number and credential are permanent ----------------------------
+  -- Switches to member B's own JWT: the RLS policy on members scopes UPDATE
+  -- to user_id = auth.uid(), so testing this while still claiming to be A
+  -- would match zero rows and report a false FAIL rather than exercising the
+  -- trigger. Has to run as the row's actual owner to mean anything.
+  PERFORM set_config('request.jwt.claim.sub', uid_b::text, true);
   BEGIN
     UPDATE public.members SET member_number = 1 WHERE id = m_b;
     log := log || E'\nFAIL  member_number was mutable';
   EXCEPTION WHEN OTHERS THEN
     log := log || E'\nPASS  member_number/credential immutable: ' || SQLERRM;
   END;
+  PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
 
   -- 8. Append-only history ---------------------------------------------------
   INSERT INTO public.affirmations (member_id, compact_version, conduct_version)
   VALUES (m_a, 'v1', 'v1');
-  BEGIN
-    UPDATE public.affirmations SET compact_version = 'v2' WHERE member_id = m_a;
-    log := log || E'\nFAIL  affirmation update accepted';
-  EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nPASS  affirmation update refused: ' || SQLERRM;
-  END;
+
+  -- Third instance of the same class of bug this file has now produced
+  -- (section 1's GUC ordering, section 7's JWT mismatch, this one): an
+  -- assertion structured as "no exception, therefore permitted" cannot tell
+  -- "genuinely allowed" apart from "matched nothing." affirmations has RLS
+  -- enabled with NO UPDATE policy for authenticated at all -- not even a
+  -- restrictive one -- so a zero-row UPDATE succeeds trivially and the
+  -- affirmations_append_only trigger never fires, because there is no row
+  -- for it to fire on. "No exception" was true here whether the trigger
+  -- blocked a real write or the row was simply invisible to the statement.
+  -- Assert what the invariant actually requires: the row is unchanged. A
+  -- check that only proves nothing raised would still pass against a table
+  -- that had been dropped.
+  UPDATE public.affirmations SET compact_version = 'v2' WHERE member_id = m_a;
+  SELECT count(*) INTO cnt FROM public.affirmations
+   WHERE member_id = m_a AND compact_version = 'v1';
+  IF cnt = 1 THEN
+    log := log || E'\nPASS  affirmation update refused (row unchanged)';
+  ELSE
+    log := log || E'\nFAIL  affirmation row missing or changed after update attempt';
+  END IF;
 
   INSERT INTO public.member_consents (member_id, consent_type, policy_version, mechanism)
   VALUES (m_a, 'directory_visibility', 'v1', 'join_flow');
@@ -230,12 +300,18 @@ BEGIN
   log := log || E'\nPASS  consent withdrawal (revoked_at) permitted';
 
   -- 9. History survives an attempted member delete ---------------------------
-  BEGIN
-    DELETE FROM public.members WHERE id = m_a;
-    log := log || E'\nFAIL  member with consent history was deletable';
-  EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nPASS  member delete restricted by history: ' || SQLERRM;
-  END;
+  -- Same shape as section 8: members has RLS enabled with explicitly no
+  -- DELETE policy for authenticated ("erasure runs through pseudonymisation,
+  -- not row deletion"), so a zero-row DELETE succeeds trivially and raises
+  -- nothing. "No exception, therefore deletable" cannot tell "actually
+  -- deleted" apart from "matched nothing." Assert the row still exists.
+  DELETE FROM public.members WHERE id = m_a;
+  SELECT count(*) INTO cnt FROM public.members WHERE id = m_a;
+  IF cnt = 1 THEN
+    log := log || E'\nPASS  member with consent history survived the delete attempt';
+  ELSE
+    log := log || E'\nFAIL  member with consent history was deleted';
+  END IF;
 
   -- 10. Visibility and consent default to the most private value -------------
   INSERT INTO public.member_visibility (member_id) VALUES (m_a);
@@ -260,8 +336,16 @@ BEGIN
 
   -- 11. Founding status is frozen at insert ----------------------------------
   SELECT founding_member::text INTO t FROM public.members WHERE id = m_a;
+
+  -- [service_role] fixture: app_config's founding_member_cutoff is an admin
+  -- setting -- authenticated holds only SELECT on app_config. This one write
+  -- is a precondition for the case, not what it's testing, so it's the only
+  -- statement in this section that runs elevated.
+  PERFORM set_config('role', 'service_role', true);
   UPDATE public.app_config SET value = to_jsonb('2000-01-01T00:00:00Z'::text)
    WHERE key = 'founding_member_cutoff';
+  PERFORM set_config('role', 'authenticated', true);
+
   UPDATE public.members SET city = 'Accra' WHERE id = m_a;
   SELECT founding_member::text INTO tmp FROM public.members WHERE id = m_a;
   IF t = tmp THEN
@@ -271,22 +355,40 @@ BEGIN
   END IF;
 
   -- 11b. Activation depends on a confirmation GoTrue actually issued ---------
-  -- Needs a real auth.users row, because that is the whole point: the rule
-  -- reads email_confirmed_at in the database rather than trusting a caller who
-  -- says they confirmed. If this environment will not let the harness write
-  -- auth.users, the case reports INFO and the rest of the harness continues.
+  -- Every fixture below (auth.users, the 999006 reservation, member C, and
+  -- every later write to auth.users or to member C's status) runs as
+  -- service_role: GoTrue owns auth.users, register_member is service_role
+  -- internally, and no member can set their own status -- that is exactly
+  -- the vulnerability this migration closes. Only the activate_membership()
+  -- calls run as authenticated, because that is the one surface a real
+  -- signed-in member actually reaches.
+  --
+  -- COVERAGE GAP, not a defect: on production, service_role has no table
+  -- access to auth.users -- GoTrue owns that schema outright and connects as
+  -- its own role, separate from what PostgREST/service_role can reach. The
+  -- INSERT into auth.users below fails there with "permission denied for
+  -- table users," this whole block is caught by the EXCEPTION handler below,
+  -- and every activation-specific assertion inside it -- unconfirmed refused,
+  -- wrong-address refused, confirmed address activates, email_verified_at
+  -- sourced from GoTrue not the caller, double-activation is a no-op,
+  -- suspended can't self-activate -- is SKIPPED with an INFO line rather than
+  -- run. That degrade-not-fail behavior is correct and should stay an INFO.
+  -- But it means activate_membership()'s actual behavior under authenticated
+  -- is UNVERIFIED ON PRODUCTION by this harness. It has been proven locally
+  -- and on the preview branch, where auth.users is writable, but production
+  -- itself has never exercised these six cases. That gap is real and belongs
+  -- in the open rather than folded into a skipped line further down.
   BEGIN
+    PERFORM set_config('role', 'service_role', true);
     INSERT INTO auth.users (id, email) VALUES (uid_c, 'c@example.test');
-
     INSERT INTO public.number_reservations (member_number, expires_at)
     VALUES (999006, now() + interval '1 hour');
-    INSERT INTO public.members (user_id, member_number, credential_id,
-      first_name, email, birth_month, birth_year, timezone)
-    VALUES (uid_c, 999006, public.credential_id(2026, 999006),
-      'C', 'c@example.test', 1::smallint, 1990::smallint, 'UTC')
-    RETURNING id INTO m_c;
-
     PERFORM set_config('request.jwt.claim.sub', uid_c::text, true);
+    SELECT r.member_id INTO m_c
+      FROM public.register_member(999006, 'C', NULL, NULL, NULL, 'c@example.test',
+                                   1::smallint, 1990::smallint, NULL, NULL, 'UTC') r;
+
+    PERFORM set_config('role', 'authenticated', true);
 
     IF auth.uid() IS DISTINCT FROM uid_c THEN
       log := log || E'\nINFO  activation cases skipped: auth.uid() not settable here';
@@ -310,9 +412,12 @@ BEGIN
         log := log || E'\nFAIL  record moved to ' || t || ' despite the refusal';
       END IF;
 
-      -- confirmed, but of a different inbox
+      -- [service_role] fixture: GoTrue confirming a different inbox --
+      -- authenticated has no path to auth.users at all.
+      PERFORM set_config('role', 'service_role', true);
       UPDATE auth.users SET email_confirmed_at = now(), email = 'other@example.test'
        WHERE id = uid_c;
+      PERFORM set_config('role', 'authenticated', true);
       BEGIN
         PERFORM public.activate_membership('harnessc');
         log := log || E'\nFAIL  activate_membership accepted a confirmation of another address';
@@ -324,8 +429,10 @@ BEGIN
         END IF;
       END;
 
-      -- confirmed, and of this record's address
+      -- [service_role] fixture: GoTrue confirming the record's real address
+      PERFORM set_config('role', 'service_role', true);
       UPDATE auth.users SET email = 'c@example.test' WHERE id = uid_c;
+      PERFORM set_config('role', 'authenticated', true);
       PERFORM public.activate_membership('harnessc');
       SELECT status::text INTO t FROM public.members WHERE id = m_c;
       SELECT handle::text INTO tmp FROM public.members WHERE id = m_c;
@@ -335,8 +442,13 @@ BEGIN
         log := log || E'\nFAIL  confirmed activation left status ' || t || ', handle ' || COALESCE(tmp, 'null');
       END IF;
 
+      -- [service_role] read: comparing members.email_verified_at against
+      -- auth.users.email_confirmed_at needs auth.users, which authenticated
+      -- cannot read directly.
+      PERFORM set_config('role', 'service_role', true);
       SELECT count(*) INTO cnt FROM public.members m, auth.users u
        WHERE m.id = m_c AND u.id = uid_c AND m.email_verified_at = u.email_confirmed_at;
+      PERFORM set_config('role', 'authenticated', true);
       IF cnt = 1 THEN
         log := log || E'\nPASS  email_verified_at is GoTrue''s timestamp, not the caller''s';
       ELSE
@@ -356,8 +468,13 @@ BEGIN
         log := log || E'\nFAIL  a second activation raised: ' || SQLERRM;
       END;
 
-      -- no member lifts their own suspension
+      -- [service_role] fixture: suspending a member is an admin/conduct
+      -- action. status is not in authenticated's grantable column list at
+      -- all -- that is this migration's whole point -- so only service_role
+      -- can create this precondition.
+      PERFORM set_config('role', 'service_role', true);
       UPDATE public.members SET status = 'suspended' WHERE id = m_c;
+      PERFORM set_config('role', 'authenticated', true);
       BEGIN
         PERFORM public.activate_membership(NULL);
         log := log || E'\nFAIL  activate_membership lifted a suspension';
@@ -371,12 +488,25 @@ BEGIN
     END IF;
 
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+    PERFORM set_config('role', 'authenticated', true);
   EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nINFO  activation cases skipped: ' || SQLERRM;
+    log := log || E'\nINFO  activation cases skipped (' || SQLERRM ||
+      '). activate_membership() under authenticated is UNVERIFIED ON PRODUCTION by this harness -- proven locally/preview only, where auth.users is writable.';
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+    PERFORM set_config('role', 'authenticated', true);
   END;
 
   -- 12. Erasure --------------------------------------------------------------
+  -- Runs as service_role throughout: pseudonymize_member is SECURITY DEFINER
+  -- granted only to service_role (erasure is a backend/compliance action, not
+  -- self-service), and it clears user_id -- which means every "read own" RLS
+  -- policy on this row, and on affirmations/consents keyed off
+  -- current_member_id(), stops matching uid_a the instant erasure runs.
+  -- Checking the aftermath as authenticated wouldn't fail meaningfully, it
+  -- would just see nothing, which is a different bug than the one this case
+  -- exists to catch.
+  PERFORM set_config('role', 'service_role', true);
+
   -- The collision this harness caught: erasure clears the handle, which the
   -- once-only handle rule used to reject. Keep this case.
   PERFORM public.pseudonymize_member(m_a, 'harness', NULL);
@@ -424,6 +554,8 @@ BEGIN
   ELSE
     log := log || E'\nFAIL  erasure recorded as conduct';
   END IF;
+
+  PERFORM set_config('role', 'authenticated', true);
 
   -- 13. Every member table denies anonymous reads ----------------------------
   FOR t IN
