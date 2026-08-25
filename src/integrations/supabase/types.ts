@@ -228,6 +228,48 @@ export type Database = {
         }
         Relationships: []
       }
+      erasure_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          erased_at: string
+          id: string
+          member_id: string
+          reason: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          erased_at?: string
+          id?: string
+          member_id: string
+          reason: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          erased_at?: string
+          id?: string
+          member_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erasure_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "erasure_log_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ghana_regions: {
         Row: {
           name: string
@@ -609,6 +651,7 @@ export type Database = {
           email: string | null
           email_verified_at: string | null
           first_name: string | null
+          founding_member: boolean
           handle: string | null
           handle_changed_at: string | null
           id: string
@@ -640,6 +683,7 @@ export type Database = {
           email?: string | null
           email_verified_at?: string | null
           first_name?: string | null
+          founding_member?: boolean
           handle?: string | null
           handle_changed_at?: string | null
           id?: string
@@ -671,6 +715,7 @@ export type Database = {
           email?: string | null
           email_verified_at?: string | null
           first_name?: string | null
+          founding_member?: boolean
           handle?: string | null
           handle_changed_at?: string | null
           id?: string
@@ -771,8 +816,31 @@ export type Database = {
         Returns: boolean
       }
       pseudonymize_member: {
-        Args: { reason?: string; target: string }
+        Args: { actor?: string; reason?: string; target: string }
         Returns: undefined
+      }
+      register_member: {
+        Args: {
+          p_birth_month?: number
+          p_birth_year?: number
+          p_city?: string
+          p_connection_types?: Database["public"]["Enums"]["connection_type"][]
+          p_country?: string
+          p_display_name?: string
+          p_email?: string
+          p_first_name?: string
+          p_handle?: string
+          p_last_name?: string
+          p_member_number: number
+          p_primary_connection?: Database["public"]["Enums"]["connection_type"]
+          p_region_interests?: string[]
+          p_timezone?: string
+        }
+        Returns: {
+          credential_id: string
+          member_id: string
+          member_number: number
+        }[]
       }
       report_gender_distribution: {
         Args: { min_cell?: number }
@@ -831,6 +899,7 @@ export type Database = {
         | "dormant"
         | "suspended"
         | "revoked"
+        | "erased"
       standing_type:
         | "founding_member"
         | "contributing_member"
@@ -1009,6 +1078,7 @@ export const Constants = {
         "dormant",
         "suspended",
         "revoked",
+        "erased",
       ],
       standing_type: [
         "founding_member",
