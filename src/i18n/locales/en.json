@@ -104,11 +104,11 @@
       "ghanaianHeritage": "Ghanaian heritage",
       "ghanaianHeritageNote": "Ghanaian descent, any generation",
       "africanDiaspora": "African diaspora",
-      "africanDiasporaNote": "African descent, no known Ghana link",
+      "africanDiasporaNote": "African descent, anywhere in the world",
       "ghanaianAtHome": "Ghanaian at home",
       "ghanaianAtHomeNote": "Living in Ghana",
       "africanContinental": "African continental",
-      "africanContinentalNote": "In Africa, not Ghanaian",
+      "africanContinentalNote": "Living on the continent",
       "ally": "Ally",
       "allyNote": "Committed to the work"
     },

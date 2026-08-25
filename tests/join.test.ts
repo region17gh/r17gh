@@ -210,6 +210,35 @@ describe("gender", () => {
 });
 
 describe("connections", () => {
+  /**
+   * Absence markers. A connection type says what a member is, never what they
+   * are missing: "African descent, no known Ghana link" and "In Africa, not
+   * Ghanaian" both failed this and were rewritten.
+   *
+   * Scoped to connection types on purpose. Consent descriptions legitimately
+   * say what will not happen with a member's record ("They never see your
+   * contact details"), which is a promise, not a definition by lack. Do not
+   * widen this guard to them.
+   */
+  const DEFINED_BY_ABSENCE = /\b(no|not|none|without|lacks?|lacking|never)\b|n't\b/i;
+
+  test("no connection type is defined by what a member lacks", () => {
+    for (const connection of CONNECTIONS) {
+      const label = (en.join.connections as Record<string, string>)[connection.key];
+      const note = (en.join.connections as Record<string, string>)[`${connection.key}Note`];
+      expect(label).toBeDefined();
+      expect(note).toBeDefined();
+      expect(label).not.toMatch(DEFINED_BY_ABSENCE);
+      expect(note).not.toMatch(DEFINED_BY_ABSENCE);
+    }
+  });
+
+  test("the guard would catch the wording it replaced", () => {
+    expect("African descent, no known Ghana link").toMatch(DEFINED_BY_ABSENCE);
+    expect("In Africa, not Ghanaian").toMatch(DEFINED_BY_ABSENCE);
+    expect("Friend of Ghana (no Ghanaian heritage)").toMatch(DEFINED_BY_ABSENCE);
+  });
+
   test("all six are offered, flat", () => {
     expect(CONNECTIONS).toHaveLength(6);
     expect(CONNECTIONS.map((c) => c.value)).toEqual([
