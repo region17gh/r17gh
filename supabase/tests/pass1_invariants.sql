@@ -34,6 +34,23 @@
 -- once-only handle rule) is exactly the class of bug that reappears whenever
 -- a new rule is added, so err towards adding cases for rule interactions,
 -- not just rules.
+--
+-- A recurring bug shape, named here because it has hit this file three times
+-- and will hit it again: an assertion that passes or fails for a reason
+-- other than the thing under test. Section 1 originally paired the JWT claim
+-- and the role switch in one BEGIN block, so a refused role switch silently
+-- reverted the JWT claim too, and every case below it passed for "not signed
+-- in" instead of the reservation rule it existed to prove. Section 7 checked
+-- member B's row while still claiming to be member A, so the RLS-scoped
+-- UPDATE matched zero rows and reported a false FAIL instead of exercising
+-- the immutability trigger. Sections 8 and 9 treated "no exception raised"
+-- as proof a write was refused, but a zero-row UPDATE or DELETE succeeds
+-- trivially in Postgres -- it doesn't raise -- so both looked identical
+-- whether the write was genuinely blocked or the row was simply invisible
+-- under RLS. Different mechanisms, same shape: check the actual outcome
+-- (the row's state, who's really signed in, which role really executed),
+-- never just the absence of an error. The next case written here will reach
+-- for the same shortcut unless this is read first.
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION pg_temp.run_register_invariants()
