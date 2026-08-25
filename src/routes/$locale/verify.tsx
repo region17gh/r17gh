@@ -9,6 +9,7 @@ import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/l
 import { clearPendingHandle, loadPendingHandle } from "@/lib/join/draft";
 import { checkHandle, normaliseHandle, type HandleProblem } from "@/lib/join/handle";
 import { commitVerification, fetchCurrentMember, type MemberRow } from "@/lib/member/membership";
+import { sendWelcomeEmail } from "@/server/welcome";
 
 export const Route = createFileRoute("/$locale/verify")({
   head: () => ({ meta: [{ title: "Confirm your address | Region 17" }] }),
@@ -86,6 +87,14 @@ function VerifyPage() {
         clearPendingHandle();
         setMember(outcome.member);
         setPhase("done");
+        // Activation is the trigger, which is why this call is here and not at
+        // registration: a record that never reaches this point never receives
+        // the email. Deliberately not awaited and deliberately never surfaced.
+        // The screen's job is to confirm the record is live; the send is the
+        // register's own business, it is claimed once server-side, and a
+        // failure there is not something to put in front of a member who has
+        // just been told they are in. It is retried on their next visit.
+        void sendWelcomeEmail({ data: { locale } }).catch(() => undefined);
         break;
       case "handle_taken":
         setProblem("taken");

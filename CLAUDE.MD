@@ -102,7 +102,9 @@ WCAG 2.2 AA is the floor.
 
 > Region 17 membership is a standing in a community. It is not a government document and confers no citizenship, residence, visa, or right of entry.
 
-It appears on the membership credential, the Compact screen, and the welcome email.
+It appears on the membership credential, the Compact screen, and the welcome
+email. All three are live. The welcome email carries it in both the HTML and
+the plain-text part, and a test asserts the exact sentence in both.
 
 Citizenship, Right of Abode, and Ghana Card questions route to Ghana's Diaspora Affairs Office or the Ministry of the Interior. **We refer. We never advise on eligibility and never imply influence over outcomes.**
 
@@ -119,6 +121,15 @@ Citizenship, Right of Abode, and Ghana Card questions route to Ghana's Diaspora 
 ## Stack
 
 React + Tailwind (Tailwind consumes the CSS custom properties, never its own palette) · Supabase (database, auth, RLS) · Resend (transactional email) · TypeScript strict, never `any`.
+
+**Email:** two separate paths through Resend, and they are not interchangeable.
+Auth mail (the one-time code, the sign-in link) goes through Supabase custom
+SMTP: GoTrue composes it and Supabase settings configure it. Application mail
+goes through the Resend API from `src/server/resend.server.ts`, and today that
+is the welcome email and nothing else. Email cannot read the design tokens, so
+`src/lib/email/welcome.ts` holds the one sanctioned copy of the palette values,
+named after the tokens they copy. It is a copy to be reconciled, never a place
+to invent a colour.
 
 **Auth:** magic link only, no passwords. The one-time code length is a Supabase
 setting, not a UI decision. Nothing in the join screen or in the email templates

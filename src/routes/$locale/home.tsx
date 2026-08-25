@@ -5,6 +5,7 @@ import { Credential } from "@/components/join/Credential";
 import { Button, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { sendWelcomeEmail } from "@/server/welcome";
 import {
   fetchCurrentMember,
   fetchFoundingCutoff,
@@ -46,6 +47,17 @@ function HomePage() {
       setCutoff(await fetchFoundingCutoff());
       setIntent(await fetchIntent(current.id).catch(() => ({ ask: null, offer: null })));
       setLoading(false);
+
+      // The welcome email's safety net. /verify fires the send the moment a
+      // record activates, but that call is made by a browser, and a browser
+      // that is closed a second later never makes it. The send is claimed once
+      // on the record, so this is a no-op for every member who already has
+      // theirs: it returns already_sent without touching Resend. It costs one
+      // request on a page that is already making three, and it is the
+      // difference between a member missing their credential email and not.
+      if (current.status === "active") {
+        void sendWelcomeEmail({ data: { locale } }).catch(() => undefined);
+      }
     })();
   }, [locale, navigate]);
 

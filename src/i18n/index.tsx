@@ -1,31 +1,10 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
-import en from "./locales/en.json";
-import { DEFAULT_LOCALE, type Locale } from "./config";
+import { type Locale } from "./config";
+import { translator, type Translate } from "./translate";
 
 export * from "./config";
-
-type Dictionary = Record<string, unknown>;
-
-/**
- * Dictionaries are bundled statically, one per locale. Members are frequently on
- * metered connections: a locale is a single small JSON payload, not a runtime fetch.
- */
-const DICTIONARIES: Record<Locale, Dictionary> = {
-  en: en as Dictionary,
-};
-
-function lookup(dict: Dictionary, key: string): string | undefined {
-  const value = key.split(".").reduce<unknown>((node, part) => {
-    if (node && typeof node === "object" && part in (node as Dictionary)) {
-      return (node as Dictionary)[part];
-    }
-    return undefined;
-  }, dict);
-  return typeof value === "string" ? value : undefined;
-}
-
-export type Translate = (key: string, vars?: Record<string, string | number>) => string;
+export { translator, type Translate } from "./translate";
 
 interface I18nValue {
   locale: Locale;
@@ -41,20 +20,8 @@ export function I18nProvider({
   locale: Locale;
   children: ReactNode;
 }) {
-  const value = useMemo<I18nValue>(() => {
-    const dict = DICTIONARIES[locale] ?? DICTIONARIES[DEFAULT_LOCALE];
-    const fallback = DICTIONARIES[DEFAULT_LOCALE];
-
-    const t: Translate = (key, vars) => {
-      const template = lookup(dict, key) ?? lookup(fallback, key) ?? key;
-      if (!vars) return template;
-      return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-        name in vars ? String(vars[name]) : match,
-      );
-    };
-
-    return { locale, t };
-  }, [locale]);
+  // One implementation, shared with the server. See i18n/translate.ts.
+  const value = useMemo<I18nValue>(() => ({ locale, t: translator(locale) }), [locale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
