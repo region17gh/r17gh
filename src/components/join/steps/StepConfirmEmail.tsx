@@ -3,8 +3,25 @@ import { useState } from "react";
 import { Button, Field, Input } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  OTP_ACCEPTED_LENGTH,
+  OTP_MAX_LENGTH,
+  checkCode,
+  normaliseCode,
+  otpLengthOutOfRange,
+} from "@/lib/auth/otp";
 
 import { TAP_CONTROL } from "./shared";
+
+// A project set outside the range this screen accepts is a deployment problem.
+// Said here, in development, rather than discovered by a member holding a code
+// the input will not take.
+if (import.meta.env.DEV && otpLengthOutOfRange(import.meta.env["VITE_AUTH_OTP_LENGTH"])) {
+  console.warn(
+    `[auth] VITE_AUTH_OTP_LENGTH is ${import.meta.env["VITE_AUTH_OTP_LENGTH"]}, outside the ` +
+      `${OTP_ACCEPTED_LENGTH.min} to ${OTP_ACCEPTED_LENGTH.max} digits this screen accepts.`,
+  );
+}
 
 export interface StepConfirmEmailProps {
   email: string;
@@ -29,9 +46,22 @@ export function StepConfirmEmail({ email, onConfirmed, onChangeEmail }: StepConf
   const [busy, setBusy] = useState(false);
 
   const confirm = async () => {
-    const token = code.trim();
-    if (token.length === 0) {
+    const token = normaliseCode(code);
+    // A length that cannot be a code is answered here. Only the provider is
+    // allowed to say a code was wrong, so a configuration change can never
+    // again reach the member as "that code did not match".
+    const problem = checkCode(token);
+    if (problem === "empty") {
       setError(t("join.step1.codeMissing"));
+      return;
+    }
+    if (problem === "length") {
+      setError(
+        t("join.step1.codeLength", {
+          min: OTP_ACCEPTED_LENGTH.min,
+          max: OTP_ACCEPTED_LENGTH.max,
+        }),
+      );
       return;
     }
     setError(null);
@@ -84,10 +114,10 @@ export function StepConfirmEmail({ email, onConfirmed, onChangeEmail }: StepConf
           <Input
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={6}
+            maxLength={OTP_MAX_LENGTH}
             value={code}
             style={{ ...TAP_CONTROL, maxWidth: "var(--measure-narrow)" }}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => setCode(normaliseCode(e.target.value))}
           />
         </Field>
 

@@ -120,7 +120,14 @@ Citizenship, Right of Abode, and Ghana Card questions route to Ghana's Diaspora 
 
 React + Tailwind (Tailwind consumes the CSS custom properties, never its own palette) · Supabase (database, auth, RLS) · Resend (transactional email) · TypeScript strict, never `any`.
 
-**Auth:** magic link only, no passwords.
+**Auth:** magic link only, no passwords. The one-time code length is a Supabase
+setting, not a UI decision. Nothing in the join screen or in the email templates
+may state a length: the input accepts the full 6 to 10 digits Supabase can
+issue, and a length that cannot be a code is its own message. Only the provider
+gets to say a code was wrong. A mismatch between a hardcoded six and a project
+set to eight has already reached a member as "that code did not match" after
+they typed it correctly.
+
 **i18n:** scaffolding from day one — strings externalised, locale routing live, English the only populated locale. French later as a translation project.
 
 ---
@@ -145,3 +152,8 @@ Tracked and unresolved. Do not treat the product as launch-ready while any are o
 - Privacy policy, terms, and Code of Conduct live before the first signup.
 - Counsel read on the age-gate implementation.
 - Data Protection Commission registration determined.
+- **Confirm signup email exercised with a real send.** Only Magic Link has been
+  seen live. Which template fires is decided by GoTrue, not by the screen, and
+  the address used for testing already had an auth account, so `confirmation`
+  has never actually gone out. Test from an address with no auth account, which
+  is what every real first-time member is, and read the code out of that email.

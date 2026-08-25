@@ -3,11 +3,17 @@ project_id = "idmxottsjqeiatgiudvt"
 # The email templates the auth flows depend on, kept in the repository so the
 # requirement is reviewable rather than dashboard-only.
 #
-# Both templates carry `{{ .Token }}`. The join flow asks for a six-digit code,
-# and which template a request triggers is decided by GoTrue, not by the screen
-# the member is on: an address with no account gets `confirmation`, an address
-# with one gets `magic_link`. A code missing from either template is a dead end
-# for whichever members land on it.
+# Both templates carry `{{ .Token }}`. The join flow asks for a code, and which
+# template a request triggers is decided by GoTrue, not by the screen the member
+# is on: an address with no account gets `confirmation`, an address with one
+# gets `magic_link`. A code missing from either template is a dead end for
+# whichever members land on it.
+#
+# Neither the templates nor the join screen state a code length. The length is a
+# Dashboard setting (Authentication, Sign In / Providers, Email OTP length) and
+# it has been changed once already. The screen accepts the whole range Supabase
+# can issue, 6 to 10 digits, so a change there is a no-op on this side. Do not
+# reintroduce a fixed length in copy or in an input.
 #
 # This project is hosted, so these files are the source of record and the
 # Dashboard (Authentication, Email Templates) has to be kept matching them.

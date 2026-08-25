@@ -22,6 +22,15 @@ import {
 import { checkHandle, normaliseHandle, suggestHandle } from "../src/lib/join/handle";
 import { looksSendable, submitIdentity } from "../src/lib/join/identity";
 import { readLinkError } from "../src/lib/auth/linkError";
+import {
+  OTP_ACCEPTED_LENGTH,
+  OTP_MAX_LENGTH,
+  OTP_MIN_LENGTH,
+  checkCode,
+  configuredOtpLength,
+  normaliseCode,
+  otpLengthOutOfRange,
+} from "../src/lib/auth/otp";
 import { CONNECTIONS, CONSENTS, GENDERS } from "../src/lib/join/options";
 import en from "../src/i18n/locales/en.json";
 import { formatMemberNumber } from "../src/components/join/memberNumber";
@@ -404,5 +413,85 @@ describe("a link that will not open", () => {
   test("a link that worked is not a failure", () => {
     expect(readLinkError("#access_token=abc&type=magiclink")).toBeNull();
     expect(readLinkError("")).toBeNull();
+  });
+});
+
+describe("the one-time code, and the length nobody in the UI gets to decide", () => {
+  /**
+   * The bug this suite exists for: the project's code length was 8, the input
+   * was capped at 6, the entry was truncated before it was sent, and the member
+   * who typed it correctly was told the code did not match. A setting change
+   * reached the member as their own mistake. None of the assertions below may be
+   * relaxed to make a copy change easier.
+   */
+
+  test("the accepted range is everything Supabase can issue, not one length", () => {
+    expect(OTP_MIN_LENGTH).toBe(6);
+    expect(OTP_MAX_LENGTH).toBe(10);
+    expect(OTP_ACCEPTED_LENGTH).toEqual({ min: 6, max: 10 });
+  });
+
+  test("nothing is truncated: every length in the range is passed through whole", () => {
+    for (let length = OTP_MIN_LENGTH; length <= OTP_MAX_LENGTH; length += 1) {
+      const typed = "1234567890".slice(0, length);
+      expect(normaliseCode(typed)).toHaveLength(length);
+      expect(checkCode(typed)).toBeNull();
+    }
+  });
+
+  test("an eight-digit code, the one that failed, reaches the provider intact", () => {
+    expect(normaliseCode("12345678")).toBe("12345678");
+    expect(checkCode("12345678")).toBeNull();
+  });
+
+  test("non-digits are dropped, and dropping them never shortens a real code", () => {
+    expect(normaliseCode(" 123 456 ")).toBe("123456");
+    expect(normaliseCode("12-34-56-78")).toBe("12345678");
+  });
+
+  test("an empty entry and a short one are different messages, and neither is a mismatch", () => {
+    expect(checkCode("")).toBe("empty");
+    expect(checkCode("   ")).toBe("empty");
+    expect(checkCode("12345")).toBe("length");
+    expect(checkCode("12345678901")).toBe("length");
+  });
+
+  test("a configured length is honoured only inside the range, and never gates entry", () => {
+    expect(configuredOtpLength("8")).toBe(8);
+    expect(configuredOtpLength(undefined)).toBeNull();
+    expect(configuredOtpLength("")).toBeNull();
+    expect(configuredOtpLength("four")).toBeNull();
+    expect(configuredOtpLength("4")).toBeNull();
+    expect(configuredOtpLength("12")).toBeNull();
+    // Whatever the build was told, entry is still judged by the range: a stale
+    // value cannot narrow what a member is allowed to type.
+    expect(checkCode("1234567890")).toBeNull();
+  });
+
+  test("a setting outside the range is reported as a deployment problem", () => {
+    expect(otpLengthOutOfRange("8")).toBe(false);
+    expect(otpLengthOutOfRange(undefined)).toBe(false);
+    expect(otpLengthOutOfRange("")).toBe(false);
+    expect(otpLengthOutOfRange("4")).toBe(true);
+    expect(otpLengthOutOfRange("12")).toBe(true);
+    expect(otpLengthOutOfRange("six")).toBe(true);
+  });
+
+  test("no code copy claims a length, so a setting change cannot outdate it", () => {
+    const step1 = en.join.step1 as Record<string, string>;
+    const codeCopy = Object.entries(step1).filter(([key]) => key.startsWith("code"));
+    expect(codeCopy.length).toBeGreaterThan(0);
+    for (const [key, value] of codeCopy) {
+      // codeLength is the one string that names digits, and it names the range
+      // from the module rather than a number of its own.
+      if (key === "codeLength") continue;
+      expect(value).not.toMatch(/six|eight|\d+[- ]digit/i);
+    }
+    expect(step1['codeLength']).toContain("{min}");
+    expect(step1['codeLength']).toContain("{max}");
+  });
+
+  test("the label asks for the code without describing its shape", () => {
+    expect(en.join.step1.codeLabel).toBe("Enter the code from your email");
   });
 });
