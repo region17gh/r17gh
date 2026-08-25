@@ -1,9 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { LinkRecovery } from "@/components/auth/LinkRecovery";
 import { Button, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/linkError";
 import { clearPendingHandle, loadPendingHandle } from "@/lib/join/draft";
 import { checkHandle, normaliseHandle, type HandleProblem } from "@/lib/join/handle";
 import { commitVerification, fetchCurrentMember, type MemberRow } from "@/lib/member/membership";
@@ -29,7 +31,18 @@ function VerifyPage() {
   const [handle, setHandle] = useState("");
   const [problem, setProblem] = useState<HandleProblem | "taken" | "reserved" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [linkProblem, setLinkProblem] = useState<LinkProblem | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // A confirmation link that will not open sends the member here with the
+  // reason in the fragment and no session behind it. Read it before deciding
+  // what this screen says, so they get the recovery rather than a bare refusal.
+  useEffect(() => {
+    const failure = currentLinkError();
+    if (!failure) return;
+    setLinkProblem(failure.problem);
+    clearLinkError();
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -98,7 +111,11 @@ function VerifyPage() {
       >
         {phase === "loading" ? <p>{t("common.loading")}</p> : null}
 
-        {phase === "signed_out" ? (
+        {linkProblem && (phase === "signed_out" || phase === "no_member") ? (
+          <LinkRecovery problem={linkProblem} />
+        ) : null}
+
+        {phase === "signed_out" && !linkProblem ? (
           <>
             <h1 style={{ font: "var(--type-section)" }}>{t("verify.heading")}</h1>
             <p style={{ marginTop: "var(--space-4)", color: "var(--text-muted)" }}>
@@ -110,7 +127,7 @@ function VerifyPage() {
           </>
         ) : null}
 
-        {phase === "no_member" ? (
+        {phase === "no_member" && !linkProblem ? (
           <>
             <h1 style={{ font: "var(--type-section)" }}>{t("verify.heading")}</h1>
             <p style={{ marginTop: "var(--space-4)", color: "var(--text-muted)" }}>

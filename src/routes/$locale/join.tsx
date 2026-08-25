@@ -7,14 +7,17 @@ import { Progress } from "@/components/join/Progress";
 import { RegisterCard } from "@/components/join/RegisterCard";
 import { useHeadingFocus } from "@/components/join/useHeadingFocus";
 import { StepCompact } from "@/components/join/steps/StepCompact";
+import { StepConfirmEmail } from "@/components/join/steps/StepConfirmEmail";
 import { StepHowYouConnect } from "@/components/join/steps/StepHowYouConnect";
 import { StepNeedBring } from "@/components/join/steps/StepNeedBring";
-import { StepWhoYouAre, type Country } from "@/components/join/steps/StepWhoYouAre";
+import { StepWhereYouLive, type Country } from "@/components/join/steps/StepWhereYouLive";
+import { StepWhoYouAre } from "@/components/join/steps/StepWhoYouAre";
 import { STEP_TOTAL } from "@/components/join/steps/shared";
 import { PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { REGIONS } from "@/design-system/region-17-ghana-design-system-e3e62f/design-system/region17/data/regions";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/linkError";
 import { checkAge } from "@/lib/join/age";
 import {
   clearDraft,
@@ -37,8 +40,16 @@ import { ensureReservation, type LapseReason } from "@/server/membership";
 
 type StepValue = 1 | 2 | 3 | 4 | "issued";
 
+/**
+ * Step 1 is three screens, not one: who you are, the code, then where you live.
+ * The code is asked for on its own screen because it is only ever requested
+ * once the answers on the first screen have passed the age gate.
+ */
+type StageValue = "identity" | "code" | "details";
+
 interface JoinSearch {
   step: StepValue;
+  stage?: StageValue;
 }
 
 function parseStep(raw: unknown): StepValue {
@@ -48,12 +59,20 @@ function parseStep(raw: unknown): StepValue {
   return 1;
 }
 
+function parseStage(raw: unknown): StageValue {
+  return raw === "code" || raw === "details" ? raw : "identity";
+}
+
 export const Route = createFileRoute("/$locale/join")({
   // The step lives in the URL so the browser back button moves between steps
   // instead of leaving the flow. Nothing personal is ever put here.
-  validateSearch: (search: Record<string, unknown>): JoinSearch => ({
-    step: parseStep(search["step"]),
-  }),
+  validateSearch: (search: Record<string, unknown>): JoinSearch => {
+    const step = parseStep(search["step"]);
+    const stage = parseStage(search["stage"]);
+    // Left out of the URL entirely when it is the default, so the address a
+    // member sees at the start of the flow stays /join.
+    return stage === "identity" ? { step } : { step, stage };
+  },
   head: () => ({
     meta: [
       { title: "Join Region 17" },
@@ -80,7 +99,7 @@ interface IssuedRecord {
 function JoinPage() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
-  const { step } = Route.useSearch();
+  const { step, stage: requestedStage = "identity" } = Route.useSearch();
 
   const [draft, setDraft] = useState<JoinDraft>(() => emptyDraft());
   const [hydrated, setHydrated] = useState(false);
@@ -98,16 +117,38 @@ function JoinPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [issued, setIssued] = useState<IssuedRecord | null>(null);
+  const [refused, setRefused] = useState(false);
+  const [linkProblem, setLinkProblem] = useState<LinkProblem | null>(null);
   const [cutoff, setCutoff] = useState<Date | null>(null);
   const [retrying, setRetrying] = useState(false);
   const versionsRef = useRef<PolicyVersions | null>(null);
 
-  const headingRef = useHeadingFocus<HTMLHeadingElement>(step);
+  /**
+   * The screen actually shown for step 1.
+   *
+   * A confirmed address always lands on the last screen: there is nothing left
+   * to do on the first two. The code screen holds through a reload, because the
+   * address is in the draft by then and the code is already in their inbox.
+   */
+  const stage: StageValue = emailConfirmed
+    ? "details"
+    : requestedStage === "code" && (!hydrated || draft.email.trim())
+      ? "code"
+      : "identity";
+
+  const headingRef = useHeadingFocus<HTMLHeadingElement>(`${String(step)}:${stage}`);
   const underage = checkAge(draft.birthMonth, draft.birthYear) === "under";
 
   const goToStep = useCallback(
     (next: StepValue) => {
       void navigate({ to: ".", search: { step: next } });
+    },
+    [navigate],
+  );
+
+  const goToStage = useCallback(
+    (next: StageValue) => {
+      void navigate({ to: ".", search: { step: 1, stage: next } });
     },
     [navigate],
   );
@@ -143,6 +184,16 @@ function JoinPage() {
     },
     [locale, navigate, t],
   );
+
+  // A dead confirmation link sends the member back here carrying the reason in
+  // the URL fragment. It is read once, answered on the screen, and taken back
+  // out of the address bar.
+  useEffect(() => {
+    const failure = currentLinkError();
+    if (!failure) return;
+    setLinkProblem(failure.problem);
+    clearLinkError();
+  }, []);
 
   // Restore the draft, then work out where this browser actually stands: signed
   // in with a record (go home), signed in without one (resume), or neither.
@@ -185,12 +236,12 @@ function JoinPage() {
     void fetchFoundingCutoff().then(setCutoff);
   }, []);
 
-  // The draft is never written while the age gate is failing, so an under-18
-  // answer cannot be left behind in storage.
+  // The draft is never written while the age gate is failing, and never again
+  // after a refusal, so an under-18 answer cannot be left behind in storage.
   useEffect(() => {
-    if (!hydrated || underage) return;
+    if (!hydrated || underage || refused) return;
     saveDraft(draft);
-  }, [draft, hydrated, underage]);
+  }, [draft, hydrated, underage, refused]);
 
   // On reaching the Compact, offer an address derived from the member's name.
   useEffect(() => {
@@ -225,10 +276,20 @@ function JoinPage() {
     setDraft((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  /**
+   * The refusal.
+   *
+   * `submitIdentity` has already returned without keeping the address or
+   * sending anything. This clears what the earlier screens had stored, empties
+   * what is held in memory, and leaves the screen showing the refusal and
+   * nothing else. Storage is not written again after this point.
+   */
   const onUnderage = useCallback(() => {
-    // No email was ever captured on this screen, and anything already stored goes.
     clearDraft();
+    setDraft(emptyDraft());
     setResumed(false);
+    setLapse(null);
+    setRefused(true);
   }, []);
 
   const submit = async () => {
@@ -288,7 +349,7 @@ function JoinPage() {
           goToStep(1);
           break;
         case "underage":
-          clearDraft();
+          onUnderage();
           goToStep(1);
           break;
         default:
@@ -348,10 +409,21 @@ function JoinPage() {
     return { name, location, connection, following, standing };
   }, [draft, countries, step, cutoff, issued, t]);
 
-  const stepHeading =
-    step === "issued"
-      ? t("join.issued.eyebrow")
-      : t(`join.step${step}.heading`);
+  /** One screen, one heading and one lede, including the three that make step 1. */
+  const stepCopy = ((): { heading: string; lede: string } => {
+    if (step === "issued") return { heading: t("join.issued.eyebrow"), lede: "" };
+    if (step !== 1) {
+      return { heading: t(`join.step${step}.heading`), lede: t(`join.step${step}.lede`) };
+    }
+    if (refused) return { heading: t("join.step1.underageHeading"), lede: "" };
+    if (stage === "code") {
+      return { heading: t("join.step1.codeHeading"), lede: t("join.step1.codeLede") };
+    }
+    if (stage === "details") {
+      return { heading: t("join.step1.detailsHeading"), lede: t("join.step1.detailsLede") };
+    }
+    return { heading: t("join.step1.heading"), lede: t("join.step1.lede") };
+  })();
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -404,7 +476,7 @@ function JoinPage() {
 
           {step !== "issued" ? <Progress current={step} total={STEP_TOTAL} /> : null}
 
-          <section className="r17-step" key={String(step)}>
+          <section className="r17-step" key={`${String(step)}:${stage}`}>
             {step !== "issued" ? (
               <p className="r17-cite" style={{ color: "var(--gold-700)" }}>
                 {t("join.stepCounter", { current: step, total: STEP_TOTAL })}
@@ -416,11 +488,11 @@ function JoinPage() {
               tabIndex={-1}
               style={{ font: "var(--type-title)", marginTop: "var(--space-2)" }}
             >
-              {stepHeading}
+              {stepCopy.heading}
               {step === 3 ? <span className="r17-optional">{t("common.optional")}</span> : null}
             </h2>
 
-            {step !== "issued" ? (
+            {stepCopy.lede ? (
               <p
                 style={{
                   color: "var(--text-muted)",
@@ -429,14 +501,21 @@ function JoinPage() {
                   margin: "var(--space-2) 0 var(--space-8)",
                 }}
               >
-                {t(`join.step${step}.lede`)}
+                {stepCopy.lede}
               </p>
             ) : null}
 
-            {resumed && step === 1 ? (
+            {resumed && step === 1 && !refused ? (
               <p className="r17-notice" role="status">
                 {t("join.resumed")}
               </p>
+            ) : null}
+
+            {linkProblem && !refused ? (
+              <div className="r17-notice" role="status">
+                <p>{t(`authLink.${linkProblem}Body`)}</p>
+                <p style={{ marginTop: "var(--space-2)" }}>{t("authLink.joinAgain")}</p>
+              </div>
             ) : null}
 
             {lapse && draft.reservation ? (
@@ -454,18 +533,39 @@ function JoinPage() {
               </p>
             ) : null}
 
-            {step === 1 ? (
+            {step === 1 && refused ? (
+              <div className="r17-notice" data-tone="alert" role="alert">
+                {t("join.step1.underage")}
+              </div>
+            ) : null}
+
+            {step === 1 && !refused && stage === "identity" ? (
               <StepWhoYouAre
                 draft={draft}
                 update={update}
-                countries={countries}
-                emailConfirmed={emailConfirmed}
-                reserving={reserving}
-                onEmailConfirmed={() => {
+                onUnderage={onUnderage}
+                onCodeSent={() => goToStage("code")}
+              />
+            ) : null}
+
+            {step === 1 && !refused && stage === "code" ? (
+              <StepConfirmEmail
+                email={draft.email.trim()}
+                onConfirmed={() => {
                   setEmailConfirmed(true);
                   void syncReservation(draft);
+                  goToStage("details");
                 }}
-                onUnderage={onUnderage}
+                onChangeEmail={() => goToStage("identity")}
+              />
+            ) : null}
+
+            {step === 1 && !refused && stage === "details" ? (
+              <StepWhereYouLive
+                draft={draft}
+                update={update}
+                countries={countries}
+                reserving={reserving}
                 onContinue={() => goToStep(2)}
               />
             ) : null}

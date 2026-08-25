@@ -1,7 +1,10 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
+import { LinkRecovery } from "@/components/auth/LinkRecovery";
 import { Button, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
+import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/linkError";
 
 export const Route = createFileRoute("/$locale/")({
   head: () => ({
@@ -31,6 +34,17 @@ export const Route = createFileRoute("/$locale/")({
 // dictionary rather than being hardcoded here.
 function LocaleHome() {
   const { locale, t } = useI18n();
+  const [linkProblem, setLinkProblem] = useState<LinkProblem | null>(null);
+
+  // This is where a dead confirmation link lands: the site URL, carrying the
+  // reason in the fragment. Unread, it shows a member the home page and no
+  // explanation at all, so it is read here and answered.
+  useEffect(() => {
+    const failure = currentLinkError();
+    if (!failure) return;
+    setLinkProblem(failure.problem);
+    clearLinkError();
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -56,14 +70,20 @@ function LocaleHome() {
         >
           {t("meta.siteName")}
         </h1>
-        <p style={{ maxWidth: "var(--measure-prose)", margin: "var(--space-0)" }}>
-          {t("meta.tagline")}
-        </p>
-        {/* size="lg" is --control-lg, the 48px tap-target floor for anything a
-            member taps. Link keeps the navigation client-side. */}
-        <Link to={localePath(locale, "/join")} style={{ borderBottom: "none" }}>
-          <Button size="lg">{t("nav.joinCta")}</Button>
-        </Link>
+        {linkProblem ? (
+          <LinkRecovery problem={linkProblem} />
+        ) : (
+          <>
+            <p style={{ maxWidth: "var(--measure-prose)", margin: "var(--space-0)" }}>
+              {t("meta.tagline")}
+            </p>
+            {/* size="lg" is --control-lg, the 48px tap-target floor for anything a
+                member taps. Link keeps the navigation client-side. */}
+            <Link to={localePath(locale, "/join")} style={{ borderBottom: "none" }}>
+              <Button size="lg">{t("nav.joinCta")}</Button>
+            </Link>
+          </>
+        )}
         {/* Safety control, not decoration. Its wording is fixed. */}
         <p
           className="r17-cite"

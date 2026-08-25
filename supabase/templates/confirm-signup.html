@@ -1,0 +1,27 @@
+<!--
+  Sent when someone joins at /join.
+
+  This is the template the join flow actually triggers. `signInWithOtp` with
+  `shouldCreateUser: true` against an address with no account is a signup, so
+  GoTrue sends this template, not Magic Link. It must therefore carry
+  `{{ .Token }}`: the join screen asks for a six-digit code, and a template with
+  only a link leaves the member holding nothing they can type.
+
+  The link is kept as well, for anyone who would rather click than type. It
+  returns to /join, where the flow resumes, and where an expired link is read
+  out of the URL fragment and answered.
+-->
+<h2>Your Region 17 code</h2>
+
+<p>Enter this code on the join screen to confirm this address:</p>
+
+<p><strong style="font-size: 24px; letter-spacing: 2px">{{ .Token }}</strong></p>
+
+<p>The code expires shortly. If it has expired, ask for a fresh one on the join screen.</p>
+
+<p>You can also <a href="{{ .ConfirmationURL }}">confirm this address by link</a>.</p>
+
+<p>
+  If you did not ask to join Region 17, ignore this email. Nothing is recorded
+  against this address unless the code is used.
+</p>
