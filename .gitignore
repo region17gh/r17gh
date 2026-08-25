@@ -23,6 +23,13 @@ src/.generated/
 .wrangler/
 .dev.vars
 
+# Local env overrides. NOTE: .env itself is tracked in this repo and holds only
+# public values (project URL, publishable keys). Server-only secrets --
+# SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY -- belong in .dev.vars or
+# .env.local, both ignored here, and never in .env.
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

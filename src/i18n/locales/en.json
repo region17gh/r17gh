@@ -289,6 +289,30 @@
     "failed": "We could not send a link to that address. Check it and try again."
   },
 
+  "email": {
+    "welcome": {
+      "subject": "Welcome to Region 17. You are member {number}.",
+      "preheader": "Your credential, your standing, and one thing to do next.",
+      "greeting": "Welcome, {name}.",
+      "fallbackName": "member",
+      "opening": "You are in the membership register of Region 17, Ghana's seventeenth region. Your record is active and your address is live.",
+      "credentialHeading": "Your credential",
+      "memberNumberLabel": "Member number",
+      "credentialIdLabel": "Credential ID",
+      "standingLabel": "Standing",
+      "classLabel": "Class",
+      "founding": "Founding Member",
+      "foundingNote": "You joined before {date}. Founding standing closes on that date and will never be offered again.",
+      "permanent": "Your number is permanently yours and is never reissued.",
+      "actionHeading": "One thing to do next",
+      "actionBody": "Add your Ask and your Offer. Two sentences give another member a real reason to reach out, and give you somewhere to turn. It is the part that makes the register work.",
+      "actionButton": "Add your Ask and your Offer",
+      "actionFallback": "If the link does not open, paste this into your browser:",
+      "footerWhy": "You are receiving this because you joined Region 17 and confirmed your email address.",
+      "footerOrg": "Region 17 is a US 501(c)(3) nonprofit and an initiative of the Embassy of Ghana to the United States."
+    }
+  },
+
   "errors": {
     "underage": "Members must be 18 or older.",
     "handleReserved": "That handle is reserved.",
