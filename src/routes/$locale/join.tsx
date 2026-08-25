@@ -14,7 +14,6 @@ import { StepWhereYouLive, type Country } from "@/components/join/steps/StepWher
 import { StepWhoYouAre } from "@/components/join/steps/StepWhoYouAre";
 import { STEP_TOTAL } from "@/components/join/steps/shared";
 import { PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
-import { REGIONS } from "@/design-system/region-17-ghana-design-system-e3e62f/design-system/region17/data/regions";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/linkError";
@@ -35,6 +34,7 @@ import {
   writeMembershipRecords,
   type PolicyVersions,
 } from "@/lib/join/registration";
+import { REGIONS_ALPHABETICAL } from "@/lib/regions";
 import { fetchCurrentMember, fetchFoundingCutoff, isHandleReserved } from "@/lib/member/membership";
 import { ensureReservation, type LapseReason } from "@/server/membership";
 
@@ -393,7 +393,7 @@ function JoinPage() {
           ? (chosen[0] as string)
           : t("card.connectionMore", { first: chosen[0] as string, count: chosen.length - 1 });
 
-    const regionNames = REGIONS.filter((r) => draft.regions.includes(r.slug)).map((r) => r.name);
+    const regionNames = REGIONS_ALPHABETICAL.filter((r) => draft.regions.includes(r.slug)).map((r) => r.name);
     const following =
       regionNames.length === 0
         ? ""

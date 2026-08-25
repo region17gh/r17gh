@@ -1,7 +1,8 @@
 import { Button } from "@/design-system/region-17-ghana-design-system-e3e62f";
-import { REGIONS, regionColor } from "@/design-system/region-17-ghana-design-system-e3e62f/design-system/region17/data/regions";
+import { regionColor } from "@/design-system/region-17-ghana-design-system-e3e62f/design-system/region17/data/regions";
 import { useT } from "@/i18n";
 import { CONNECTIONS, type ConnectionType } from "@/lib/join/options";
+import { REGIONS_ALPHABETICAL } from "@/lib/regions";
 
 import type { StepProps } from "./shared";
 
@@ -83,7 +84,8 @@ export function StepHowYouConnect({
           {t("join.step2.regionsHint")}
         </p>
         <div className="r17-regions">
-          {REGIONS.map((region) => {
+          {/* Alphabetical, not by colour band: a member is scanning for one name. */}
+          {REGIONS_ALPHABETICAL.map((region) => {
             const pressed = draft.regions.includes(region.slug);
             return (
               <button
