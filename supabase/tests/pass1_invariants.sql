@@ -94,13 +94,13 @@ BEGIN
 
   INSERT INTO public.members (user_id, member_number, credential_id, handle,
     first_name, email, birth_month, birth_year, timezone)
-  VALUES (uid_a, 999003, public.credential_id(2026, 999003), 'harness_a',
+  VALUES (uid_a, 999003, public.credential_id(2026, 999003), 'harnessa',
     'A', 'a@example.test', 1::smallint, 1990::smallint, 'UTC')
   RETURNING id, member_number, credential_id INTO m_a, n_a, cred_a;
 
   INSERT INTO public.members (user_id, member_number, credential_id, handle,
     first_name, email, birth_month, birth_year, timezone)
-  VALUES (uid_b, 999004, public.credential_id(2026, 999004), 'harness_b',
+  VALUES (uid_b, 999004, public.credential_id(2026, 999004), 'harnessbb',
     'B', 'b@example.test', 1::smallint, 1990::smallint, 'UTC')
   RETURNING id INTO m_b;
 
@@ -132,9 +132,9 @@ BEGIN
   END IF;
 
   -- 6. Handle may be changed once, and the old one is retired ----------------
-  UPDATE public.members SET handle = 'harness_a2' WHERE id = m_a;
+  UPDATE public.members SET handle = 'harnessb' WHERE id = m_a;
   SELECT count(*) INTO cnt FROM public.reserved_handles
-   WHERE handle = 'harness_a'::citext AND reason = 'released';
+   WHERE handle = 'harnessa'::citext AND reason = 'released';
   IF cnt = 1 THEN
     log := log || E'\nPASS  released handle retained in reserved_handles';
   ELSE
@@ -142,7 +142,7 @@ BEGIN
   END IF;
 
   BEGIN
-    UPDATE public.members SET handle = 'harness_a3' WHERE id = m_a;
+    UPDATE public.members SET handle = 'harnessc' WHERE id = m_a;
     log := log || E'\nFAIL  second handle change accepted';
   EXCEPTION WHEN OTHERS THEN
     log := log || E'\nPASS  second handle change refused: ' || SQLERRM;
