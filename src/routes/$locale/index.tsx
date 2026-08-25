@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { useT } from "@/i18n";
 
 export const Route = createFileRoute("/$locale/")({
