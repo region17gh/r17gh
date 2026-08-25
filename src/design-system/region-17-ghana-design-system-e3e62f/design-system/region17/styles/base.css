@@ -1,0 +1,21 @@
+*, *::before, *::after { box-sizing: border-box }
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-body);
+  font: var(--type-body);
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4 { margin: 0; color: var(--text-strong); font-family: var(--font-display); font-weight: var(--weight-regular); letter-spacing: var(--tracking-title) }
+p { margin: 0; text-wrap: pretty }
+a { color: var(--text-link); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--text-link) 30%, transparent); transition: var(--transition-control) }
+a:hover { color: var(--text-link-hover); border-bottom-color: var(--gold-500) }
+:focus-visible { outline: none; box-shadow: var(--focus-ring) }
+::selection { background: var(--gold-300); color: var(--navy-900) }
+.r17-eyebrow { font: var(--type-eyebrow); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--text-muted) }
+.r17-cite { font: var(--type-cite); color: var(--text-cite) }
+.r17-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important } }
+.r17-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0 }

@@ -1,0 +1,1339 @@
+{
+  "meta": {
+    "name": "Region 17 Ghana | Design System",
+    "package": "@ws-37c4fa22bd73efa80998/bd5d2564-daa7-4bfa-8d5c-6d0249a703b5",
+    "version": "1.0.0",
+    "framework": "react",
+    "css_framework": "css-variables",
+    "starter_template": "custom_design_system",
+    "theme_files": [
+      "src/design-system/region17/styles/colors.css",
+      "src/design-system/region17/styles/regions.css",
+      "src/design-system/region17/styles/typography.css",
+      "src/design-system/region17/styles/spacing.css",
+      "src/design-system/region17/styles/elevation.css",
+      "src/design-system/region17/styles/motion.css",
+      "src/design-system/region17/styles/fonts.css"
+    ],
+    "source_type": "local",
+    "source_manifest": {
+      "#enrichment": "928e06f41a2bf187d5002ebbc8ea870a10d4b9d33bf3396da20815f70cecad3d",
+      ".dsignore": "2c7d76468c15bc0f1499420154f01ae3",
+      ".gitignore": "6059213806e442947666752f3db6bfdc",
+      ".lovable/meta.yaml": "741c3eafda0760cb63dd46f35131ad2e",
+      ".lovable/sources.yaml": "ce24fa186b046155193232040e1c94ae",
+      ".lovable/system.md": "2b0c251ecd288fa3e77b292fabfc8f91",
+      "README.md": "d19675c449605f23c7cfa133c69b398b",
+      "bunfig.toml": "25f4c8696b22b0943db7191e0cdf7942",
+      "eslint.config.js": "07a67437fb1a45ab36d6de0145ff09de",
+      "lovable.toml": "9636c1bf32f9901bfba4eabb92981217",
+      "mockupPreviewPlugin.ts": "08be2d15337c9b4145cc506cdf63a04e",
+      "package.json": "2c97aa1d17f2c80fbeede408b8f991cb",
+      "public/favicon.png": "df065ad8f912950871807bed83850c1a",
+      "src/assets/logos/region17-seal.png": "4124d34b91fc94d218a3bef45accd1bf",
+      "src/design-system/region17/assets/region17-seal.png": "4124d34b91fc94d218a3bef45accd1bf",
+      "src/design-system/region17/components/Badge.tsx": "2b938eded6a736b4206326c28b8fae75",
+      "src/design-system/region17/components/Button.tsx": "b97c27554517f829bff2b05d6aef7439",
+      "src/design-system/region17/components/Card.tsx": "f0463055aee55bae18c4d66dea289d76",
+      "src/design-system/region17/components/Checkbox.tsx": "962f8e25989002b6f020632311592c56",
+      "src/design-system/region17/components/ConfidenceFlag.tsx": "41be7561883e468e63b6443c67f16833",
+      "src/design-system/region17/components/Field.tsx": "34c14045d233a281c25308c5dc91ac62",
+      "src/design-system/region17/components/Icon.tsx": "b12dcd7d7d9b182b3018c9ac30b0f122",
+      "src/design-system/region17/components/IconButton.tsx": "878890e695244ba4300a2bd0ee07d937",
+      "src/design-system/region17/components/PanBand.tsx": "9b014aa7fcf8689f7d79b379e0c6a7ea",
+      "src/design-system/region17/components/RegionTag.tsx": "1fd194d4b4a1b20114f81aabff272c07",
+      "src/design-system/region17/components/Seal.tsx": "33c6df06b8c42b20dbb80c8a1c77f589",
+      "src/design-system/region17/components/SectionHeader.tsx": "ac4df6c3923f12bd64bbe2382bfa04db",
+      "src/design-system/region17/components/Statistic.tsx": "0b43dac98cdf7b9d55580461e05e3046",
+      "src/design-system/region17/data/regions.ts": "1fab69bddec7d0854adfeea2327e9978",
+      "src/design-system/region17/styles/base.css": "3815c6ffa73adf408b7d15f119b949e2",
+      "src/design-system/region17/styles/colors.css": "1da549034077c93a520e3d302de183fb",
+      "src/design-system/region17/styles/elevation.css": "a53d6bd8e900288c6c9affbd82cb797e",
+      "src/design-system/region17/styles/fonts.css": "12cbe7c5bf43d884d1bf7eb88dc05f73",
+      "src/design-system/region17/styles/index.css": "e733d73a55e09098a4831af4e43cc8b7",
+      "src/design-system/region17/styles/motion.css": "0c03a2efcb32c6eb57d48ff46c2c44e3",
+      "src/design-system/region17/styles/regions.css": "7c4b7b84c412d61a2f4bd237b500b373",
+      "src/design-system/region17/styles/spacing.css": "6863dfe56f688f1c3a0d04d1438e5511",
+      "src/design-system/region17/styles/typography.css": "9d2492871672598e1ec739cb186a5f80",
+      "src/index.ts": "f7d8a45b0430a26f86d5364fa88c5859",
+      "src/mockup-preview.d.ts": "38969839f35ce2966e32a9f01a5c09ea",
+      "src/routeTree.gen.ts": "d42637ceb75dcba7c2ae743391612b83",
+      "src/router.tsx": "8f905e713b0eba7fa8148b7995a708c9",
+      "src/routes/[__component].preview.$.tsx": "3a40af1fe37daff2e891175a6e6d4f99",
+      "src/routes/[__mockup].preview.$.tsx": "5d9f42470848aa60148f20f9580e240e",
+      "src/routes/__root.tsx": "94fc6d802c331e070d872f4d3566b90f",
+      "src/routes/colours.tsx": "252c8cd8732b474a8ca04aedb0cf79e4",
+      "src/routes/components.tsx": "d64c7e7eb8b4c8ea96b98e7446e9406e",
+      "src/routes/index.tsx": "c550e8a03933954ecb1747c36f060797",
+      "src/routes/typography.tsx": "36b31432cc12d93d0c09d21cef395f28",
+      "src/showcase/Shell.tsx": "6e6053c5407fde09b2575e279894edd7",
+      "src/styles.css": "5bab8827b43e474e7fefbb08c823ed65",
+      "tsconfig.json": "994abf64c2b9f78b568879f80ed0170e",
+      "vite.config.ts": "9f787596cc6f9a2aa3de5a021aed28f3",
+      "wrangler.jsonc": "680b897d48e44bcc65fe437c29b38f3b"
+    },
+    "pipeline_version": 8
+  },
+  "tokens": {
+    "color": [
+      {
+        "name": "--navy-900",
+        "raw": "#08152B",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-800",
+        "raw": "#0C1C36",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-700",
+        "raw": "#10233F",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-600",
+        "raw": "#1A3355",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-500",
+        "raw": "#2A476E",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-400",
+        "raw": "#4A648A",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-300",
+        "raw": "#8598B2",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-200",
+        "raw": "#C2CCD9",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--navy-100",
+        "raw": "#E4E9EF",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-700",
+        "raw": "#8A6D1C",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-600",
+        "raw": "#AE8A26",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-500",
+        "raw": "#D4AF37",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-400",
+        "raw": "#E2C566",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-300",
+        "raw": "#EFDCA1",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-200",
+        "raw": "#F7EDD1",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--gold-100",
+        "raw": "#FBF6E8",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--pan-red",
+        "raw": "#B32A21",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--pan-red-tint",
+        "raw": "#FBEDEB",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--pan-green",
+        "raw": "#1E6B43",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--pan-green-tint",
+        "raw": "#EAF3EE",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--pan-black",
+        "raw": "#14161A",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--paper-000",
+        "raw": "#FFFFFF",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--paper-050",
+        "raw": "#FBFAF7",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--paper-100",
+        "raw": "#F5F3EE",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--paper-200",
+        "raw": "#ECE8E0",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--paper-300",
+        "raw": "#DCD7CC",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--ink-900",
+        "raw": "#14161A",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--ink-700",
+        "raw": "#33383F",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--ink-500",
+        "raw": "#5C636D",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--ink-400",
+        "raw": "#7C848F",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--ink-300",
+        "raw": "#A3AAB4",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--border-hairline",
+        "raw": "#E3DFD6",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--border-default",
+        "raw": "#D6D0C4",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--border-inverse",
+        "raw": "rgba(212, 175, 55, 0.28)",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--focus-ring",
+        "raw": "0 0 0 2px var(--paper-050), 0 0 0 4px var(--gold-500)",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--focus-ring-inverse",
+        "raw": "0 0 0 2px var(--navy-700), 0 0 0 4px var(--gold-400)",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--region-volta",
+        "raw": "#1F3F6B",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-oti",
+        "raw": "#33587F",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-greater-accra",
+        "raw": "#1B4A5C",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-eastern",
+        "raw": "#47688F",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-western",
+        "raw": "#17503F",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-western-north",
+        "raw": "#2A6B4E",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-ahafo",
+        "raw": "#3C7A4A",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-central",
+        "raw": "#2E7368",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-northern",
+        "raw": "#8C6220",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-savannah",
+        "raw": "#8F7620",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-north-east",
+        "raw": "#A5711F",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-bono-east",
+        "raw": "#6E5A1C",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-ashanti",
+        "raw": "#7C3527",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-upper-east",
+        "raw": "#9A4A2B",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-upper-west",
+        "raw": "#A85E3A",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-bono",
+        "raw": "#6B3B33",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--overlay-glass",
+        "raw": "rgba(251, 250, 247, 0.78)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--overlay-glass-inverse",
+        "raw": "rgba(12, 28, 54, 0.7)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--overlay-modal",
+        "raw": "rgba(8, 21, 43, 0.44)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      }
+    ],
+    "spacing": [
+      {
+        "name": "--space-0",
+        "raw": "0",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-1",
+        "raw": "4px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-2",
+        "raw": "8px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-3",
+        "raw": "12px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-4",
+        "raw": "16px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-5",
+        "raw": "20px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-6",
+        "raw": "24px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-8",
+        "raw": "32px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-10",
+        "raw": "40px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-12",
+        "raw": "48px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-16",
+        "raw": "64px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-20",
+        "raw": "80px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-24",
+        "raw": "96px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--space-32",
+        "raw": "128px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--border-width",
+        "raw": "1px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--border-width-emphasis",
+        "raw": "2px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      }
+    ],
+    "typography": [
+      {
+        "name": "--text-on-inverse",
+        "raw": "#F2F5F9",
+        "source": "src/design-system/region17/styles/colors.css"
+      },
+      {
+        "name": "--text-display-1",
+        "raw": "76px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-display-2",
+        "raw": "58px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-display-3",
+        "raw": "44px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-title-1",
+        "raw": "34px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-title-2",
+        "raw": "26px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-title-3",
+        "raw": "21px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-body-lg",
+        "raw": "18px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-body",
+        "raw": "16px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-body-sm",
+        "raw": "14.5px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-meta",
+        "raw": "13px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-cite-size",
+        "raw": "12px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--text-eyebrow",
+        "raw": "11.5px",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--lh-body",
+        "raw": "1.6",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--tracking-body",
+        "raw": "0",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--font-display",
+        "raw": "\"Petrona\", \"Iowan Old Style\", Georgia, serif",
+        "source": "src/design-system/region17/styles/fonts.css"
+      },
+      {
+        "name": "--font-sans",
+        "raw": "\"Instrument Sans\", \"Helvetica Neue\", Arial, sans-serif",
+        "source": "src/design-system/region17/styles/fonts.css"
+      },
+      {
+        "name": "--font-mono",
+        "raw": "\"Roboto Mono\", ui-monospace, \"SF Mono\", Menlo, monospace",
+        "source": "src/design-system/region17/styles/fonts.css"
+      }
+    ],
+    "radius": [
+      {
+        "name": "--radius-xs",
+        "raw": "2px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--radius-sm",
+        "raw": "3px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--radius-md",
+        "raw": "5px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--radius-lg",
+        "raw": "8px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--radius-card",
+        "raw": "6px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--radius-pill",
+        "raw": "999px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      }
+    ],
+    "shadow": [
+      {
+        "name": "--shadow-none",
+        "raw": "none",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--shadow-hairline",
+        "raw": "0 0 0 1px var(--border-hairline)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--shadow-1",
+        "raw": "0 1px 2px rgba(16, 35, 63, 0.06)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--shadow-2",
+        "raw": "0 2px 6px rgba(16, 35, 63, 0.07), 0 1px 2px rgba(16, 35, 63, 0.05)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--shadow-3",
+        "raw": "0 8px 24px -6px rgba(16, 35, 63, 0.14), 0 2px 6px rgba(16, 35, 63, 0.06)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--shadow-4",
+        "raw": "0 24px 56px -16px rgba(16, 35, 63, 0.24), 0 4px 12px rgba(16, 35, 63, 0.08)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--shadow-inset-top",
+        "raw": "inset 0 1px 0 rgba(255, 255, 255, 0.7)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      }
+    ],
+    "other": [
+      {
+        "name": "--region-volta-tint",
+        "raw": "color-mix(in oklab, var(--region-volta) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-oti-tint",
+        "raw": "color-mix(in oklab, var(--region-oti) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-greater-accra-tint",
+        "raw": "color-mix(in oklab, var(--region-greater-accra) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-eastern-tint",
+        "raw": "color-mix(in oklab, var(--region-eastern) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-western-tint",
+        "raw": "color-mix(in oklab, var(--region-western) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-western-north-tint",
+        "raw": "color-mix(in oklab, var(--region-western-north) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-ahafo-tint",
+        "raw": "color-mix(in oklab, var(--region-ahafo) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-central-tint",
+        "raw": "color-mix(in oklab, var(--region-central) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-northern-tint",
+        "raw": "color-mix(in oklab, var(--region-northern) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-savannah-tint",
+        "raw": "color-mix(in oklab, var(--region-savannah) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-north-east-tint",
+        "raw": "color-mix(in oklab, var(--region-north-east) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-bono-east-tint",
+        "raw": "color-mix(in oklab, var(--region-bono-east) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-ashanti-tint",
+        "raw": "color-mix(in oklab, var(--region-ashanti) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-upper-east-tint",
+        "raw": "color-mix(in oklab, var(--region-upper-east) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-upper-west-tint",
+        "raw": "color-mix(in oklab, var(--region-upper-west) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--region-bono-tint",
+        "raw": "color-mix(in oklab, var(--region-bono) 12%, var(--paper-000))",
+        "source": "src/design-system/region17/styles/regions.css"
+      },
+      {
+        "name": "--lh-display",
+        "raw": "1.06",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--lh-title",
+        "raw": "1.18",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--lh-tight",
+        "raw": "1.35",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--weight-light",
+        "raw": "300",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--weight-regular",
+        "raw": "400",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--weight-medium",
+        "raw": "500",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--weight-semibold",
+        "raw": "600",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--weight-bold",
+        "raw": "700",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--tracking-display",
+        "raw": "-0.018em",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--tracking-title",
+        "raw": "-0.01em",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--tracking-meta",
+        "raw": "0.01em",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--tracking-eyebrow",
+        "raw": "0.14em",
+        "source": "src/design-system/region17/styles/typography.css"
+      },
+      {
+        "name": "--page-max",
+        "raw": "1240px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--measure-prose",
+        "raw": "68ch",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--measure-narrow",
+        "raw": "52ch",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--control-sm",
+        "raw": "32px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--control-md",
+        "raw": "40px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--control-lg",
+        "raw": "48px",
+        "source": "src/design-system/region17/styles/spacing.css"
+      },
+      {
+        "name": "--scrim-bottom",
+        "raw": "linear-gradient(to top, rgba(8, 21, 43, 0.92) 0%, rgba(8, 21, 43, 0.7) 34%, rgba(8, 21, 43, 0) 82%)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--scrim-left",
+        "raw": "linear-gradient(to right, rgba(8, 21, 43, 0.9) 0%, rgba(8, 21, 43, 0.55) 45%, rgba(8, 21, 43, 0) 90%)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--blur-glass",
+        "raw": "saturate(140%) blur(14px)",
+        "source": "src/design-system/region17/styles/elevation.css"
+      },
+      {
+        "name": "--dur-instant",
+        "raw": "90ms",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--dur-fast",
+        "raw": "140ms",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--dur-base",
+        "raw": "220ms",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--dur-slow",
+        "raw": "380ms",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--dur-reveal",
+        "raw": "620ms",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--ease-standard",
+        "raw": "cubic-bezier(0.2, 0, 0.2, 1)",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--ease-out",
+        "raw": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--ease-in",
+        "raw": "cubic-bezier(0.5, 0, 0.9, 0.4)",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--transition-control",
+        "raw": "color var(--dur-fast) var(--ease-standard),\n    background-color var(--dur-fast) var(--ease-standard),\n    border-color var(--dur-fast) var(--ease-standard),\n    box-shadow var(--dur-fast) var(--ease-standard)",
+        "source": "src/design-system/region17/styles/motion.css"
+      },
+      {
+        "name": "--transition-surface",
+        "raw": "box-shadow var(--dur-base) var(--ease-standard),\n    border-color var(--dur-base) var(--ease-standard),\n    transform var(--dur-base) var(--ease-standard)",
+        "source": "src/design-system/region17/styles/motion.css"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Icon",
+      "file": "src/design-system/region17/components/Icon",
+      "import_path": "",
+      "props": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "default": "18"
+        },
+        {
+          "name": "strokeWidth",
+          "type": "enum",
+          "values": [
+            "thin",
+            "regular"
+          ],
+          "default": "regular"
+        }
+      ]
+    },
+    {
+      "name": "Button",
+      "file": "src/design-system/region17/components/Button",
+      "import_path": "",
+      "props": [
+        {
+          "name": "variant",
+          "type": "enum",
+          "values": [
+            "primary",
+            "gold",
+            "secondary",
+            "ghost",
+            "inverse",
+            "danger"
+          ],
+          "default": "primary"
+        },
+        {
+          "name": "size",
+          "type": "enum",
+          "values": [
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "md"
+        },
+        {
+          "name": "icon",
+          "type": "string"
+        },
+        {
+          "name": "iconAfter",
+          "type": "string"
+        },
+        {
+          "name": "fullWidth",
+          "type": "boolean",
+          "default": "false"
+        },
+        {
+          "name": "href",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "values": [
+            "button",
+            "submit",
+            "reset"
+          ],
+          "default": "button"
+        }
+      ]
+    },
+    {
+      "name": "IconButton",
+      "file": "src/design-system/region17/components/IconButton",
+      "import_path": "",
+      "props": [
+        {
+          "name": "icon",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "size",
+          "type": "enum",
+          "values": [
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "md"
+        },
+        {
+          "name": "variant",
+          "type": "enum",
+          "values": [
+            "primary",
+            "secondary",
+            "ghost",
+            "inverse"
+          ],
+          "default": "secondary"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "values": [
+            "button",
+            "submit",
+            "reset"
+          ],
+          "default": "button"
+        }
+      ]
+    },
+    {
+      "name": "Field",
+      "file": "src/design-system/region17/components/Field",
+      "import_path": "",
+      "props": [
+        {
+          "name": "label",
+          "type": "any"
+        },
+        {
+          "name": "hint",
+          "type": "any"
+        },
+        {
+          "name": "error",
+          "type": "any"
+        },
+        {
+          "name": "required",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "name": "Input",
+      "file": "src/design-system/region17/components/Field",
+      "import_path": "",
+      "props": [
+        {
+          "name": "icon",
+          "type": "string"
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Textarea",
+      "file": "src/design-system/region17/components/Field",
+      "import_path": "",
+      "props": [
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Select",
+      "file": "src/design-system/region17/components/Field",
+      "import_path": "",
+      "props": [
+        {
+          "name": "options",
+          "type": "any"
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Checkbox",
+      "file": "src/design-system/region17/components/Checkbox",
+      "import_path": ""
+    },
+    {
+      "name": "Radio",
+      "file": "src/design-system/region17/components/Checkbox",
+      "import_path": ""
+    },
+    {
+      "name": "Switch",
+      "file": "src/design-system/region17/components/Checkbox",
+      "import_path": "",
+      "props": [
+        {
+          "name": "label",
+          "type": "any"
+        }
+      ]
+    },
+    {
+      "name": "Badge",
+      "file": "src/design-system/region17/components/Badge",
+      "import_path": "",
+      "props": [
+        {
+          "name": "tone",
+          "type": "enum",
+          "values": [
+            "neutral",
+            "navy",
+            "gold",
+            "verified",
+            "estimate",
+            "projected",
+            "alert",
+            "inverse"
+          ],
+          "default": "neutral"
+        },
+        {
+          "name": "icon",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "Tag",
+      "file": "src/design-system/region17/components/Badge",
+      "import_path": "",
+      "props": [
+        {
+          "name": "color",
+          "type": "string",
+          "default": "var(--navy-600)"
+        },
+        {
+          "name": "icon",
+          "type": "string"
+        },
+        {
+          "name": "onRemove",
+          "type": "function"
+        },
+        {
+          "name": "removeLabel",
+          "type": "string",
+          "default": "Remove"
+        }
+      ]
+    },
+    {
+      "name": "Card",
+      "file": "src/design-system/region17/components/Card",
+      "import_path": "",
+      "props": [
+        {
+          "name": "elevation",
+          "type": "any",
+          "default": "1"
+        },
+        {
+          "name": "accent",
+          "type": "string"
+        },
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "default": "false"
+        },
+        {
+          "name": "padding",
+          "type": "string",
+          "default": "var(--space-6)"
+        }
+      ]
+    },
+    {
+      "name": "ConfidenceFlag",
+      "file": "src/design-system/region17/components/ConfidenceFlag",
+      "import_path": "",
+      "props": [
+        {
+          "name": "level",
+          "type": "enum",
+          "values": [
+            "verified",
+            "estimate",
+            "projected",
+            "disputed"
+          ],
+          "default": "verified"
+        },
+        {
+          "name": "compact",
+          "type": "boolean",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Statistic",
+      "file": "src/design-system/region17/components/Statistic",
+      "import_path": "",
+      "props": [
+        {
+          "name": "value",
+          "type": "any",
+          "required": true
+        },
+        {
+          "name": "unit",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "type": "any",
+          "required": true
+        },
+        {
+          "name": "year",
+          "type": "any"
+        },
+        {
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "name": "confidence",
+          "type": "any",
+          "default": "verified"
+        },
+        {
+          "name": "accent",
+          "type": "string"
+        },
+        {
+          "name": "align",
+          "type": "enum",
+          "values": [
+            "left",
+            "center"
+          ],
+          "default": "left"
+        },
+        {
+          "name": "size",
+          "type": "enum",
+          "values": [
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "md"
+        }
+      ]
+    },
+    {
+      "name": "StatisticBand",
+      "file": "src/design-system/region17/components/Statistic",
+      "import_path": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "any",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "RegionTag",
+      "file": "src/design-system/region17/components/RegionTag",
+      "import_path": "",
+      "props": [
+        {
+          "name": "slug",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "default": "arrow-right"
+        },
+        {
+          "name": "size",
+          "type": "enum",
+          "values": [
+            "sm",
+            "md"
+          ],
+          "default": "md"
+        },
+        {
+          "name": "showDot",
+          "type": "boolean",
+          "default": "true"
+        },
+        {
+          "name": "href",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "SectionHeader",
+      "file": "src/design-system/region17/components/SectionHeader",
+      "import_path": "",
+      "props": [
+        {
+          "name": "eyebrow",
+          "type": "any"
+        },
+        {
+          "name": "title",
+          "type": "any",
+          "required": true
+        },
+        {
+          "name": "lede",
+          "type": "any"
+        },
+        {
+          "name": "align",
+          "type": "enum",
+          "values": [
+            "left",
+            "center"
+          ],
+          "default": "left"
+        },
+        {
+          "name": "inverse",
+          "type": "boolean",
+          "default": "false"
+        },
+        {
+          "name": "action",
+          "type": "any"
+        }
+      ]
+    },
+    {
+      "name": "Seal",
+      "file": "src/design-system/region17/components/Seal",
+      "import_path": "",
+      "props": [
+        {
+          "name": "size",
+          "type": "number",
+          "default": "64"
+        },
+        {
+          "name": "alt",
+          "type": "string",
+          "default": "Seal of the 17th Region of Ghana"
+        }
+      ]
+    },
+    {
+      "name": "PanBand",
+      "file": "src/design-system/region17/components/PanBand",
+      "import_path": "",
+      "props": [
+        {
+          "name": "height",
+          "type": "number",
+          "default": "4"
+        },
+        {
+          "name": "order",
+          "type": "any"
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "file": "src/assets/logos/region17-seal.png",
+      "kind": "logo",
+      "format": "png"
+    }
+  ]
+}

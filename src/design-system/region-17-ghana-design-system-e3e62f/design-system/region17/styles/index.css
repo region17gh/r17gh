@@ -1,0 +1,10 @@
+/* Region 17 design system — single theme entry point.
+   Import this once at the root of a consuming app. */
+@import "./fonts.css";
+@import "./colors.css";
+@import "./regions.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./elevation.css";
+@import "./motion.css";
+@import "./base.css";

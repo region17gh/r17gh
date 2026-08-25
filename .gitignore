@@ -33,3 +33,6 @@ src/.generated/
 *.njsproj
 *.sln
 *.sw?
+
+# Lovable sandbox workspace directory
+.workspace/

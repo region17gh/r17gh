@@ -1,0 +1,20 @@
+:root {
+  /* Motion is short and un-bouncy. Nothing overshoots; nothing announces itself. */
+  --dur-instant: 90ms; /* @kind other */
+  --dur-fast: 140ms; /* @kind other */
+  --dur-base: 220ms; /* @kind other */
+  --dur-slow: 380ms; /* @kind other */
+  --dur-reveal: 620ms; /* @kind other */
+
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-in: cubic-bezier(0.5, 0, 0.9, 0.4); /* @kind other */
+
+  --transition-control: color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard); /* @kind other */
+  --transition-surface: box-shadow var(--dur-base) var(--ease-standard),
+    border-color var(--dur-base) var(--ease-standard),
+    transform var(--dur-base) var(--ease-standard); /* @kind other */
+}

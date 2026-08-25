@@ -1,0 +1,52 @@
+/* Region coding system — Ghana's 16 regions.
+   Four hue families, four values each, drawn from the seal's palette rather than
+   16 arbitrary colors:
+     Corridor blues  → Volta basin + the coastal capital
+     Forest greens   → the western forest belt + central coast
+     Savanna golds   → the northern savanna
+     Clay reds       → Ashanti + the upper regions
+   Every value sits in the same tonal band, so a 16-region map reads as one
+   family. Use --region-*-tint for fills, the base value for strokes, tags and
+   page identity. */
+:root {
+  --region-volta: #1F3F6B;
+  --region-oti: #33587F;
+  --region-greater-accra: #1B4A5C;
+  --region-eastern: #47688F;
+
+  --region-western: #17503F;
+  --region-western-north: #2A6B4E;
+  --region-ahafo: #3C7A4A;
+  --region-central: #2E7368;
+
+  --region-northern: #8C6220;
+  --region-savannah: #8F7620;
+  --region-north-east: #A5711F;
+  --region-bono-east: #6E5A1C;
+
+  --region-ashanti: #7C3527;
+  --region-upper-east: #9A4A2B;
+  --region-upper-west: #A85E3A;
+  --region-bono: #6B3B33;
+
+  --region-volta-tint: color-mix(in oklab, var(--region-volta) 12%, var(--paper-000));
+  --region-oti-tint: color-mix(in oklab, var(--region-oti) 12%, var(--paper-000));
+  --region-greater-accra-tint: color-mix(in oklab, var(--region-greater-accra) 12%, var(--paper-000));
+  --region-eastern-tint: color-mix(in oklab, var(--region-eastern) 12%, var(--paper-000));
+  --region-western-tint: color-mix(in oklab, var(--region-western) 12%, var(--paper-000));
+  --region-western-north-tint: color-mix(in oklab, var(--region-western-north) 12%, var(--paper-000));
+  --region-ahafo-tint: color-mix(in oklab, var(--region-ahafo) 12%, var(--paper-000));
+  --region-central-tint: color-mix(in oklab, var(--region-central) 12%, var(--paper-000));
+  --region-northern-tint: color-mix(in oklab, var(--region-northern) 12%, var(--paper-000));
+  --region-savannah-tint: color-mix(in oklab, var(--region-savannah) 12%, var(--paper-000));
+  --region-north-east-tint: color-mix(in oklab, var(--region-north-east) 12%, var(--paper-000));
+  --region-bono-east-tint: color-mix(in oklab, var(--region-bono-east) 12%, var(--paper-000));
+  --region-ashanti-tint: color-mix(in oklab, var(--region-ashanti) 12%, var(--paper-000));
+  --region-upper-east-tint: color-mix(in oklab, var(--region-upper-east) 12%, var(--paper-000));
+  --region-upper-west-tint: color-mix(in oklab, var(--region-upper-west) 12%, var(--paper-000));
+  --region-bono-tint: color-mix(in oklab, var(--region-bono) 12%, var(--paper-000));
+
+  /* Set --region-accent on a region page root to theme the whole view. */
+  --region-accent: var(--navy-700);
+  --region-accent-tint: var(--navy-100);
+}

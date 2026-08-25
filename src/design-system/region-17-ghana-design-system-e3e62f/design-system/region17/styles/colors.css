@@ -1,0 +1,80 @@
+:root {
+  /* ── Core brand: taken from the seal ─────────────────────────── */
+  --navy-900: #08152B;
+  --navy-800: #0C1C36;
+  --navy-700: #10233F; /* Sovereign Navy — the brand anchor */
+  --navy-600: #1A3355;
+  --navy-500: #2A476E;
+  --navy-400: #4A648A;
+  --navy-300: #8598B2;
+  --navy-200: #C2CCD9;
+  --navy-100: #E4E9EF;
+
+  --gold-700: #8A6D1C;
+  --gold-600: #AE8A26;
+  --gold-500: #D4AF37; /* Seal Gold */
+  --gold-400: #E2C566;
+  --gold-300: #EFDCA1;
+  --gold-200: #F7EDD1;
+  --gold-100: #FBF6E8;
+
+  /* Pan-African accents. Used sparingly: state, emphasis, region coding.
+     Never all four at equal weight in one composition. */
+  --pan-red: #B32A21;
+  --pan-red-tint: #FBEDEB;
+  --pan-green: #1E6B43;
+  --pan-green-tint: #EAF3EE;
+  --pan-black: #14161A;
+
+  /* ── Neutrals: warm paper, not grey ──────────────────────────── */
+  --paper-000: #FFFFFF;
+  --paper-050: #FBFAF7; /* page ground */
+  --paper-100: #F5F3EE;
+  --paper-200: #ECE8E0;
+  --paper-300: #DCD7CC;
+  --ink-900: #14161A;
+  --ink-700: #33383F;
+  --ink-500: #5C636D;
+  --ink-400: #7C848F;
+  --ink-300: #A3AAB4;
+
+  /* ── Semantic surfaces ──────────────────────────────────────── */
+  --surface-page: var(--paper-050);
+  --surface-card: var(--paper-000);
+  --surface-sunken: var(--paper-100);
+  --surface-inverse: var(--navy-700);
+  --surface-inverse-deep: var(--navy-900);
+  --surface-accent: var(--gold-100);
+
+  /* ── Semantic text ──────────────────────────────────────────── */
+  --text-strong: var(--navy-700);
+  --text-body: var(--ink-700);
+  --text-muted: var(--ink-500);
+  --text-faint: var(--ink-400);
+  --text-on-inverse: #F2F5F9;
+  --text-on-inverse-muted: var(--navy-300);
+  --text-link: var(--navy-600);
+  --text-link-hover: var(--gold-700);
+  --text-cite: var(--ink-400);
+
+  /* ── Lines ──────────────────────────────────────────────────── */
+  --border-hairline: #E3DFD6;
+  --border-default: #D6D0C4;
+  --border-strong: var(--navy-200);
+  --border-inverse: rgba(212, 175, 55, 0.28);
+  --rule-gold: var(--gold-500);
+
+  /* ── Status / data confidence ───────────────────────────────── */
+  --status-verified: var(--pan-green);
+  --status-verified-tint: var(--pan-green-tint);
+  --status-estimate: var(--gold-600);
+  --status-estimate-tint: var(--gold-100);
+  --status-projected: var(--navy-400);
+  --status-projected-tint: var(--navy-100);
+  --status-alert: var(--pan-red);
+  --status-alert-tint: var(--pan-red-tint);
+
+  /* ── Focus ──────────────────────────────────────────────────── */
+  --focus-ring: 0 0 0 2px var(--paper-050), 0 0 0 4px var(--gold-500);
+  --focus-ring-inverse: 0 0 0 2px var(--navy-700), 0 0 0 4px var(--gold-400);
+}

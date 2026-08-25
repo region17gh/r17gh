@@ -1,0 +1,20 @@
+:root {
+  /* Shadows are navy-tinted and quiet. Region 17 elevates with hairlines first,
+     shadow second — a card without a border is rare. */
+  --shadow-none: none;
+  --shadow-hairline: 0 0 0 1px var(--border-hairline);
+  --shadow-1: 0 1px 2px rgba(16, 35, 63, 0.06);
+  --shadow-2: 0 2px 6px rgba(16, 35, 63, 0.07), 0 1px 2px rgba(16, 35, 63, 0.05);
+  --shadow-3: 0 8px 24px -6px rgba(16, 35, 63, 0.14), 0 2px 6px rgba(16, 35, 63, 0.06);
+  --shadow-4: 0 24px 56px -16px rgba(16, 35, 63, 0.24), 0 4px 12px rgba(16, 35, 63, 0.08);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  /* Protection gradient for text over photography */
+  --scrim-bottom: linear-gradient(to top, rgba(8, 21, 43, 0.92) 0%, rgba(8, 21, 43, 0.7) 34%, rgba(8, 21, 43, 0) 82%); /* @kind other */
+  --scrim-left: linear-gradient(to right, rgba(8, 21, 43, 0.9) 0%, rgba(8, 21, 43, 0.55) 45%, rgba(8, 21, 43, 0) 90%); /* @kind other */
+
+  --blur-glass: saturate(140%) blur(14px); /* @kind other */
+  --overlay-glass: rgba(251, 250, 247, 0.78);
+  --overlay-glass-inverse: rgba(12, 28, 54, 0.7);
+  --overlay-modal: rgba(8, 21, 43, 0.44);
+}

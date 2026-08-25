@@ -1,0 +1,46 @@
+:root {
+  /* Scale — 1920/desktop reference. Display tier is serif, everything else sans. */
+  --text-display-1: 76px;
+  --text-display-2: 58px;
+  --text-display-3: 44px;
+  --text-title-1: 34px;
+  --text-title-2: 26px;
+  --text-title-3: 21px;
+  --text-body-lg: 18px;
+  --text-body: 16px;
+  --text-body-sm: 14.5px;
+  --text-meta: 13px;
+  --text-cite-size: 12px; /* citation tier — never smaller */
+  --text-eyebrow: 11.5px;
+
+  --lh-display: 1.06; /* @kind other */
+  --lh-title: 1.18; /* @kind other */
+  --lh-body: 1.6; /* @kind other */
+  --lh-tight: 1.35; /* @kind other */
+
+  --weight-light: 300; /* @kind other */
+  --weight-regular: 400; /* @kind other */
+  --weight-medium: 500; /* @kind other */
+  --weight-semibold: 600; /* @kind other */
+  --weight-bold: 700; /* @kind other */
+
+  --tracking-display: -0.018em; /* @kind other */
+  --tracking-title: -0.01em; /* @kind other */
+  --tracking-body: 0; /* @kind other */
+  --tracking-meta: 0.01em; /* @kind other */
+  --tracking-eyebrow: 0.14em; /* @kind other */
+
+  /* Semantic type roles */
+  --type-hero: var(--weight-regular) var(--text-display-1) / var(--lh-display) var(--font-display);
+  --type-display: var(--weight-regular) var(--text-display-2) / var(--lh-display) var(--font-display);
+  --type-section: var(--weight-regular) var(--text-display-3) / var(--lh-title) var(--font-display);
+  --type-title: var(--weight-medium) var(--text-title-2) / var(--lh-title) var(--font-display);
+  --type-subtitle: var(--weight-semibold) var(--text-title-3) / var(--lh-tight) var(--font-sans);
+  --type-body: var(--weight-regular) var(--text-body) / var(--lh-body) var(--font-sans);
+  --type-body-lg: var(--weight-regular) var(--text-body-lg) / var(--lh-body) var(--font-sans);
+  --type-ui: var(--weight-medium) var(--text-body-sm) / 1.4 var(--font-sans);
+  --type-meta: var(--weight-medium) var(--text-meta) / 1.45 var(--font-sans);
+  --type-cite: var(--weight-regular) var(--text-cite-size) / 1.5 var(--font-mono);
+  --type-figure: var(--weight-medium) var(--text-title-1) / 1.1 var(--font-mono);
+  --type-eyebrow: var(--weight-semibold) var(--text-eyebrow) / 1.2 var(--font-sans);
+}

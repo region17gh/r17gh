@@ -1,0 +1,40 @@
+:root {
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* Layout */
+  --page-max: 1240px; /* @kind spacing */
+  --measure-prose: 68ch; /* @kind spacing */
+  --measure-narrow: 52ch; /* @kind spacing */
+  --gutter: var(--space-6);
+  --gutter-lg: var(--space-10);
+  --section-y: var(--space-24);
+  --section-y-sm: var(--space-16);
+
+  /* Radii — institutional, tight. Nothing pill-shaped except tags and avatars. */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-card: 6px;
+  --radius-pill: 999px;
+
+  /* Control heights */
+  --control-sm: 32px; /* @kind spacing */
+  --control-md: 40px; /* @kind spacing */
+  --control-lg: 48px; /* @kind spacing */
+  --border-width: 1px;
+  --border-width-emphasis: 2px;
+}

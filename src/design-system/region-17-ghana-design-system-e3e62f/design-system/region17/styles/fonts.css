@@ -1,0 +1,12 @@
+/* Region 17 typefaces.
+   No licensed binaries were supplied, so the system is pinned to Google Fonts
+   equivalents: Petrona = institutional display serif; Instrument Sans =
+   interface/data sans; Roboto Mono = figures, citations, ledger rows.
+   The families are loaded with a <link> in the app shell (never an @import of a
+   remote URL). If Region 17 licenses a bespoke serif, add local @font-face rules
+   and leave the --font-* aliases untouched. */
+:root {
+  --font-display: "Petrona", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
