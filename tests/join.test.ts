@@ -7,6 +7,7 @@
  * the tests out of that program leaves `tsc --noEmit` clean over the app.
  */
 import { describe, expect, test, beforeEach } from "bun:test";
+import { readFileSync, readdirSync } from "node:fs";
 
 import { MONTHS, birthYears, checkAge } from "../src/lib/join/age";
 import {
@@ -35,6 +36,23 @@ import { CONNECTIONS, CONSENTS, GENDERS } from "../src/lib/join/options";
 import { REGIONS_ALPHABETICAL } from "../src/lib/regions";
 import en from "../src/i18n/locales/en.json";
 import { formatMemberNumber } from "../src/components/join/memberNumber";
+
+/** Every TypeScript source file under a directory, as repo-relative paths. */
+function sourceFiles(root: string): string[] {
+  const base = new URL(`../${root}/`, import.meta.url);
+  const found: string[] = [];
+  for (const entry of readdirSync(base, { withFileTypes: true })) {
+    const relative = `${root}/${entry.name}`;
+    if (entry.isDirectory()) found.push(...sourceFiles(relative));
+    else if (/\.tsx?$/.test(entry.name)) found.push(relative);
+  }
+  return found.sort();
+}
+
+/** A source file, read as text, for the assertions about where code sits. */
+function readSource(relativePath: string): string {
+  return readFileSync(new URL(`../${relativePath}`, import.meta.url), "utf8");
+}
 
 /** A browser-shaped local storage, so the draft helpers run their real paths. */
 function installStorage() {
@@ -528,5 +546,110 @@ describe("the one-time code, and the length nobody in the UI gets to decide", ()
 
   test("the label asks for the code without describing its shape", () => {
     expect(en.join.step1.codeLabel).toBe("Enter the code from your email");
+  });
+});
+
+describe("the challenge that stands in front of a member number", () => {
+  /**
+   * The gate this suite exists for: sequential member numbers during the
+   * founding window are scriptable, and a challenge checked after
+   * `reserve_member_number()` would let a bot burn the low range by failing it.
+   * The assertions below are about placement, not about Cloudflare. They are
+   * the cheapest thing that catches a refactor moving the check.
+   */
+
+  const membership = readSource("src/server/membership.ts");
+  const turnstile = readSource("src/server/turnstile.server.ts");
+  const widget = readSource("src/components/join/Challenge.tsx");
+
+  test("reserve_member_number() has exactly one call site in the whole of src", () => {
+    // The whole control rests on this. A second call site is a second door,
+    // and it would not have the challenge in front of it.
+    const callers = sourceFiles("src").filter((path) =>
+      /rpc\(\s*["']reserve_member_number["']/.test(readSource(path)),
+    );
+    expect(callers).toEqual(["src/server/membership.ts"]);
+    expect(membership.match(/rpc\(\s*["']reserve_member_number["']/g)).toHaveLength(1);
+  });
+
+  test("the challenge is verified before the number is reserved, in the same function", () => {
+    const body = membership.slice(membership.indexOf("async function issueReservation"));
+    const verified = body.indexOf("verifyChallenge");
+    const reserved = body.indexOf("reserve_member_number");
+    expect(verified).toBeGreaterThan(-1);
+    expect(reserved).toBeGreaterThan(-1);
+    expect(verified).toBeLessThan(reserved);
+  });
+
+  test("a refused challenge returns before anything is reserved", () => {
+    expect(membership).toContain("if (!verdict.ok) return { issued: false, problem: verdict.problem }");
+  });
+
+  test("the stub is gated on a build-time constant, not only an environment variable", () => {
+    // `import.meta.env.DEV` is replaced by `false` when Vite builds for
+    // production, so the branch is absent from the bundle rather than merely
+    // switched off. An env-only gate could be flipped on a live deployment.
+    expect(turnstile).toContain("import.meta.env.DEV");
+    expect(turnstile).toMatch(/const STUB_ALLOWED[^\n]*\n?[^\n]*import\.meta\.env\.DEV/);
+    expect(widget).toContain("import.meta.env.DEV");
+  });
+
+  test("every path that is not an explicit success refuses", () => {
+    // A missing secret, an unreachable Cloudflare, and an unparseable response
+    // all fail closed. A challenge that cannot be checked has not been passed.
+    expect(turnstile).toContain("if (!secret)");
+    expect(turnstile).toContain('return { ok: false, problem: "unavailable" }');
+    expect(turnstile).toContain("payload.success !== true");
+  });
+
+  test("the sentinel is refused outright by a build that does not honour it", () => {
+    const guard = turnstile.indexOf("Stub token presented to a build that does not honour it");
+    expect(guard).toBeGreaterThan(turnstile.indexOf("if (STUB_ALLOWED &&"));
+  });
+
+  test("the secret's value never reaches a log, a message, or the verdict", () => {
+    // The variable name appears in a "this is not set" line, which is the
+    // point of that line. What must never appear is the value it holds.
+    expect(turnstile).not.toMatch(/\$\{\s*secret\s*\}/);
+    expect(turnstile).not.toMatch(/console\.\w+\([^)]*\bsecret\b\s*[,)]/);
+    // It leaves this module in exactly one direction: the POST body to
+    // Cloudflare. Nothing in the returned verdict can carry it.
+    expect(turnstile.match(/\bsecret\b(?!_KEY)/g)?.length).toBeGreaterThan(0);
+    expect(turnstile).toContain("new URLSearchParams({ secret, response: supplied })");
+  });
+
+  test("failure copy exists for every problem the widget can report", () => {
+    const challenge = en.join.challenge as Record<string, string>;
+    for (const problem of ["unavailable", "failed", "expired"]) {
+      expect(challenge[problem]).toBeTruthy();
+    }
+    expect(challenge["retry"]).toBeTruthy();
+    expect(challenge["kept"]).toBeTruthy();
+  });
+
+  test("the copy says a number was not taken, and never blames the member", () => {
+    const challenge = en.join.challenge as Record<string, string>;
+    for (const problem of ["failed", "expired"]) {
+      expect(challenge[problem]?.toLowerCase()).toContain("no number was taken");
+    }
+    const blame = /you failed|your fault|you did something|prove you|bot/i;
+    for (const value of Object.values(challenge)) {
+      expect(value).not.toMatch(blame);
+    }
+  });
+
+  test("the copy keeps the house voice: no dashes as punctuation, no banned words", () => {
+    const banned =
+      /\b(unlock|empower|seamless|revolutionize|revolutionise|world-class|leverage|journey|elevate)\b/i;
+    for (const value of Object.values(en.join.challenge as Record<string, string>)) {
+      expect(value).not.toMatch(/[—–]/);
+      expect(value).not.toMatch(banned);
+    }
+  });
+
+  test("the stub notice names itself as a stub, so preview cannot be mistaken for live", () => {
+    const stub = (en.join.challenge as Record<string, string>)["stub"] ?? "";
+    expect(stub.toLowerCase()).toContain("stubbed");
+    expect(stub.toLowerCase()).toContain("production");
   });
 });

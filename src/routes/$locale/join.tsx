@@ -1,6 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { Challenge, type ChallengeHandle } from "@/components/join/Challenge";
 import { Confetti } from "@/components/join/Confetti";
 import { Issued } from "@/components/join/Issued";
 import { Progress } from "@/components/join/Progress";
@@ -13,11 +14,12 @@ import { StepNeedBring } from "@/components/join/steps/StepNeedBring";
 import { StepWhereYouLive, type Country } from "@/components/join/steps/StepWhereYouLive";
 import { StepWhoYouAre } from "@/components/join/steps/StepWhoYouAre";
 import { STEP_TOTAL } from "@/components/join/steps/shared";
-import { PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import { Button, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/linkError";
 import { checkAge } from "@/lib/join/age";
+import type { ChallengeProblem } from "@/lib/security/turnstile";
 import {
   clearDraft,
   emptyDraft,
@@ -107,6 +109,7 @@ function JoinPage() {
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [reserving, setReserving] = useState(false);
   const [lapse, setLapse] = useState<LapseReason | null>(null);
+  const [challengeProblem, setChallengeProblem] = useState<ChallengeProblem | null>(null);
   const [resumed, setResumed] = useState(false);
   const [affirmed, setAffirmed] = useState(false);
   const [handleProblem, setHandleProblem] = useState<HandleProblem | "taken" | "reserved" | null>(
@@ -122,6 +125,7 @@ function JoinPage() {
   const [cutoff, setCutoff] = useState<Date | null>(null);
   const [retrying, setRetrying] = useState(false);
   const versionsRef = useRef<PolicyVersions | null>(null);
+  const challengeRef = useRef<ChallengeHandle | null>(null);
 
   /**
    * The screen actually shown for step 1.
@@ -153,18 +157,39 @@ function JoinPage() {
     [navigate],
   );
 
-  /** Claims or re-checks the member number. Also catches an account that already joined. */
+  /**
+   * Claims or re-checks the member number. Also catches an account that already
+   * joined.
+   *
+   * The challenge token is fetched before the call and thrown away after it,
+   * whatever the answer was: Turnstile tokens are single-use, so a token that
+   * has been sent once is spent whether or not it was accepted. The server is
+   * the thing that decides; this only carries the answer.
+   */
   const syncReservation = useCallback(
     async (current: JoinDraft) => {
       setReserving(true);
       try {
+        const challengeToken = (await challengeRef.current?.token()) ?? null;
         const result = await ensureReservation({
-          data: { heldNumber: current.reservation?.memberNumber ?? null },
+          data: {
+            heldNumber: current.reservation?.memberNumber ?? null,
+            challengeToken,
+          },
         });
+        challengeRef.current?.reset();
+
         if (result.status === "already_member") {
           void navigate({ to: localePath(locale, "/home") });
           return null;
         }
+        if (result.status === "challenge_refused") {
+          // Nothing was reserved, which is the point. The member is told what
+          // happened and given the check again, not a raw error.
+          setChallengeProblem(result.problem);
+          return null;
+        }
+        setChallengeProblem(null);
         if (result.status === "reissued") setLapse(result.reason ?? "unknown");
         else setLapse(null);
 
@@ -184,6 +209,13 @@ function JoinPage() {
     },
     [locale, navigate, t],
   );
+
+  /** The member asking for the check again after it would not complete. */
+  const retryChallenge = useCallback(() => {
+    setChallengeProblem(null);
+    challengeRef.current?.reset();
+    void syncReservation(draft);
+  }, [draft, syncReservation]);
 
   // A dead confirmation link sends the member back here carrying the reason in
   // the URL fragment. It is read once, answered on the screen, and taken back
@@ -289,6 +321,7 @@ function JoinPage() {
     setDraft(emptyDraft());
     setResumed(false);
     setLapse(null);
+    setChallengeProblem(null);
     setRefused(true);
   }, []);
 
@@ -523,6 +556,28 @@ function JoinPage() {
                 <p>{t(`join.recovery.${lapse}`)}</p>
                 <p style={{ marginTop: "var(--space-2)" }}>
                   {t("join.recovery.newNumber", { number: draft.reservation.memberNumber })}
+                </p>
+              </div>
+            ) : null}
+
+            {/*
+              The check that stands in front of a member number. Mounted for the
+              whole flow, not one screen: a number is claimed at three separate
+              moments and each of them needs a token. Invisible unless
+              Cloudflare wants a person to do something.
+            */}
+            {step !== "issued" && !refused ? (
+              <Challenge handle={challengeRef} onProblem={setChallengeProblem} />
+            ) : null}
+
+            {challengeProblem && !refused ? (
+              <div className="r17-notice" data-tone="alert" role="alert">
+                <p>{t(`join.challenge.${challengeProblem}`)}</p>
+                <p style={{ marginTop: "var(--space-2)" }}>{t("join.challenge.kept")}</p>
+                <p style={{ marginTop: "var(--space-3)" }}>
+                  <Button size="lg" onClick={retryChallenge} disabled={reserving}>
+                    {reserving ? t("join.challenge.retrying") : t("join.challenge.retry")}
+                  </Button>
                 </p>
               </div>
             ) : null}
