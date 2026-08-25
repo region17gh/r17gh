@@ -38,11 +38,6 @@ DECLARE
   tmp text;
   cnt integer;
   t text;
-
-  PROCEDURE_NOTE text := 'results follow';
-
-  -- record a result line
-  FUNCTION_NOTE text := '';
 BEGIN
   ----------------------------------------------------------------------------
   -- helper: local macro via inline blocks. Each check appends to `log`.
