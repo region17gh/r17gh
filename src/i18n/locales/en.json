@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "siteName": "Region 17 Ghana",
+    "tagline": "The membership register of Ghana's seventeenth region."
+  },
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "optional": "Optional",
+    "preferNotToSay": "Prefer not to say",
+    "loading": "Loading",
+    "errorGeneric": "Something went wrong. Try again."
+  },
+  "nav": {
+    "join": "Join",
+    "compact": "The Compact",
+    "conduct": "Code of Conduct",
+    "privacy": "Privacy",
+    "settings": "Settings",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "legal": {
+    "notAGovernmentDocument": "Region 17 membership is a standing in a community. It is not a government document and confers no citizenship, residence, visa, or right of entry.",
+    "referral": "Questions about citizenship, Right of Abode, or the Ghana Card go to Ghana's Diaspora Affairs Office or the Ministry of the Interior. We refer. We do not advise on eligibility."
+  },
+  "join": {
+    "title": "Join the register",
+    "stepOf": "Step {current} of {total}",
+    "emailLabel": "Email address",
+    "emailHelp": "We send a sign-in link. No password.",
+    "firstNameLabel": "First name",
+    "lastNameLabel": "Last name",
+    "countryLabel": "Country of residence",
+    "cityLabel": "City",
+    "timezoneLabel": "Time zone",
+    "birthMonthLabel": "Month of birth",
+    "birthYearLabel": "Year of birth",
+    "birthHelp": "Month and year only. You must be 18 or older.",
+    "connectionLabel": "Your connection",
+    "regionsLabel": "Regions you follow",
+    "handleLabel": "Handle",
+    "handleHelp": "This may be changed once, ever.",
+    "affirmTitle": "Affirm the Compact",
+    "affirmAction": "I affirm the Compact and the Code of Conduct."
+  },
+  "consent": {
+    "title": "Consents",
+    "help": "Nothing is shared unless you turn it on. Every choice here can be withdrawn at any time in settings.",
+    "directory_visibility": "Appear in the member directory",
+    "institutional_discoverability": "Be discoverable by verified institutions",
+    "daoop_sharing": "Share my record with the Diaspora Affairs Office programme",
+    "marketing": "Receive news about Region 17",
+    "aggregate_research": "Include my record in anonymised aggregate research",
+    "townhall_invites": "Receive town hall invitations",
+    "programme_updates": "Receive programme updates",
+    "withdraw": "Withdraw"
+  },
+  "credential": {
+    "title": "Membership credential",
+    "memberSince": "Member since {year}",
+    "credentialId": "Credential ID",
+    "foundingMember": "Founding member"
+  },
+  "errors": {
+    "underage": "Members must be 18 or older.",
+    "handleReserved": "That handle is reserved.",
+    "handleAlreadyChanged": "A handle may be changed once only.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "That address does not exist."
+  }
+}
