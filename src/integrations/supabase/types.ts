@@ -335,6 +335,35 @@ export type Database = {
           },
         ]
       }
+      member_gender: {
+        Row: {
+          created_at: string
+          gender: Database["public"]["Enums"]["gender_identity"]
+          member_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gender?: Database["public"]["Enums"]["gender_identity"]
+          member_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gender?: Database["public"]["Enums"]["gender_identity"]
+          member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_gender_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_intent: {
         Row: {
           ask_updated_at: string | null
@@ -745,6 +774,14 @@ export type Database = {
         Args: { reason?: string; target: string }
         Returns: undefined
       }
+      report_gender_distribution: {
+        Args: { min_cell?: number }
+        Returns: {
+          gender: Database["public"]["Enums"]["gender_identity"]
+          member_count: number
+          suppressed: boolean
+        }[]
+      }
       reserve_member_number: {
         Args: never
         Returns: {
@@ -782,6 +819,12 @@ export type Database = {
         | "aggregate_research"
         | "townhall_invites"
         | "programme_updates"
+      gender_identity:
+        | "prefer_not_to_say"
+        | "woman"
+        | "man"
+        | "non_binary"
+        | "self_described"
       member_status:
         | "pending_verification"
         | "active"
@@ -952,6 +995,13 @@ export const Constants = {
         "aggregate_research",
         "townhall_invites",
         "programme_updates",
+      ],
+      gender_identity: [
+        "prefer_not_to_say",
+        "woman",
+        "man",
+        "non_binary",
+        "self_described",
       ],
       member_status: [
         "pending_verification",
