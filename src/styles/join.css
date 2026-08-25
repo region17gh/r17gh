@@ -1,0 +1,396 @@
+/* Region 17 — join flow surfaces.
+   Consumes the design system; redefines none of it. Every value below resolves
+   to a design-system custom property, or composes several of them. The three
+   breakpoint widths in media queries are the one exception: CSS cannot read a
+   custom property inside a media condition. */
+
+:root {
+  /* App-layer layout variables, composed from design-system spacing. Named
+     --join-* so they can never collide with a token the system owns. */
+  --join-aside-width: calc(var(--space-32) * 2 + var(--space-24));
+  --join-shell-gap: var(--space-12);
+  --join-tap-min: var(--control-lg);
+  --join-rule: var(--border-width) solid var(--border-hairline);
+  --join-rule-inverse: var(--border-width) solid var(--border-inverse);
+  --join-chip-min: calc(var(--space-32) + var(--space-16));
+  --join-number-size: var(--text-display-3);
+  --join-number-size-lg: var(--text-display-1);
+  --join-measure: var(--measure-narrow);
+}
+
+/* ---------- shell ---------- */
+.r17-join-shell {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--gutter) var(--space-20);
+  display: grid;
+  grid-template-columns: var(--join-aside-width) 1fr;
+  gap: var(--join-shell-gap);
+  align-items: start;
+}
+.r17-join-aside { position: sticky; top: var(--space-8) }
+
+@media (max-width: 900px) {
+  .r17-join-shell {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    padding: var(--space-4) var(--space-4) var(--space-16);
+  }
+  .r17-join-aside { position: static }
+}
+
+/* ---------- register card ---------- */
+.r17-register-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-inverse);
+  color: var(--text-on-inverse);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-3);
+}
+.r17-register-card::after {
+  content: "";
+  position: absolute;
+  inset: var(--space-2);
+  border: var(--join-rule-inverse);
+  border-radius: var(--radius-xs);
+  pointer-events: none;
+}
+.r17-register-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-5);
+  border-bottom: var(--join-rule-inverse);
+}
+.r17-register-number {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  font-size: var(--join-number-size);
+  line-height: var(--lh-display);
+  color: var(--text-on-inverse);
+  display: flex;
+  align-items: baseline;
+}
+.r17-register-number .r17-register-prefix { color: var(--text-on-inverse-muted) }
+
+.r17-register-rows { margin: var(--space-5) 0 0; display: flex; flex-direction: column }
+.r17-register-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-2) 0;
+  border-bottom: var(--border-width) dotted var(--border-inverse);
+  font: var(--type-meta);
+}
+.r17-register-row:last-child { border-bottom: 0 }
+.r17-register-row dt { color: var(--text-on-inverse-muted); flex-shrink: 0; font-weight: var(--weight-regular) }
+.r17-register-row dd { margin: 0; text-align: right; color: var(--text-on-inverse); font-weight: var(--weight-medium) }
+.r17-register-row dd[data-empty="true"] { color: var(--text-on-inverse-muted); font-weight: var(--weight-regular) }
+
+.r17-register-stamp {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: var(--join-rule-inverse);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  opacity: 0.35;
+  transition: opacity var(--dur-slow) var(--ease-standard);
+}
+.r17-register-stamp[data-on="true"] { opacity: 1 }
+
+/* ---------- progress ---------- */
+.r17-progress { display: flex; gap: var(--space-1); margin: var(--space-5) 0 var(--space-8) }
+.r17-progress-seg {
+  height: var(--border-width-emphasis);
+  flex: 1;
+  background: var(--border-default);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  position: relative;
+}
+.r17-progress-seg > i {
+  position: absolute;
+  inset: 0;
+  background: var(--navy-700);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-slow) var(--ease-standard);
+}
+.r17-progress-seg[data-state="done"] > i,
+.r17-progress-seg[data-state="now"] > i { transform: scaleX(1) }
+.r17-progress-seg[data-state="now"] > i { background: var(--gold-600) }
+
+/* ---------- steps ---------- */
+.r17-step { animation: r17-step-in var(--dur-base) var(--ease-out) }
+.r17-step:focus { outline: none }
+@keyframes r17-step-in {
+  from { opacity: 0; transform: translateY(var(--space-1)) }
+  to { opacity: 1; transform: none }
+}
+
+.r17-field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--join-chip-min), 100%), 1fr));
+  gap: var(--space-5);
+}
+
+/* ---------- chips ---------- */
+.r17-chips { display: flex; flex-wrap: wrap; gap: var(--space-2) }
+.r17-chip {
+  min-height: var(--join-tap-min);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--border-default);
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: var(--type-ui);
+  text-align: left;
+  transition: var(--transition-control);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.r17-chip:hover { border-color: var(--navy-500); background: var(--surface-card) }
+.r17-chip[aria-pressed="true"] {
+  background: var(--navy-700);
+  border-color: var(--navy-700);
+  color: var(--text-on-inverse);
+}
+.r17-chip small {
+  display: block;
+  font: var(--type-cite);
+  font-family: var(--font-sans);
+  opacity: 0.75;
+  margin-top: var(--space-1);
+}
+
+.r17-regions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--join-chip-min), 100%), 1fr));
+  gap: var(--space-2);
+}
+.r17-region-chip {
+  min-height: var(--join-tap-min);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border-hairline);
+  background: transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: var(--type-ui);
+  color: var(--text-strong);
+  text-align: left;
+  transition: var(--transition-control);
+}
+.r17-region-chip:hover { border-color: var(--navy-500) }
+.r17-region-chip[aria-pressed="true"] {
+  background: var(--surface-card);
+  border-color: var(--navy-700);
+  font-weight: var(--weight-semibold);
+}
+.r17-region-dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+
+/* ---------- the Compact ---------- */
+.r17-compact {
+  position: relative;
+  background: var(--surface-card);
+  border: var(--join-rule);
+  border-left: var(--border-width-emphasis) solid var(--gold-500);
+  border-radius: var(--radius-card);
+  padding: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+.r17-compact p {
+  font-family: var(--font-display);
+  font-size: var(--text-body-lg);
+  line-height: var(--lh-body);
+  color: var(--text-body);
+  margin-bottom: var(--space-4);
+}
+.r17-compact p:last-of-type { margin-bottom: 0 }
+.r17-compact p.r17-compact-small {
+  font-family: var(--font-sans);
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+  border-top: var(--join-rule);
+  padding-top: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+/* Padding sits on the inner label, not the wrapper, so the whole bordered row
+   is the tap target and clears 48px rather than only the text inside it. */
+.r17-affirm {
+  border: var(--border-width-emphasis) solid var(--navy-700);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+.r17-affirm > label {
+  width: 100%;
+  min-height: var(--join-tap-min);
+  padding: var(--space-4);
+  align-items: center;
+}
+.r17-affirm-block { margin-bottom: var(--space-6) }
+
+.r17-consent {
+  border: var(--join-rule);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  margin-bottom: var(--space-2);
+  transition: var(--transition-control);
+}
+.r17-consent > label {
+  width: 100%;
+  min-height: var(--join-tap-min);
+  padding: var(--space-3) var(--space-4);
+}
+.r17-consent:hover { border-color: var(--border-default); background: var(--surface-card) }
+
+.r17-consent-group {
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+/* ---------- navigation ---------- */
+.r17-step-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  flex-wrap: wrap;
+}
+.r17-step-nav-end { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap }
+
+/* ---------- the credential ---------- */
+.r17-issued { text-align: center; padding: var(--space-5) 0 }
+.r17-issued-number {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  font-size: var(--join-number-size-lg);
+  line-height: var(--lh-display);
+  color: var(--navy-700);
+  margin: var(--space-5) 0 var(--space-1);
+}
+.r17-issued-number .r17-register-prefix { color: var(--border-strong) }
+.r17-issued-founding {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface-inverse);
+  color: var(--gold-400);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  margin: var(--space-5) 0 var(--space-6);
+}
+.r17-next { margin-top: var(--space-8); padding-top: var(--space-6); border-top: var(--join-rule); text-align: left }
+.r17-next ol { list-style: none; counter-reset: r17next; margin: 0; padding: 0 }
+.r17-next li {
+  counter-increment: r17next;
+  padding: var(--space-3) 0 var(--space-3) var(--space-8);
+  position: relative;
+  border-bottom: var(--border-width) dotted var(--border-default);
+  font: var(--type-body);
+  font-size: var(--text-body-sm);
+}
+.r17-next li:last-child { border-bottom: 0 }
+.r17-next li::before {
+  content: counter(r17next, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: var(--space-3);
+  font: var(--type-cite);
+  color: var(--gold-700);
+  font-weight: var(--weight-bold);
+}
+
+/* ---------- the address field ---------- */
+.r17-handle-row {
+  display: flex;
+  align-items: center;
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  overflow: hidden;
+  min-height: var(--join-tap-min);
+}
+.r17-handle-row:focus-within { border-color: var(--navy-500); box-shadow: var(--focus-ring) }
+.r17-handle-prefix {
+  font: var(--type-cite);
+  color: var(--text-muted);
+  padding-left: var(--space-3);
+  white-space: nowrap;
+}
+.r17-handle-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: var(--type-cite);
+  color: var(--text-body);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-1);
+}
+
+/* ---------- notices ---------- */
+.r17-notice {
+  border: var(--join-rule);
+  border-left: var(--border-width-emphasis) solid var(--gold-500);
+  background: var(--surface-accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  font: var(--type-body);
+  font-size: var(--text-body-sm);
+  color: var(--text-body);
+}
+.r17-notice[data-tone="alert"] {
+  border-left-color: var(--status-alert);
+  background: var(--status-alert-tint);
+}
+.r17-error { font: var(--type-meta); font-weight: var(--weight-regular); color: var(--pan-red) }
+
+.r17-count { font: var(--type-cite); color: var(--text-muted); text-align: right }
+.r17-count[data-over="true"] { color: var(--pan-red) }
+
+.r17-optional {
+  display: inline-block;
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: var(--border-width) solid var(--border-default);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.r17-confetti { position: fixed; inset: 0; pointer-events: none }
+
+@media (max-width: 640px) {
+  .r17-compact { padding: var(--space-5) }
+  .r17-join-shell { padding-bottom: var(--space-12) }
+}

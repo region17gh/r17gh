@@ -15,6 +15,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LocaleIndexRouteImport } from './routes/$locale/index'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as LocaleVerifyRouteImport } from './routes/$locale/verify'
+import { Route as LocaleSigninRouteImport } from './routes/$locale/signin'
+import { Route as LocaleJoinRouteImport } from './routes/$locale/join'
+import { Route as LocaleHomeRouteImport } from './routes/$locale/home'
 import { Route as Char91__mockupChar93PreviewSplatRouteImport } from './routes/[__mockup].preview.$'
 import { Route as Char91__componentChar93PreviewSplatRouteImport } from './routes/[__component].preview.$'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -52,6 +56,26 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LocaleVerifyRoute = LocaleVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
+const LocaleSigninRoute = LocaleSigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
+const LocaleJoinRoute = LocaleJoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
+const LocaleHomeRoute = LocaleHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
 const Char91__mockupChar93PreviewSplatRoute =
   Char91__mockupChar93PreviewSplatRouteImport.update({
     id: '/__mockup/preview/$',
@@ -80,6 +104,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteRouteWithChildren
   '/mcp': typeof McpRoute
+  '/$locale/home': typeof LocaleHomeRoute
+  '/$locale/join': typeof LocaleJoinRoute
+  '/$locale/signin': typeof LocaleSigninRoute
+  '/$locale/verify': typeof LocaleVerifyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/$locale/': typeof LocaleIndexRoute
@@ -91,6 +119,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/$locale/home': typeof LocaleHomeRoute
+  '/$locale/join': typeof LocaleJoinRoute
+  '/$locale/signin': typeof LocaleSigninRoute
+  '/$locale/verify': typeof LocaleVerifyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/$locale': typeof LocaleIndexRoute
@@ -104,6 +136,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteRouteWithChildren
   '/mcp': typeof McpRoute
+  '/$locale/home': typeof LocaleHomeRoute
+  '/$locale/join': typeof LocaleJoinRoute
+  '/$locale/signin': typeof LocaleSigninRoute
+  '/$locale/verify': typeof LocaleVerifyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/$locale/': typeof LocaleIndexRoute
@@ -118,6 +154,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$locale'
     | '/mcp'
+    | '/$locale/home'
+    | '/$locale/join'
+    | '/$locale/signin'
+    | '/$locale/verify'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/$locale/'
@@ -129,6 +169,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/mcp'
+    | '/$locale/home'
+    | '/$locale/join'
+    | '/$locale/signin'
+    | '/$locale/verify'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/$locale'
@@ -141,6 +185,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$locale'
     | '/mcp'
+    | '/$locale/home'
+    | '/$locale/join'
+    | '/$locale/signin'
+    | '/$locale/verify'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/$locale/'
@@ -206,6 +254,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/verify': {
+      id: '/$locale/verify'
+      path: '/verify'
+      fullPath: '/$locale/verify'
+      preLoaderRoute: typeof LocaleVerifyRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
+    '/$locale/signin': {
+      id: '/$locale/signin'
+      path: '/signin'
+      fullPath: '/$locale/signin'
+      preLoaderRoute: typeof LocaleSigninRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
+    '/$locale/join': {
+      id: '/$locale/join'
+      path: '/join'
+      fullPath: '/$locale/join'
+      preLoaderRoute: typeof LocaleJoinRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
+    '/$locale/home': {
+      id: '/$locale/home'
+      path: '/home'
+      fullPath: '/$locale/home'
+      preLoaderRoute: typeof LocaleHomeRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
     '/__mockup/preview/$': {
       id: '/__mockup/preview/$'
       path: '/__mockup/preview/$'
@@ -238,10 +314,18 @@ declare module '@tanstack/react-router' {
 }
 
 interface LocaleRouteRouteChildren {
+  LocaleHomeRoute: typeof LocaleHomeRoute
+  LocaleJoinRoute: typeof LocaleJoinRoute
+  LocaleSigninRoute: typeof LocaleSigninRoute
+  LocaleVerifyRoute: typeof LocaleVerifyRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
 }
 
 const LocaleRouteRouteChildren: LocaleRouteRouteChildren = {
+  LocaleHomeRoute: LocaleHomeRoute,
+  LocaleJoinRoute: LocaleJoinRoute,
+  LocaleSigninRoute: LocaleSigninRoute,
+  LocaleVerifyRoute: LocaleVerifyRoute,
   LocaleIndexRoute: LocaleIndexRoute,
 }
 
@@ -267,10 +351,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

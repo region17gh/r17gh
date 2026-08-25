@@ -1,3 +1,5 @@
 /* Region 17 design system theme. Loaded first so its tokens and base layer
-   define the app's typography, colour, spacing and motion. */
+   define the app's typography, colour, spacing and motion.
+   App surfaces come after, so they compose the tokens rather than race them. */
 @import "./design-system/region-17-ghana-design-system-e3e62f/design-system/region17/styles/index.css";
+@import "./styles/join.css";
