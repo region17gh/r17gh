@@ -11,18 +11,23 @@ import { checkHandle, normaliseHandle, type HandleProblem } from "@/lib/join/han
 import { commitVerification, fetchCurrentMember, type MemberRow } from "@/lib/member/membership";
 
 export const Route = createFileRoute("/$locale/verify")({
-  head: () => ({ meta: [{ title: "Confirm your email | Region 17" }] }),
+  head: () => ({ meta: [{ title: "Confirm your address | Region 17" }] }),
   component: VerifyPage,
 });
 
 type Phase = "loading" | "signed_out" | "no_member" | "ready" | "done";
 
 /**
- * Email confirmation, and the moment the address goes live.
+ * Activation, and the moment the address goes live.
  *
  * Until this runs a member's status is `pending_verification`: no directory
  * listing, no live handle, no RSVP. The handle chosen at the Compact is written
  * here, which is why an unverified account never holds a public address.
+ *
+ * Reaching this screen is not the confirmation and never was. The confirmation
+ * is the code the member entered at step 1, and `activate_membership()` reads
+ * it out of `auth.users` rather than taking this page's word for it. This
+ * screen chooses the handle and asks; the database decides.
  */
 function VerifyPage() {
   const { t, locale } = useI18n();
@@ -90,6 +95,15 @@ function VerifyPage() {
         break;
       case "email_unconfirmed":
         setError(t("verify.emailUnconfirmed"));
+        break;
+      case "email_mismatch":
+        setError(t("verify.emailMismatch"));
+        break;
+      case "not_pending":
+        setError(t("verify.notPending"));
+        break;
+      case "signed_out":
+        setPhase("signed_out");
         break;
       case "no_member":
         setPhase("no_member");

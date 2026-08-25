@@ -805,6 +805,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_membership: {
+        Args: { p_handle?: string }
+        Returns: Database["public"]["Tables"]["members"]["Row"]
+      }
       credential_id: {
         Args: { join_year: number; member_number: number }
         Returns: string

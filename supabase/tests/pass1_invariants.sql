@@ -30,8 +30,10 @@ DECLARE
   log text := '';
   uid_a uuid := gen_random_uuid();
   uid_b uuid := gen_random_uuid();
+  uid_c uuid := gen_random_uuid();
   m_a uuid;
   m_b uuid;
+  m_c uuid;
   n_a integer;
   n_b integer;
   cred_a text;
@@ -44,8 +46,16 @@ BEGIN
   ----------------------------------------------------------------------------
 
   -- 1. Registration requires a live reservation ------------------------------
+  -- Separate blocks on purpose. A GUC set inside a block is reverted when that
+  -- block raises, so pairing these meant a refused SET ROLE also undid the JWT
+  -- claim, leaving auth.uid() null and every case below passing for the wrong
+  -- reason: register_member refused with 'Sign in required.' rather than for
+  -- the missing reservation the case exists to prove.
   BEGIN
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+  BEGIN
     PERFORM set_config('role', 'authenticated', true);
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
@@ -86,6 +96,47 @@ BEGIN
     log := log || E'\nPASS  members carries no INSERT policy';
   ELSE
     log := log || E'\nFAIL  members carries an INSERT policy';
+  END IF;
+
+  -- 2b. A member cannot write their own standing ------------------------------
+  -- The RLS policy on members asks only that the row belongs to the caller, so
+  -- the column grant is the whole of this rule. If UPDATE on status ever comes
+  -- back, /verify stops being a gate and a PATCH from any signed-in account
+  -- activates a record.
+  SELECT count(*) INTO cnt
+    FROM information_schema.column_privileges
+   WHERE table_schema = 'public' AND table_name = 'members'
+     AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
+     AND column_name IN ('status', 'email_verified_at', 'email', 'user_id',
+                         'member_number', 'credential_id', 'founding_member',
+                         'joined_at', 'class_year', 'pseudonymized_at');
+  IF cnt = 0 THEN
+    log := log || E'\nPASS  authenticated cannot UPDATE standing or identity columns';
+  ELSE
+    log := log || E'\nFAIL  authenticated can UPDATE ' || cnt || ' standing/identity column(s)';
+  END IF;
+
+  -- The member still edits what is theirs to edit. A grant revoked too widely
+  -- is as much a defect as one left too wide.
+  SELECT count(*) INTO cnt
+    FROM information_schema.column_privileges
+   WHERE table_schema = 'public' AND table_name = 'members'
+     AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
+     AND column_name IN ('first_name', 'city', 'country', 'handle', 'region_interests');
+  IF cnt = 5 THEN
+    log := log || E'\nPASS  authenticated can still UPDATE its own descriptive columns';
+  ELSE
+    log := log || E'\nFAIL  descriptive columns are not updatable (' || cnt || ' of 5)';
+  END IF;
+
+  SELECT count(*) INTO cnt
+    FROM information_schema.routine_privileges
+   WHERE routine_schema = 'public' AND routine_name = 'activate_membership'
+     AND grantee IN ('anon', 'PUBLIC');
+  IF cnt = 0 THEN
+    log := log || E'\nPASS  activate_membership is not executable by anon';
+  ELSE
+    log := log || E'\nFAIL  activate_membership is executable by anon';
   END IF;
 
   -- 3. Two members, created the sanctioned way -------------------------------
@@ -218,6 +269,112 @@ BEGIN
   ELSE
     log := log || E'\nFAIL  founding_member moved with the cutoff';
   END IF;
+
+  -- 11b. Activation depends on a confirmation GoTrue actually issued ---------
+  -- Needs a real auth.users row, because that is the whole point: the rule
+  -- reads email_confirmed_at in the database rather than trusting a caller who
+  -- says they confirmed. If this environment will not let the harness write
+  -- auth.users, the case reports INFO and the rest of the harness continues.
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES (uid_c, 'c@example.test');
+
+    INSERT INTO public.number_reservations (member_number, expires_at)
+    VALUES (999006, now() + interval '1 hour');
+    INSERT INTO public.members (user_id, member_number, credential_id,
+      first_name, email, birth_month, birth_year, timezone)
+    VALUES (uid_c, 999006, public.credential_id(2026, 999006),
+      'C', 'c@example.test', 1::smallint, 1990::smallint, 'UTC')
+    RETURNING id INTO m_c;
+
+    PERFORM set_config('request.jwt.claim.sub', uid_c::text, true);
+
+    IF auth.uid() IS DISTINCT FROM uid_c THEN
+      log := log || E'\nINFO  activation cases skipped: auth.uid() not settable here';
+    ELSE
+      -- unconfirmed
+      BEGIN
+        PERFORM public.activate_membership('harnessc');
+        log := log || E'\nFAIL  activate_membership activated an unconfirmed address';
+      EXCEPTION WHEN OTHERS THEN
+        IF SQLERRM LIKE '%has not been confirmed%' THEN
+          log := log || E'\nPASS  unconfirmed address refused: ' || SQLERRM;
+        ELSE
+          log := log || E'\nFAIL  unconfirmed address refused for the wrong reason: ' || SQLERRM;
+        END IF;
+      END;
+
+      SELECT status::text INTO t FROM public.members WHERE id = m_c;
+      IF t = 'pending_verification' THEN
+        log := log || E'\nPASS  record left pending after the refusal';
+      ELSE
+        log := log || E'\nFAIL  record moved to ' || t || ' despite the refusal';
+      END IF;
+
+      -- confirmed, but of a different inbox
+      UPDATE auth.users SET email_confirmed_at = now(), email = 'other@example.test'
+       WHERE id = uid_c;
+      BEGIN
+        PERFORM public.activate_membership('harnessc');
+        log := log || E'\nFAIL  activate_membership accepted a confirmation of another address';
+      EXCEPTION WHEN OTHERS THEN
+        IF SQLERRM LIKE '%not the address on this record%' THEN
+          log := log || E'\nPASS  confirmation of another address refused: ' || SQLERRM;
+        ELSE
+          log := log || E'\nFAIL  another address refused for the wrong reason: ' || SQLERRM;
+        END IF;
+      END;
+
+      -- confirmed, and of this record's address
+      UPDATE auth.users SET email = 'c@example.test' WHERE id = uid_c;
+      PERFORM public.activate_membership('harnessc');
+      SELECT status::text INTO t FROM public.members WHERE id = m_c;
+      SELECT handle::text INTO tmp FROM public.members WHERE id = m_c;
+      IF t = 'active' AND tmp = 'harnessc' THEN
+        log := log || E'\nPASS  a confirmed address activates and takes the handle';
+      ELSE
+        log := log || E'\nFAIL  confirmed activation left status ' || t || ', handle ' || COALESCE(tmp, 'null');
+      END IF;
+
+      SELECT count(*) INTO cnt FROM public.members m, auth.users u
+       WHERE m.id = m_c AND u.id = uid_c AND m.email_verified_at = u.email_confirmed_at;
+      IF cnt = 1 THEN
+        log := log || E'\nPASS  email_verified_at is GoTrue''s timestamp, not the caller''s';
+      ELSE
+        log := log || E'\nFAIL  email_verified_at does not match auth.users.email_confirmed_at';
+      END IF;
+
+      -- running it twice is a no-op, not an error
+      BEGIN
+        PERFORM public.activate_membership('somethingelse');
+        SELECT handle::text INTO tmp FROM public.members WHERE id = m_c;
+        IF tmp = 'harnessc' THEN
+          log := log || E'\nPASS  a second activation is a no-op and does not spend the handle change';
+        ELSE
+          log := log || E'\nFAIL  a second activation rewrote the handle to ' || COALESCE(tmp, 'null');
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        log := log || E'\nFAIL  a second activation raised: ' || SQLERRM;
+      END;
+
+      -- no member lifts their own suspension
+      UPDATE public.members SET status = 'suspended' WHERE id = m_c;
+      BEGIN
+        PERFORM public.activate_membership(NULL);
+        log := log || E'\nFAIL  activate_membership lifted a suspension';
+      EXCEPTION WHEN OTHERS THEN
+        IF SQLERRM LIKE '%not awaiting verification%' THEN
+          log := log || E'\nPASS  suspended record refused: ' || SQLERRM;
+        ELSE
+          log := log || E'\nFAIL  suspension refused for the wrong reason: ' || SQLERRM;
+        END IF;
+      END;
+    END IF;
+
+    PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+  EXCEPTION WHEN OTHERS THEN
+    log := log || E'\nINFO  activation cases skipped: ' || SQLERRM;
+    PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+  END;
 
   -- 12. Erasure --------------------------------------------------------------
   -- The collision this harness caught: erasure clears the handle, which the

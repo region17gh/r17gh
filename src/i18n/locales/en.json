@@ -168,7 +168,7 @@
       "handleLive": "Your address goes live when you confirm your email.",
       "submit": "Join Region 17",
       "submitting": "Entering you into the register",
-      "footnote": "Next you'll confirm your email. Your address goes live then."
+      "footnote": "Next you'll confirm your address. Your record goes live then."
     },
 
     "consents": {
@@ -205,12 +205,12 @@
       "classOf": "CLASS OF {year}",
       "foundingNote": "You joined before {date}. That standing closes on that date and will never be offered again.",
       "addressLabel": "Your address",
-      "addressPending": "Live once you confirm your email.",
+      "addressPending": "Live once you activate your record.",
       "nextHeading": "What happens now",
-      "nextOne": "Check your email and confirm your address. Your credential is waiting there.",
+      "nextOne": "Confirm your address. That activates your record and puts your address live.",
       "nextTwo": "Add your Ask and your Offer. It's the reason members find each other.",
       "nextThree": "The next Regional Spotlight town hall is on the 14th. Your seat is free.",
-      "toVerify": "Confirm my email address",
+      "toVerify": "Confirm my address",
       "incomplete": "Your record is entered, but we could not save everything: {items}. Try again so your register entry is complete.",
       "retry": "Save the rest of my record"
     },
@@ -238,9 +238,9 @@
   },
 
   "verify": {
-    "title": "Confirm your email",
+    "title": "Confirm your address",
     "heading": "Confirm your address",
-    "lede": "One step left. Confirming activates your record and puts your Region 17 address live.",
+    "lede": "Your address was confirmed by the code you entered when you joined. This puts your record and your Region 17 address live.",
     "confirm": "Confirm and activate",
     "working": "Confirming",
     "successHeading": "You're in the register.",
@@ -249,6 +249,8 @@
     "noMember": "This account has not joined yet.",
     "toJoin": "Start joining",
     "emailUnconfirmed": "We could not confirm this address. Sign in again and we will send a fresh code.",
+    "emailMismatch": "The address you confirmed is not the address on this record. Sign in with the address you joined with.",
+    "notPending": "This record is not awaiting verification. Go to your membership to see where it stands.",
     "alreadyVerified": "This record is already active.",
     "addressLabel": "Your address"
   },

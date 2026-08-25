@@ -32,6 +32,7 @@ import {
   otpLengthOutOfRange,
 } from "../src/lib/auth/otp";
 import { CONNECTIONS, CONSENTS, GENDERS } from "../src/lib/join/options";
+import { REGIONS_ALPHABETICAL } from "../src/lib/regions";
 import en from "../src/i18n/locales/en.json";
 import { formatMemberNumber } from "../src/components/join/memberNumber";
 
@@ -264,6 +265,40 @@ describe("connections", () => {
     for (const connection of CONNECTIONS) {
       expect(Object.keys(connection)).toEqual(["value", "key"]);
     }
+  });
+});
+
+describe("regions", () => {
+  test("all sixteen are offered, in alphabetical order", () => {
+    expect(REGIONS_ALPHABETICAL).toHaveLength(16);
+    expect(REGIONS_ALPHABETICAL.map((r) => r.name)).toEqual([
+      "Ahafo",
+      "Ashanti",
+      "Bono",
+      "Bono East",
+      "Central",
+      "Eastern",
+      "Greater Accra",
+      "North East",
+      "Northern",
+      "Oti",
+      "Savannah",
+      "Upper East",
+      "Upper West",
+      "Volta",
+      "Western",
+      "Western North",
+    ]);
+  });
+
+  /**
+   * The design system's own order is the colour band running down the map, and
+   * it is replaced in place as design work continues. Sorting is ours precisely
+   * so that a replacement cannot quietly restore an order a member cannot scan.
+   */
+  test("the order does not depend on the design system's", () => {
+    const source = [...REGIONS_ALPHABETICAL].map((r) => r.name);
+    expect(source).toEqual([...source].sort((a, b) => a.localeCompare(b, "en")));
   });
 });
 

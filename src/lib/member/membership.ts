@@ -22,53 +22,46 @@ export type VerificationOutcome =
   | { status: "handle_taken" }
   | { status: "handle_reserved" }
   | { status: "no_member" }
+  | { status: "signed_out" }
   | { status: "email_unconfirmed" }
+  | { status: "email_mismatch" }
+  | { status: "not_pending" }
   | { status: "failed"; message: string };
 
 /**
  * Commits verification: the record goes active and the chosen address goes live.
  *
- * Until this runs the member's status is `pending_verification`, which is what
- * keeps an unverified account from holding a public address. The handle is
- * written here for the first time, so it does not consume the member's one
- * permitted change: the trigger only stamps `handle_changed_at` when an
- * existing handle is replaced.
+ * Every check that matters happens inside `activate_membership()`, in the
+ * database. It reads `auth.users.email_confirmed_at` there, which GoTrue sets
+ * only when a code or link it emailed is actually used, and it refuses anything
+ * that is not a `pending_verification` record whose address matches the
+ * confirmed one. There is deliberately no check here to match: a rule this page
+ * could evaluate is a rule anyone holding the anon key could skip, which is
+ * what made `pending_verification` decorative before.
+ *
+ * The handle is passed and written only if the record holds none, so it does
+ * not spend the member's one permitted change.
  */
 export async function commitVerification(handle: string): Promise<VerificationOutcome> {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { status: "no_member" };
+  const { data, error } = await supabase.rpc("activate_membership", {
+    p_handle: handle.trim() || undefined,
+  });
 
-  // Supabase set this when the member entered the one-time code at step 1.
-  // Without it there is nothing here that proves control of the address.
-  if (!auth.user.email_confirmed_at) return { status: "email_unconfirmed" };
-
-  const existing = await fetchCurrentMember();
-  if (!existing) return { status: "no_member" };
-
-  const patch: Database["public"]["Tables"]["members"]["Update"] = {
-    email_verified_at: new Date().toISOString(),
-    status: "active",
-  };
-  // A member who already holds an address keeps it: their one change is theirs
-  // to spend in settings, not something verification spends for them.
-  if (!existing.handle && handle) patch.handle = handle;
-
-  const { data, error } = await supabase
-    .from("members")
-    .update(patch)
-    .eq("user_id", auth.user.id)
-    .select("*")
-    .single();
-
-  if (error) {
-    if (error.message.includes("reserved")) return { status: "handle_reserved" };
-    if (error.code === "23505" || error.message.includes("duplicate key")) {
-      return { status: "handle_taken" };
-    }
-    return { status: "failed", message: error.message };
-  }
-
+  if (error) return classifyActivationError(error.code, error.message);
+  if (!data) return { status: "no_member" };
   return { status: "verified", member: data };
+}
+
+/** The database's refusals, in the words this screen answers them with. */
+function classifyActivationError(code: string, message: string): VerificationOutcome {
+  if (message.includes("Sign in required")) return { status: "signed_out" };
+  if (message.includes("has not been confirmed")) return { status: "email_unconfirmed" };
+  if (message.includes("has not joined yet")) return { status: "no_member" };
+  if (message.includes("not the address on this record")) return { status: "email_mismatch" };
+  if (message.includes("not awaiting verification")) return { status: "not_pending" };
+  if (message.includes("reserved")) return { status: "handle_reserved" };
+  if (code === "23505" || message.includes("duplicate key")) return { status: "handle_taken" };
+  return { status: "failed", message };
 }
 
 export interface MemberIntent {
