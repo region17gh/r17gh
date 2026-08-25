@@ -35,7 +35,7 @@
 -- a new rule is added, so err towards adding cases for rule interactions,
 -- not just rules.
 --
--- A recurring bug shape, named here because it has hit this file three times
+-- A recurring bug shape, named here because it has hit this file four times
 -- and will hit it again: an assertion that passes or fails for a reason
 -- other than the thing under test. Section 1 originally paired the JWT claim
 -- and the role switch in one BEGIN block, so a refused role switch silently
@@ -51,6 +51,25 @@
 -- (the row's state, who's really signed in, which role really executed),
 -- never just the absence of an error. The next case written here will reach
 -- for the same shortcut unless this is read first.
+--
+-- Fourth instance, caught on production rather than in review: the
+-- information_schema.*_privileges views (role_table_grants,
+-- routine_privileges, column_privileges) only show grants visible to the
+-- currently active role. A case that impersonates authenticated and then
+-- queries one of those views for a grant made to anon or service_role gets
+-- back zero rows unconditionally -- not because the grant doesn't exist, but
+-- because the view can't see another role's grants from here. That reads as
+-- PASS ("no such grant") regardless of the true state, which is exactly
+-- backwards from a check whose job is to catch an over-broad grant. This hit
+-- the activate_membership EXECUTE check (coincidentally correct: anon truly
+-- had no grant) and sections 14/14b on member_gender (not coincidental:
+-- production had SELECT held by both anon and service_role, masked as PASS).
+-- has_table_privilege() / has_function_privilege() / has_column_privilege()
+-- take an explicit role argument and are not scoped to the active role --
+-- use those for any assertion about a role other than the one currently
+-- impersonated. pg_policies and pg_class are catalog views, not
+-- information_schema privilege views, and are not subject to this
+-- restriction; checks that read those are unaffected.
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION pg_temp.run_register_invariants()
@@ -157,14 +176,16 @@ BEGIN
     log := log || E'\nFAIL  descriptive columns are not updatable (' || cnt || ' of 5)';
   END IF;
 
-  SELECT count(*) INTO cnt
-    FROM information_schema.routine_privileges
-   WHERE routine_schema = 'public' AND routine_name = 'activate_membership'
-     AND grantee IN ('anon', 'PUBLIC');
-  IF cnt = 0 THEN
-    log := log || E'\nPASS  activate_membership is not executable by anon';
-  ELSE
+  -- has_function_privilege(), not information_schema.routine_privileges: that
+  -- view only shows grants visible to the currently active role (here,
+  -- authenticated), so it cannot see a grant made to anon and would read
+  -- "PASS" whether anon truly lacks EXECUTE or the view simply can't see it.
+  -- Same class of bug as 14/14b below -- has_function_privilege() is
+  -- role-independent and answers the real question.
+  IF has_function_privilege('anon', 'public.activate_membership(text)', 'EXECUTE') THEN
     log := log || E'\nFAIL  activate_membership is executable by anon';
+  ELSE
+    log := log || E'\nPASS  activate_membership is not executable by anon';
   END IF;
 
   -- 3. Two members, created the sanctioned way -------------------------------
@@ -600,32 +621,41 @@ BEGIN
   -- record standing. Withholding SELECT is what condition 4 asks for; the
   -- write grants are what makes erasure work.
   --
-  -- So this case filters on privilege_type = 'SELECT'. It previously counted
-  -- ANY grant, which made it stricter than the invariant it exists to check:
-  -- it failed on the erasure write and would have been "fixed" by revoking it.
-  -- Do not widen it back to any privilege. The next assertion holds the other
-  -- side of the same line.
-  SELECT count(*) INTO cnt
-    FROM information_schema.role_table_grants
-   WHERE table_schema = 'public' AND table_name = 'member_gender'
-     AND privilege_type = 'SELECT'
-     AND grantee IN ('anon','service_role','PUBLIC');
-  IF cnt = 0 THEN
-    log := log || E'\nPASS  member_gender readable by no role beyond authenticated/r17_reporting';
-  ELSE
+  -- So this case checks SELECT specifically, not any privilege. It previously
+  -- counted ANY grant, which made it stricter than the invariant it exists to
+  -- check: it failed on the erasure write and would have been "fixed" by
+  -- revoking it. Do not widen it back to any privilege. The next assertion
+  -- holds the other side of the same line.
+  --
+  -- has_table_privilege(), not information_schema.role_table_grants: that
+  -- view only shows grants visible to the currently active role (here,
+  -- authenticated), so a grant made to anon or service_role is structurally
+  -- invisible to it -- the query returns zero rows and this reports PASS
+  -- whether or not anon/service_role actually hold SELECT. This is exactly
+  -- how it missed a live grant: production had SELECT held by both anon and
+  -- service_role (service_role also carries BYPASSRLS, so RLS was not a
+  -- backstop) while this check reported PASS. has_table_privilege() is
+  -- role-independent and answers the real question. Fourth instance of the
+  -- bug shape named in this file's header.
+  IF has_table_privilege('anon', 'public.member_gender', 'SELECT')
+     OR has_table_privilege('service_role', 'public.member_gender', 'SELECT') THEN
     log := log || E'\nFAIL  member_gender SELECT is granted to a broader role';
+  ELSE
+    log := log || E'\nPASS  member_gender readable by no role beyond authenticated/r17_reporting';
   END IF;
 
   -- 14b. ...and service_role keeps the writes erasure depends on -------------
   -- The companion to 14. Revoking these is the failure mode 14 used to invite:
   -- it looks like tightening the gender rule and it silently breaks the right
   -- to erasure, which is a legal obligation, not a preference.
-  SELECT count(*) INTO cnt
-    FROM information_schema.role_table_grants
-   WHERE table_schema = 'public' AND table_name = 'member_gender'
-     AND grantee = 'service_role'
-     AND privilege_type IN ('INSERT','UPDATE','DELETE');
-  IF cnt = 3 THEN
+  --
+  -- Same fix as 14, same reason: information_schema.role_table_grants could
+  -- not see service_role's own grant rows while impersonating authenticated,
+  -- so this previously reported a FAIL that was itself an artifact -- the
+  -- write grants were never actually missing.
+  IF has_table_privilege('service_role', 'public.member_gender', 'INSERT')
+     AND has_table_privilege('service_role', 'public.member_gender', 'UPDATE')
+     AND has_table_privilege('service_role', 'public.member_gender', 'DELETE') THEN
     log := log || E'\nPASS  service_role keeps INSERT/UPDATE/DELETE on member_gender for erasure';
   ELSE
     log := log || E'\nFAIL  service_role is missing a write grant on member_gender; pseudonymize_member() cannot clear it';

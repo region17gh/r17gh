@@ -1,0 +1,34 @@
+-- ============================================================
+-- Region 17 Ghana — member_gender: revoke the SELECT grant D-038 never wanted
+-- ============================================================
+-- 20260825060018 documented "service_role deliberately gets no SELECT: it
+-- maintains the row, it does not read it" and never granted SELECT to anon
+-- or service_role -- but it never revoked it either. The public schema's
+-- default privileges grant ALL PRIVILEGES on new tables to anon,
+-- authenticated and service_role, so member_gender inherited SELECT for both
+-- at creation regardless of what that migration granted explicitly.
+-- Omitting a grant is not the same as revoking a schema default.
+--
+-- This went uncaught because the assertion meant to catch it
+-- (pass1_invariants.sql, "member_gender readable by no role beyond
+-- authenticated/r17_reporting") queried information_schema.role_table_grants
+-- while impersonating authenticated -- a view scoped to what the currently
+-- active role can see -- so it could not see anon's or service_role's own
+-- grant rows and reported PASS regardless of their true state.
+-- has_table_privilege(), which is role-independent, confirms both anon and
+-- service_role hold SELECT on production right now.
+--
+-- service_role also carries BYPASSRLS, so RLS is not a backstop for it here:
+-- the table-level SELECT grant alone lets any service_role-authenticated
+-- backend code read every member's gender, live and unfiltered. That is a
+-- violation of D-038 condition 4 (read restricted to the member themselves
+-- and r17_reporting) on the field carrying the register's most sensitive
+-- data. anon holds no matching RLS policy and no BYPASSRLS, so its SELECT
+-- grant has produced no live exposure -- but it is still wrong and a
+-- landmine against any future RLS or role change.
+--
+-- Keep service_role's INSERT, UPDATE, DELETE: pseudonymize_member() depends
+-- on them to clear the gender row during erasure.
+-- ============================================================
+
+REVOKE SELECT ON public.member_gender FROM anon, service_role;
