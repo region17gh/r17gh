@@ -88,4 +88,4 @@ BEGIN
 END; $$;
 
 COMMENT ON FUNCTION public.enforce_member_rules() IS
-'BEFORE INSERT OR UPDATE trigger on members. SECURITY DEFINER so its own INSERT into reserved_handles (retiring a released handle) runs with the function owner''s privileges rather than the triggering row''s caller -- authenticated holds only SELECT on reserved_handles. search_path is pinned to public, extensions, which is what makes SECURITY DEFINER safe here. Read the full body before editing.';
+'BEFORE INSERT OR UPDATE trigger on members. SECURITY DEFINER because it writes to public.reserved_handles when a member changes their handle for the first time, retiring the old one -- authenticated holds SELECT only on reserved_handles, so this write must run as the function owner rather than the triggering caller. search_path is pinned to public, extensions, which is what makes SECURITY DEFINER safe here. Read the full body before editing.';
