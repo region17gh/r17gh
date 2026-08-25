@@ -46,8 +46,16 @@ BEGIN
   ----------------------------------------------------------------------------
 
   -- 1. Registration requires a live reservation ------------------------------
+  -- Separate blocks on purpose. A GUC set inside a block is reverted when that
+  -- block raises, so pairing these meant a refused SET ROLE also undid the JWT
+  -- claim, leaving auth.uid() null and every case below passing for the wrong
+  -- reason: register_member refused with 'Sign in required.' rather than for
+  -- the missing reservation the case exists to prove.
   BEGIN
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+  BEGIN
     PERFORM set_config('role', 'authenticated', true);
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
@@ -288,7 +296,11 @@ BEGIN
         PERFORM public.activate_membership('harnessc');
         log := log || E'\nFAIL  activate_membership activated an unconfirmed address';
       EXCEPTION WHEN OTHERS THEN
-        log := log || E'\nPASS  unconfirmed address refused: ' || SQLERRM;
+        IF SQLERRM LIKE '%has not been confirmed%' THEN
+          log := log || E'\nPASS  unconfirmed address refused: ' || SQLERRM;
+        ELSE
+          log := log || E'\nFAIL  unconfirmed address refused for the wrong reason: ' || SQLERRM;
+        END IF;
       END;
 
       SELECT status::text INTO t FROM public.members WHERE id = m_c;
@@ -305,7 +317,11 @@ BEGIN
         PERFORM public.activate_membership('harnessc');
         log := log || E'\nFAIL  activate_membership accepted a confirmation of another address';
       EXCEPTION WHEN OTHERS THEN
-        log := log || E'\nPASS  confirmation of another address refused: ' || SQLERRM;
+        IF SQLERRM LIKE '%not the address on this record%' THEN
+          log := log || E'\nPASS  confirmation of another address refused: ' || SQLERRM;
+        ELSE
+          log := log || E'\nFAIL  another address refused for the wrong reason: ' || SQLERRM;
+        END IF;
       END;
 
       -- confirmed, and of this record's address
@@ -346,7 +362,11 @@ BEGIN
         PERFORM public.activate_membership(NULL);
         log := log || E'\nFAIL  activate_membership lifted a suspension';
       EXCEPTION WHEN OTHERS THEN
-        log := log || E'\nPASS  suspended record refused: ' || SQLERRM;
+        IF SQLERRM LIKE '%not awaiting verification%' THEN
+          log := log || E'\nPASS  suspended record refused: ' || SQLERRM;
+        ELSE
+          log := log || E'\nFAIL  suspension refused for the wrong reason: ' || SQLERRM;
+        END IF;
       END;
     END IF;
 
