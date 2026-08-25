@@ -598,6 +598,57 @@ BEGIN
     log := log || E'\nFAIL  member_gender is granted to a broader role';
   END IF;
 
+  -- 15. A member cannot write their own welcome-email stamp ------------------
+  -- `welcome_email_sent_at` is what stops the welcome email being sent twice.
+  -- 20260825190000 replaced the table-wide UPDATE grant on members with a
+  -- column list, and this column is deliberately not on it. If it were, a
+  -- member could stamp their own row to suppress the send, or clear it to make
+  -- the register send again on every visit.
+  --
+  -- has_column_privilege() rather than a scan of information_schema: it is the
+  -- definitive answer and it accounts for a privilege arriving either as a
+  -- column grant or as a table-wide one, which a naive catalog query does not.
+  IF has_column_privilege('authenticated', 'public.members', 'welcome_email_sent_at', 'UPDATE') THEN
+    log := log || E'\nFAIL  authenticated holds UPDATE on members.welcome_email_sent_at';
+  ELSE
+    log := log || E'\nPASS  authenticated cannot write members.welcome_email_sent_at';
+  END IF;
+
+  -- The other side of the line: the sender runs as service_role and claims the
+  -- send with this column. Revoking it would stop every welcome email silently.
+  IF has_column_privilege('service_role', 'public.members', 'welcome_email_sent_at', 'UPDATE') THEN
+    log := log || E'\nPASS  service_role keeps UPDATE on members.welcome_email_sent_at';
+  ELSE
+    log := log || E'\nFAIL  service_role cannot write members.welcome_email_sent_at; no welcome email can be claimed';
+  END IF;
+
+  -- And the behaviour, not just the grant. m_b is intact: section 12 erased
+  -- m_a only. The JWT and the role are set as separate statements, per the
+  -- header note about section 1 -- pairing them lets a refused role switch
+  -- quietly revert the claim and turn this into a test of "not signed in".
+  PERFORM set_config('request.jwt.claim.sub', uid_b::text, true);
+  PERFORM set_config('role', 'authenticated', true);
+  BEGIN
+    UPDATE public.members SET welcome_email_sent_at = now() WHERE id = m_b;
+    log := log || E'\nNOTE  welcome stamp update raised nothing; the value below is the real answer';
+  EXCEPTION WHEN OTHERS THEN
+    log := log || E'\nPASS  welcome stamp write refused: ' || SQLERRM;
+  END;
+
+  -- Read it back elevated. Checked as authenticated this would be a zero-row
+  -- read under RLS and would look identical whether the write was blocked or
+  -- the row was merely invisible, which is the recurring bug named in the
+  -- header of this file.
+  PERFORM set_config('role', 'service_role', true);
+  SELECT count(*) INTO cnt FROM public.members
+   WHERE id = m_b AND welcome_email_sent_at IS NULL;
+  IF cnt = 1 THEN
+    log := log || E'\nPASS  welcome stamp unchanged after the member attempted to write it';
+  ELSE
+    log := log || E'\nFAIL  member wrote their own welcome_email_sent_at';
+  END IF;
+  PERFORM set_config('role', 'authenticated', true);
+
   ----------------------------------------------------------------------------
   -- Always abort. The results ride out on the exception message.
   ----------------------------------------------------------------------------
