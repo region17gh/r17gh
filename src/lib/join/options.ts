@@ -74,9 +74,15 @@ export interface GenderOption {
  * Gender is optional and `prefer_not_to_say` is the stored default, so a member
  * who declines is indistinguishable from one who has not answered yet.
  *
- * `self_described` has no free-text partner here. `member_gender` stores the
- * enum only, and adding a text column would put an unstructured account of a
- * member's identity in the register. See the PR for the open question.
+ * The list is the enum and nothing else. `self_described` has no free-text
+ * partner, and no control anywhere offers one. A category can be counted and
+ * small-cell suppressed; a free-text account of a member's identity is unique
+ * by definition, so it can be neither, and it would sit in an Embassy-affiliated
+ * register under a bill awaiting assent. This is a settled decision, not a gap:
+ * adding a text column reverses it.
+ *
+ * The label follows from the same decision. An option that offers to collect a
+ * description and then collects nothing is a bug, so it does not offer one.
  */
 export const GENDERS: GenderOption[] = [
   { value: "prefer_not_to_say", key: "preferNotToSay" },

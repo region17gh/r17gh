@@ -20,7 +20,8 @@ import {
   savePendingHandle,
 } from "../src/lib/join/draft";
 import { checkHandle, normaliseHandle, suggestHandle } from "../src/lib/join/handle";
-import { CONNECTIONS, CONSENTS } from "../src/lib/join/options";
+import { CONNECTIONS, CONSENTS, GENDERS } from "../src/lib/join/options";
+import en from "../src/i18n/locales/en.json";
 import { formatMemberNumber } from "../src/components/join/memberNumber";
 
 /** A browser-shaped local storage, so the draft helpers run their real paths. */
@@ -173,6 +174,38 @@ describe("consents", () => {
     // There is no visibility column anywhere in the consent definitions: a
     // consent is a consent, and member_visibility keeps its own defaults.
     expect(Object.keys(directory ?? {})).toEqual(["value", "key", "group", "defaultOn"]);
+  });
+});
+
+describe("gender", () => {
+  test("a member starts on prefer_not_to_say, so declining reads as not yet answered", () => {
+    expect(emptyDraft().gender).toBe("prefer_not_to_say");
+    expect(GENDERS[0]?.value).toBe("prefer_not_to_say");
+  });
+
+  test("the list is the enum and nothing else", () => {
+    expect(GENDERS.map((g) => g.value)).toEqual([
+      "prefer_not_to_say",
+      "woman",
+      "man",
+      "non_binary",
+      "self_described",
+    ]);
+    // No option can carry a free-text partner: there is nowhere to put one.
+    for (const option of GENDERS) {
+      expect(Object.keys(option)).toEqual(["value", "key"]);
+    }
+  });
+
+  test("no label offers to collect a description", () => {
+    // member_gender stores the enum only. A label promising self-description
+    // would be offering a box that does not exist, and asking for a free-text
+    // statement of identity that could be neither counted nor suppressed.
+    for (const option of GENDERS) {
+      const label = (en.join.genders as Record<string, string>)[option.key];
+      expect(label).toBeDefined();
+      expect(label).not.toMatch(/describe|own words|specify|tell us/i);
+    }
   });
 });
 
