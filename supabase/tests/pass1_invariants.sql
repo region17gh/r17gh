@@ -587,15 +587,48 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- 14. Gender is not readable by anon or by service_role --------------------
+  -- 14. Gender is not READABLE by anon or by service_role --------------------
+  -- Condition 4 of the gender decision restricts READS: "the member themselves
+  -- and the r17_reporting role". It says nothing about writes, and on this
+  -- table writes are deliberately granted wider than reads.
+  --
+  -- 20260825060018 grants service_role INSERT, UPDATE, DELETE and withholds
+  -- SELECT. That is the point of the table: service_role maintains the row and
+  -- never reads it. pseudonymize_member() runs as service_role and DELETEs the
+  -- gender row during erasure, so a service_role that cannot write this table
+  -- cannot erase it -- the erasure would report success and leave the gender
+  -- record standing. Withholding SELECT is what condition 4 asks for; the
+  -- write grants are what makes erasure work.
+  --
+  -- So this case filters on privilege_type = 'SELECT'. It previously counted
+  -- ANY grant, which made it stricter than the invariant it exists to check:
+  -- it failed on the erasure write and would have been "fixed" by revoking it.
+  -- Do not widen it back to any privilege. The next assertion holds the other
+  -- side of the same line.
   SELECT count(*) INTO cnt
     FROM information_schema.role_table_grants
    WHERE table_schema = 'public' AND table_name = 'member_gender'
+     AND privilege_type = 'SELECT'
      AND grantee IN ('anon','service_role','PUBLIC');
   IF cnt = 0 THEN
-    log := log || E'\nPASS  member_gender granted to no role beyond authenticated/r17_reporting';
+    log := log || E'\nPASS  member_gender readable by no role beyond authenticated/r17_reporting';
   ELSE
-    log := log || E'\nFAIL  member_gender is granted to a broader role';
+    log := log || E'\nFAIL  member_gender SELECT is granted to a broader role';
+  END IF;
+
+  -- 14b. ...and service_role keeps the writes erasure depends on -------------
+  -- The companion to 14. Revoking these is the failure mode 14 used to invite:
+  -- it looks like tightening the gender rule and it silently breaks the right
+  -- to erasure, which is a legal obligation, not a preference.
+  SELECT count(*) INTO cnt
+    FROM information_schema.role_table_grants
+   WHERE table_schema = 'public' AND table_name = 'member_gender'
+     AND grantee = 'service_role'
+     AND privilege_type IN ('INSERT','UPDATE','DELETE');
+  IF cnt = 3 THEN
+    log := log || E'\nPASS  service_role keeps INSERT/UPDATE/DELETE on member_gender for erasure';
+  ELSE
+    log := log || E'\nFAIL  service_role is missing a write grant on member_gender; pseudonymize_member() cannot clear it';
   END IF;
 
   -- 15. A member cannot write their own welcome-email stamp ------------------

@@ -159,7 +159,15 @@ Act 843 applies extraterritorially, plus every host-country regime members live 
 
 Tracked and unresolved. Do not treat the product as launch-ready while any are open.
 
-- **Cloudflare Turnstile live on `/join` in production.** Currently stubbed. Sequential member numbers during the founding window are scriptable.
+- **Cloudflare Turnstile keys set in production.** The control is built and
+  wired: `verifyChallenge()` runs inside `issueReservation()`, above the
+  `reserve_member_number()` call and in the same function, so a failed challenge
+  costs no reservation. What is outstanding is operational, not code. Set
+  `VITE_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in the production
+  environment: without the secret the server refuses to issue member numbers at
+  all, which is the correct failure but is not a launch state. The development
+  stub is guarded by `import.meta.env.DEV` and cannot be switched on in a
+  production build, because the branch is not compiled into one.
 - Privacy policy, terms, and Code of Conduct live before the first signup.
 - Counsel read on the age-gate implementation.
 - Data Protection Commission registration determined.

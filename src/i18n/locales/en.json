@@ -220,6 +220,16 @@
       "claimed": "The number we were holding went to another registration while you were away. Here is your number. Everything you entered is still here.",
       "unknown": "We could not find the number we were holding for you. Here is your number. Everything you entered is still here.",
       "newNumber": "Your member number is now {number}."
+    },
+
+    "challenge": {
+      "unavailable": "We could not run the check that protects member numbers. That is usually a browser extension or a blocked connection rather than anything you did. Try again, and if it keeps happening, try a different browser or network.",
+      "failed": "The check that protects member numbers did not pass. No number was taken and nothing was lost.",
+      "expired": "The check that protects member numbers did not finish in time. No number was taken.",
+      "kept": "Everything you entered is still here.",
+      "retry": "Run the check again",
+      "retrying": "Checking",
+      "stub": "Development build: the member-number check is stubbed and no real challenge is running. This does not exist in a production build."
     }
   },
 
