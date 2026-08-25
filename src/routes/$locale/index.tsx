@@ -31,54 +31,39 @@ function LocaleHome() {
   const t = useT();
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "var(--space-4)",
-        padding: "var(--space-8)",
-        backgroundColor: "var(--paper-050)",
-        color: "var(--ink-900)",
-        textAlign: "center",
-      }}
-    >
-      <h1
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <PanBand />
+      <main
         style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "var(--text-display-3)",
-          lineHeight: "var(--lh-display)",
-          letterSpacing: "var(--tracking-display)",
-          margin: "var(--space-0)",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "var(--space-4)",
+          padding: "var(--space-8)",
+          textAlign: "center",
         }}
       >
-        {t("meta.siteName")}
-      </h1>
-      <p
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "var(--text-body)",
-          lineHeight: "var(--lh-body)",
-          maxWidth: "var(--measure-prose)",
-          margin: "var(--space-0)",
-        }}
-      >
-        {t("meta.tagline")}
-      </p>
-      <p
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "var(--text-meta)",
-          lineHeight: "var(--lh-body)",
-          color: "var(--ink-700)",
-          maxWidth: "var(--measure-prose)",
-          margin: "var(--space-0)",
-        }}
-      >
-        {t("legal.notAGovernmentDocument")}
-      </p>
-    </main>
+        <h1
+          style={{
+            font: "var(--type-hero)",
+            letterSpacing: "var(--tracking-display)",
+            margin: "var(--space-0)",
+          }}
+        >
+          {t("meta.siteName")}
+        </h1>
+        <p style={{ maxWidth: "var(--measure-prose)", margin: "var(--space-0)" }}>
+          {t("meta.tagline")}
+        </p>
+        <p
+          className="r17-cite"
+          style={{ maxWidth: "var(--measure-prose)", margin: "var(--space-0)" }}
+        >
+          {t("legal.notAGovernmentDocument")}
+        </p>
+      </main>
+    </div>
   );
 }
