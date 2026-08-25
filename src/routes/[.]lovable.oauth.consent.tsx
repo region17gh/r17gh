@@ -38,7 +38,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   component: Consent,
   errorComponent: ({ error }) => (
     <Shell>
-      <p role="alert" style={{ font: "var(--text-body)", color: "var(--pan-red)" }}>
+      <p role="alert" style={{ font: "var(--type-body)", color: "var(--pan-red)" }}>
         We could not load this authorisation request: {String((error as Error)?.message ?? error)}
       </p>
     </Shell>
@@ -112,15 +112,15 @@ function Consent() {
   if (!state.signedIn) {
     return (
       <Shell>
-        <h1 style={{ font: "var(--text-title-1)", fontFamily: "var(--font-display)", marginTop: "var(--space-0)" }}>
+        <h1 style={{ font: "var(--type-section)", marginTop: "var(--space-0)" }}>
           Sign in to continue
         </h1>
-        <p style={{ font: "var(--text-body)", color: "var(--ink-700)" }}>
+        <p style={{ font: "var(--type-body)", color: "var(--ink-700)" }}>
           We send a sign-in link to the email address on your member record. Open it on this device and you will return
           to this approval screen.
         </p>
         {sent ? (
-          <p style={{ font: "var(--text-body)" }} role="status">
+          <p style={{ font: "var(--type-body)" }} role="status">
             Check {email} for the sign-in link.
           </p>
         ) : (
@@ -143,7 +143,7 @@ function Consent() {
           </form>
         )}
         {error ? (
-          <p role="alert" style={{ font: "var(--text-body-sm)", color: "var(--pan-red)", marginTop: "var(--space-4)" }}>
+          <p role="alert" style={{ font: "var(--type-meta)", color: "var(--pan-red)", marginTop: "var(--space-4)" }}>
             {error}
           </p>
         ) : null}
@@ -155,20 +155,20 @@ function Consent() {
 
   return (
     <Shell>
-      <h1 style={{ font: "var(--text-title-1)", fontFamily: "var(--font-display)", marginTop: "var(--space-0)" }}>
+      <h1 style={{ font: "var(--type-section)", marginTop: "var(--space-0)" }}>
         Connect {clientName} to your Region 17 account
       </h1>
-      <p style={{ font: "var(--text-body)", color: "var(--ink-700)" }}>
+      <p style={{ font: "var(--type-body)", color: "var(--ink-700)" }}>
         {clientName} will be able to read your own member record, your consent history, and the reference list of Ghana's
         regions, acting as you. It cannot read other members' records and it cannot change yours. You can revoke this at
         any time.
       </p>
-      <p style={{ font: "var(--text-body-sm)", color: "var(--ink-700)" }}>
+      <p style={{ font: "var(--type-meta)", color: "var(--ink-700)" }}>
         Region 17 membership is a standing in a community. It is not a government document and confers no citizenship,
         residence, visa, or right of entry.
       </p>
       {error ? (
-        <p role="alert" style={{ font: "var(--text-body-sm)", color: "var(--pan-red)" }}>
+        <p role="alert" style={{ font: "var(--type-meta)", color: "var(--pan-red)" }}>
           {error}
         </p>
       ) : null}
