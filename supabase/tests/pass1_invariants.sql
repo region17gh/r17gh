@@ -248,12 +248,27 @@ BEGIN
   -- 8. Append-only history ---------------------------------------------------
   INSERT INTO public.affirmations (member_id, compact_version, conduct_version)
   VALUES (m_a, 'v1', 'v1');
-  BEGIN
-    UPDATE public.affirmations SET compact_version = 'v2' WHERE member_id = m_a;
-    log := log || E'\nFAIL  affirmation update accepted';
-  EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nPASS  affirmation update refused: ' || SQLERRM;
-  END;
+
+  -- Third instance of the same class of bug this file has now produced
+  -- (section 1's GUC ordering, section 7's JWT mismatch, this one): an
+  -- assertion structured as "no exception, therefore permitted" cannot tell
+  -- "genuinely allowed" apart from "matched nothing." affirmations has RLS
+  -- enabled with NO UPDATE policy for authenticated at all -- not even a
+  -- restrictive one -- so a zero-row UPDATE succeeds trivially and the
+  -- affirmations_append_only trigger never fires, because there is no row
+  -- for it to fire on. "No exception" was true here whether the trigger
+  -- blocked a real write or the row was simply invisible to the statement.
+  -- Assert what the invariant actually requires: the row is unchanged. A
+  -- check that only proves nothing raised would still pass against a table
+  -- that had been dropped.
+  UPDATE public.affirmations SET compact_version = 'v2' WHERE member_id = m_a;
+  SELECT count(*) INTO cnt FROM public.affirmations
+   WHERE member_id = m_a AND compact_version = 'v1';
+  IF cnt = 1 THEN
+    log := log || E'\nPASS  affirmation update refused (row unchanged)';
+  ELSE
+    log := log || E'\nFAIL  affirmation row missing or changed after update attempt';
+  END IF;
 
   INSERT INTO public.member_consents (member_id, consent_type, policy_version, mechanism)
   VALUES (m_a, 'directory_visibility', 'v1', 'join_flow');
@@ -268,12 +283,18 @@ BEGIN
   log := log || E'\nPASS  consent withdrawal (revoked_at) permitted';
 
   -- 9. History survives an attempted member delete ---------------------------
-  BEGIN
-    DELETE FROM public.members WHERE id = m_a;
-    log := log || E'\nFAIL  member with consent history was deletable';
-  EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nPASS  member delete restricted by history: ' || SQLERRM;
-  END;
+  -- Same shape as section 8: members has RLS enabled with explicitly no
+  -- DELETE policy for authenticated ("erasure runs through pseudonymisation,
+  -- not row deletion"), so a zero-row DELETE succeeds trivially and raises
+  -- nothing. "No exception, therefore deletable" cannot tell "actually
+  -- deleted" apart from "matched nothing." Assert the row still exists.
+  DELETE FROM public.members WHERE id = m_a;
+  SELECT count(*) INTO cnt FROM public.members WHERE id = m_a;
+  IF cnt = 1 THEN
+    log := log || E'\nPASS  member with consent history survived the delete attempt';
+  ELSE
+    log := log || E'\nFAIL  member with consent history was deleted';
+  END IF;
 
   -- 10. Visibility and consent default to the most private value -------------
   INSERT INTO public.member_visibility (member_id) VALUES (m_a);
@@ -324,6 +345,22 @@ BEGIN
   -- the vulnerability this migration closes. Only the activate_membership()
   -- calls run as authenticated, because that is the one surface a real
   -- signed-in member actually reaches.
+  --
+  -- COVERAGE GAP, not a defect: on production, service_role has no table
+  -- access to auth.users -- GoTrue owns that schema outright and connects as
+  -- its own role, separate from what PostgREST/service_role can reach. The
+  -- INSERT into auth.users below fails there with "permission denied for
+  -- table users," this whole block is caught by the EXCEPTION handler below,
+  -- and every activation-specific assertion inside it -- unconfirmed refused,
+  -- wrong-address refused, confirmed address activates, email_verified_at
+  -- sourced from GoTrue not the caller, double-activation is a no-op,
+  -- suspended can't self-activate -- is SKIPPED with an INFO line rather than
+  -- run. That degrade-not-fail behavior is correct and should stay an INFO.
+  -- But it means activate_membership()'s actual behavior under authenticated
+  -- is UNVERIFIED ON PRODUCTION by this harness. It has been proven locally
+  -- and on the preview branch, where auth.users is writable, but production
+  -- itself has never exercised these six cases. That gap is real and belongs
+  -- in the open rather than folded into a skipped line further down.
   BEGIN
     PERFORM set_config('role', 'service_role', true);
     INSERT INTO auth.users (id, email) VALUES (uid_c, 'c@example.test');
@@ -436,7 +473,8 @@ BEGIN
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
     PERFORM set_config('role', 'authenticated', true);
   EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nINFO  activation cases skipped: ' || SQLERRM;
+    log := log || E'\nINFO  activation cases skipped (' || SQLERRM ||
+      '). activate_membership() under authenticated is UNVERIFIED ON PRODUCTION by this harness -- proven locally/preview only, where auth.users is writable.';
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
     PERFORM set_config('role', 'authenticated', true);
   END;
