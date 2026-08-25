@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "sdk_version": "0.28.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://idmxottsjqeiatgiudvt.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "region-17-ghana-initial-build-aug-2026",
+      "version": "0.1.0",
+      "title": "Region 17 Ghana | Initial Build (Aug 2026)"
+    },
+    "tools": [
+      {
+        "name": "get_my_membership",
+        "title": "Get my membership record",
+        "description": "Read the signed-in member's own Region 17 record: member number, credential ID, handle, standing dates and status. Returns nothing for a signed-in user who has not yet registered.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_consents",
+        "title": "List my consents and affirmations",
+        "description": "Read the signed-in member's own consent history (one row per consent, with grant and revocation times and policy version) and their Compact affirmation records. Read only: consent records are append-only and can only be changed in the app.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_ghana_regions",
+        "title": "List Ghana's regions",
+        "description": "Reference list of Ghana's sixteen regions with slug, name and capital. The seventeenth region is the diaspora itself and is not a row here.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "slug": {
+              "description": "Return one region by slug instead of all sixteen.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
