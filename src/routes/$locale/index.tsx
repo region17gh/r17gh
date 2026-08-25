@@ -35,7 +35,7 @@ function LocaleHome() {
       <PanBand />
       <main
         style={{
-          flex: 1,
+          flexGrow: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
