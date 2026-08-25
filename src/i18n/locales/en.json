@@ -64,6 +64,7 @@
       "dobHint": "Month and year only, never the day. Region 17 membership is for adults, 18 and over.",
       "dobMissing": "Please enter your month and year of birth.",
       "underage": "Region 17 membership opens at 18. We're working on a youth pathway with the safeguards it needs, and we'd rather build that properly than let you in early. Come back and find us.",
+      "underageHeading": "Membership opens at 18.",
       "firstName": "First name",
       "lastName": "Last name",
       "email": "Email",
@@ -71,8 +72,12 @@
       "emailMissing": "Enter an email address so we can send your credential.",
       "sendCode": "Send me a code",
       "sendingCode": "Sending",
+
+      "codeHeading": "Check your email",
+      "codeLede": "One short step. Confirming this address is what lets us hold a member number for you.",
       "codeLabel": "Six-digit code",
       "codeSent": "We sent a six-digit code to {email}. It expires shortly.",
+      "codeResent": "We sent another code to {email}. Use the most recent one.",
       "codeHint": "Enter the code to confirm this address. Nothing is stored against it until you do.",
       "codeMissing": "Enter the six-digit code from your email.",
       "codeWrong": "That code did not match. Check the most recent email and try again.",
@@ -81,6 +86,9 @@
       "codeResend": "Send another code",
       "codeChangeEmail": "Use a different address",
       "emailConfirmed": "Address confirmed.",
+
+      "detailsHeading": "Where you live",
+      "detailsLede": "City-level, and one optional question we use only for counting.",
       "locationLabel": "Where you live",
       "cityLabel": "City",
       "cityPlaceholder": "Houston",
@@ -212,6 +220,20 @@
       "unknown": "We could not find the number we were holding for you. Here is your number. Everything you entered is still here.",
       "newNumber": "Your member number is now {number}."
     }
+  },
+
+  "authLink": {
+    "eyebrow": "Email link",
+    "expiredHeading": "That link has expired.",
+    "expiredBody": "Confirmation links are short-lived on purpose, and this one has passed its window. It will not open your record.",
+    "deniedHeading": "That link could not be used.",
+    "deniedBody": "It has either been used already or it was opened in a different browser from the one that asked for it.",
+    "unknownHeading": "That link did not open.",
+    "unknownBody": "We could not tell what went wrong with it. Usually that means it has already been used, or it has expired.",
+    "held": "If a member number was being held for you, it is still yours. If the hold has lapsed we issue a new one and keep everything you entered.",
+    "continue": "Continue joining",
+    "signIn": "Sign in instead",
+    "joinAgain": "Ask for a fresh code below. Everything you entered is still here."
   },
 
   "verify": {

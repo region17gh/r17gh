@@ -20,6 +20,8 @@ import {
   savePendingHandle,
 } from "../src/lib/join/draft";
 import { checkHandle, normaliseHandle, suggestHandle } from "../src/lib/join/handle";
+import { looksSendable, submitIdentity } from "../src/lib/join/identity";
+import { readLinkError } from "../src/lib/auth/linkError";
 import { CONNECTIONS, CONSENTS, GENDERS } from "../src/lib/join/options";
 import en from "../src/i18n/locales/en.json";
 import { formatMemberNumber } from "../src/components/join/memberNumber";
@@ -261,5 +263,146 @@ describe("member numbers", () => {
     expect(formatMemberNumber(248)).toEqual({ prefix: "000,", tail: "248" });
     expect(formatMemberNumber(1248)).toEqual({ prefix: "00", tail: "1,248" });
     expect(formatMemberNumber(123456)).toEqual({ prefix: "", tail: "123,456" });
+  });
+});
+
+describe("the age gate, at submit", () => {
+  const now = new Date(Date.UTC(2026, 7, 25)); // 25 August 2026
+  const ADDRESS = "ama@example.com";
+
+  /** Records what was called, in order, so the sequence itself can be asserted. */
+  function watch() {
+    const calls: string[] = [];
+    return {
+      calls,
+      keepEmail: (email: string) => void calls.push(`keep:${email}`),
+      sendCode: async (email: string) => {
+        calls.push(`send:${email}`);
+        return { error: null };
+      },
+      now,
+    };
+  }
+
+  test("an under-18 submission with all four answers keeps no address and calls nothing", async () => {
+    const store = installStorage();
+    // The state a member reaches by filling the screen in: name and date of
+    // birth are in the draft as they are typed, the address is not, and every
+    // field on the screen has something in it.
+    saveDraft({
+      ...emptyDraft(),
+      firstName: "Ama",
+      lastName: "Mensah",
+      birthMonth: 8,
+      birthYear: 2010,
+    });
+    const handlers = watch();
+
+    const outcome = await submitIdentity(
+      { birthMonth: 8, birthYear: 2010, email: ADDRESS },
+      handlers,
+    );
+
+    expect(outcome.status).toBe("underage");
+    // No network call: the code was never requested.
+    expect(handlers.calls).toEqual([]);
+    // No draft state: the address was never handed to the draft, and what the
+    // earlier fields had already stored is gone with it.
+    expect(loadDraft().email).toBe("");
+    expect(loadDraft().firstName).toBe("");
+    expect(store.get("r17.join.draft.v1")).toBeUndefined();
+    // Nothing anywhere in storage carries the address.
+    expect([...store.values()].some((value) => value.includes(ADDRESS))).toBe(false);
+  });
+
+  test("an adult submission keeps the address first, then asks for the code", async () => {
+    installStorage();
+    const handlers = watch();
+
+    const outcome = await submitIdentity(
+      { birthMonth: 6, birthYear: 1990, email: `  ${ADDRESS} ` },
+      handlers,
+    );
+
+    expect(outcome.status).toBe("sent");
+    expect(handlers.calls).toEqual([`keep:${ADDRESS}`, `send:${ADDRESS}`]);
+  });
+
+  test("a missing date of birth stops before the address is read at all", async () => {
+    installStorage();
+    saveDraft({ ...emptyDraft(), firstName: "Ama" });
+    const handlers = watch();
+
+    const outcome = await submitIdentity(
+      { birthMonth: null, birthYear: null, email: ADDRESS },
+      handlers,
+    );
+
+    expect(outcome.status).toBe("dob_missing");
+    expect(handlers.calls).toEqual([]);
+    // Not a refusal: what they have entered so far is still theirs.
+    expect(loadDraft().firstName).toBe("Ama");
+  });
+
+  test("an adult with no usable address sends nothing and keeps nothing", async () => {
+    installStorage();
+    const handlers = watch();
+
+    const outcome = await submitIdentity(
+      { birthMonth: 6, birthYear: 1990, email: "   " },
+      handlers,
+    );
+
+    expect(outcome.status).toBe("email_missing");
+    expect(handlers.calls).toEqual([]);
+  });
+
+  test("a failed send is reported without pretending a code is on its way", async () => {
+    installStorage();
+    const outcome = await submitIdentity(
+      { birthMonth: 6, birthYear: 1990, email: ADDRESS },
+      {
+        keepEmail: () => undefined,
+        sendCode: async () => ({ error: { message: "smtp is down" } }),
+        now,
+      },
+    );
+
+    expect(outcome.status).toBe("send_failed");
+  });
+
+  test("the address check catches what cannot be sent, and nothing more", () => {
+    expect(looksSendable("ama@example.com")).toBe(true);
+    expect(looksSendable("ama+r17@example.co.uk")).toBe(true);
+    expect(looksSendable("")).toBe(false);
+    expect(looksSendable("ama")).toBe(false);
+    expect(looksSendable("@example.com")).toBe(false);
+    expect(looksSendable("ama@")).toBe(false);
+    expect(looksSendable("ama mensah@example.com")).toBe(false);
+  });
+});
+
+describe("a link that will not open", () => {
+  test("reads an expired confirmation link out of the fragment", () => {
+    const failure = readLinkError(
+      "#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired",
+    );
+    expect(failure).toEqual({ problem: "expired", code: "otp_expired" });
+  });
+
+  test("reads a refusal that carries no code", () => {
+    expect(readLinkError("#error=access_denied")).toEqual({ problem: "denied", code: "" });
+  });
+
+  test("reads the query string too, for the flow that puts it there", () => {
+    expect(readLinkError("", "?error=server_error&error_code=unexpected_failure")).toEqual({
+      problem: "unknown",
+      code: "unexpected_failure",
+    });
+  });
+
+  test("a link that worked is not a failure", () => {
+    expect(readLinkError("#access_token=abc&type=magiclink")).toBeNull();
+    expect(readLinkError("")).toBeNull();
   });
 });

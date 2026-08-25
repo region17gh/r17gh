@@ -1,1 +1,21 @@
 project_id = "idmxottsjqeiatgiudvt"
+
+# The email templates the auth flows depend on, kept in the repository so the
+# requirement is reviewable rather than dashboard-only.
+#
+# Both templates carry `{{ .Token }}`. The join flow asks for a six-digit code,
+# and which template a request triggers is decided by GoTrue, not by the screen
+# the member is on: an address with no account gets `confirmation`, an address
+# with one gets `magic_link`. A code missing from either template is a dead end
+# for whichever members land on it.
+#
+# This project is hosted, so these files are the source of record and the
+# Dashboard (Authentication, Email Templates) has to be kept matching them.
+
+[auth.email.template.confirmation]
+subject = "Your Region 17 code is {{ .Token }}"
+content_path = "./supabase/templates/confirm-signup.html"
+
+[auth.email.template.magic_link]
+subject = "Your Region 17 sign-in code is {{ .Token }}"
+content_path = "./supabase/templates/magic-link.html"

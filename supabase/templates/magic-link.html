@@ -1,0 +1,20 @@
+<!--
+  Sent when an existing account asks for a code or a link: /signin, and any
+  later request from an address that already has an account.
+
+  Carries both, for the same reason as the signup template. The join flow and
+  the sign-in flow ask for different things, a code and a link, and which
+  template fires depends on whether the address already has an account rather
+  than on which screen the member is standing on.
+-->
+<h2>Sign in to Region 17</h2>
+
+<p><a href="{{ .ConfirmationURL }}">Sign in</a></p>
+
+<p>Or enter this code where you were asked for one:</p>
+
+<p><strong style="font-size: 24px; letter-spacing: 2px">{{ .Token }}</strong></p>
+
+<p>The link and the code both expire shortly, and both work once.</p>
+
+<p>If you did not ask to sign in, ignore this email.</p>
