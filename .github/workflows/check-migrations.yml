@@ -1,0 +1,64 @@
+name: Check migrations are deployed
+
+# Fails when main carries a migration that production's own migration
+# history doesn't show yet. This is detection only: it never runs `supabase
+# db push` and never writes to production. It exists because a migration
+# has reached main before without anyone applying it -- 20260825210000 (the
+# welcome_email_sent_at column) sat merged through three PRs' worth of
+# history while production silently lacked it, and the only code that
+# depended on it failed on every call, swallowed by design at its one call
+# site. See PR #12.
+#
+# `supabase migration list --linked` compares local and remote migration
+# history by timestamp only (per Supabase's own docs), so this check reads
+# the same thing that comparison would use -- it just never acts on it.
+#
+# Deliberately not auto-applying migrations here. That's a separate,
+# bigger decision: it means a workflow holds credentials that can write to
+# production, and it needs its own proposal with the credential handling,
+# failure containment, and rollback path spelled out.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**.sql"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link to the production project
+        run: supabase link --project-ref idmxottsjqeiatgiudvt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      # Grepping the plain-text listing rather than parsing a specific
+      # --output format, so this doesn't silently stop checking anything
+      # if the CLI's structured-output schema changes under it.
+      - name: Verify every local migration is in production's history
+        run: |
+          set -euo pipefail
+          status=0
+          listing="$(supabase migration list --linked)"
+          for f in supabase/migrations/*.sql; do
+            version="$(basename "$f" | cut -d'_' -f1)"
+            if ! grep -q "$version" <<< "$listing"; then
+              echo "::error file=$f::Migration $version is on main but does not appear in production's migration history. Apply it by hand (supabase db push) until automatic deploy exists."
+              status=1
+            fi
+          done
+          exit "$status"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
