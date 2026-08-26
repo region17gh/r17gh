@@ -2,7 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { Credential } from "@/components/join/Credential";
-import { Button, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import { Button, Card, PanBand, SectionHeader } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { sendWelcomeEmail } from "@/server/welcome";
@@ -90,20 +90,14 @@ function HomePage() {
           padding: "var(--space-12) var(--gutter) var(--space-20)",
         }}
       >
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            gap: "var(--space-4)",
-            flexWrap: "wrap",
-          }}
-        >
-          <h1 style={{ font: "var(--type-section)" }}>{t("home.heading", { name })}</h1>
-          <Button size="lg" variant="ghost" onClick={() => void signOut()}>
-            {t("home.signOut")}
-          </Button>
-        </header>
+        <SectionHeader
+          title={t("home.heading", { name })}
+          action={
+            <Button size="lg" variant="ghost" onClick={() => void signOut()}>
+              {t("home.signOut")}
+            </Button>
+          }
+        />
 
         {pending ? (
           <div
@@ -121,15 +115,10 @@ function HomePage() {
           </div>
         ) : null}
 
-        <section
-          style={{
-            marginTop: "var(--space-8)",
-            padding: "var(--space-8) var(--space-6)",
-            border: "var(--border-width) solid var(--border-hairline)",
-            borderRadius: "var(--radius-card)",
-            background: "var(--surface-card)",
-            textAlign: "center",
-          }}
+        <Card
+          elevation={0}
+          padding="var(--space-8) var(--space-6)"
+          style={{ marginTop: "var(--space-8)", textAlign: "center" }}
         >
           <h2 className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
             {t("home.credentialHeading")}
@@ -148,7 +137,7 @@ function HomePage() {
               {member.handle}
             </p>
           ) : null}
-        </section>
+        </Card>
 
         <section style={{ marginTop: "var(--space-10)" }}>
           <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.askOfferHeading")}</h2>
@@ -206,7 +195,7 @@ function HomePage() {
         <p
           className="r17-cite"
           style={{
-            fontFamily: "var(--font-sans)",
+            
             color: "var(--text-muted)",
             marginTop: "var(--space-12)",
           }}

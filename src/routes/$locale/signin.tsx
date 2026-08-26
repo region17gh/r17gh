@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { Button, Field, Input, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import { Button, Field, Input, PanBand, SectionHeader } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { TAP_CONTROL } from "@/components/join/steps/shared";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,8 +58,7 @@ function SignInPage() {
           padding: "var(--space-16) var(--gutter) var(--space-20)",
         }}
       >
-        <h1 style={{ font: "var(--type-section)" }}>{t("signin.heading")}</h1>
-        <p style={{ marginTop: "var(--space-4)", color: "var(--text-muted)" }}>{t("signin.lede")}</p>
+        <SectionHeader title={t("signin.heading")} lede={t("signin.lede")} />
 
         {sent ? (
           <p className="r17-notice" role="status" style={{ marginTop: "var(--space-6)" }}>
@@ -93,7 +92,7 @@ function SignInPage() {
         <p
           className="r17-cite"
           style={{
-            fontFamily: "var(--font-sans)",
+            
             color: "var(--text-muted)",
             marginTop: "var(--space-12)",
           }}

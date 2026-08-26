@@ -1,4 +1,5 @@
 import { useT } from "@/i18n";
+import { Tag } from "@/design-system/region-17-ghana-design-system-e3e62f";
 
 import { formatMemberNumber } from "./memberNumber";
 import { RegisterStar } from "./RegisterCard";
@@ -59,19 +60,9 @@ export function Credential({
             <RegisterStar size={14} />
             {t("join.issued.founding")}
           </span>
-          <span
-            className="r17-cite"
-            style={{
-              display: "inline-block",
-              border: "var(--border-width) solid var(--border-default)",
-              borderRadius: "var(--radius-pill)",
-              padding: "0 var(--space-3)",
-              marginLeft: "var(--space-2)",
-              color: "var(--text-muted)",
-            }}
-          >
+          <Tag color="var(--text-muted)" style={{ marginLeft: "var(--space-2)" }}>
             {t("join.issued.classOf", { year: classYear })}
-          </span>
+          </Tag>
         </p>
       ) : null}
 
