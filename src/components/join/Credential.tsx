@@ -1,4 +1,5 @@
 import { useT } from "@/i18n";
+import { Tag } from "@/design-system/region-17-ghana-design-system-e3e62f";
 
 import { formatMemberNumber } from "./memberNumber";
 import { RegisterStar } from "./RegisterCard";

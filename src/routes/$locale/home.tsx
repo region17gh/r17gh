@@ -2,7 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { Credential } from "@/components/join/Credential";
-import { Button, PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import { Button, Card, PanBand, SectionHeader } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { sendWelcomeEmail } from "@/server/welcome";
