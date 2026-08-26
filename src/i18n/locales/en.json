@@ -296,7 +296,13 @@
     "townhallHeading": "Next town hall",
     "townhallBody": "The next Regional Spotlight town hall is on the 14th. Your seat is free.",
     "nextHeading": "What happens now",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "classLabel": "Class",
+    "addressLabel": "Address",
+    "standingMember": "Member",
+    "downloadCredential": "Download PDF",
+    "downloadingCredential": "Preparing your PDF",
+    "downloadFailed": "Could not build the PDF. Try again."
   },
 
   "signin": {
