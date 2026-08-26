@@ -164,16 +164,18 @@ BEGIN
   END IF;
 
   -- The member still edits what is theirs to edit. A grant revoked too widely
-  -- is as much a defect as one left too wide.
+  -- is as much a defect as one left too wide. subdivision joined this group in
+  -- 20260826020000: it is address data of the same kind as city and country,
+  -- and register_member() writes it at signup the same way it writes those.
   SELECT count(*) INTO cnt
     FROM information_schema.column_privileges
    WHERE table_schema = 'public' AND table_name = 'members'
      AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
-     AND column_name IN ('first_name', 'city', 'country', 'handle', 'region_interests');
-  IF cnt = 5 THEN
+     AND column_name IN ('first_name', 'city', 'country', 'subdivision', 'handle', 'region_interests');
+  IF cnt = 6 THEN
     log := log || E'\nPASS  authenticated can still UPDATE its own descriptive columns';
   ELSE
-    log := log || E'\nFAIL  descriptive columns are not updatable (' || cnt || ' of 5)';
+    log := log || E'\nFAIL  descriptive columns are not updatable (' || cnt || ' of 6)';
   END IF;
 
   -- has_function_privilege(), not information_schema.routine_privileges: that
