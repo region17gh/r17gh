@@ -78,6 +78,7 @@ export async function registerMember(
     p_birth_year: draft.birthYear ?? undefined,
     p_country: draft.country || undefined,
     p_city: draft.city.trim() || undefined,
+    p_subdivision: draft.subdivision.trim() || undefined,
     p_timezone: resolveTimezone(),
     p_connection_types: draft.connections,
     p_region_interests: draft.regions,

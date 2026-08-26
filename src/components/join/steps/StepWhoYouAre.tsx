@@ -5,6 +5,7 @@ import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { MONTHS, birthYears } from "@/lib/join/age";
 import { submitIdentity } from "@/lib/join/identity";
+import { GENDERS, type GenderIdentity } from "@/lib/join/options";
 
 import { TAP_CONTROL, type StepProps } from "./shared";
 
@@ -17,11 +18,14 @@ export interface StepWhoYouAreProps extends StepProps {
 /**
  * Who you are, asked first and asked whole.
  *
- * Name, date of birth and email are one screen, because the first thing we ask
- * someone should be who they are, not how old they are. The age gate has not
- * moved; it has moved to submit, where it runs before the address is written to
- * the draft and before anything is sent. See `submitIdentity`: an under-18
- * answer returns from that function having called neither.
+ * Name, date of birth, email and gender are one screen, because the first
+ * thing we ask someone should be who they are, not how old they are or where
+ * they live. The age gate has not moved; it runs at submit, before the
+ * address is written to the draft and before anything is sent. See
+ * `submitIdentity`: an under-18 answer returns from that function having
+ * called neither. Gender carries no such gate -- it is optional and never
+ * touches the address -- so it is a plain field on the draft like any other
+ * answer here, not held back with the email.
  *
  * The address therefore lives in this component's own state until the gate
  * passes, not in the draft. Typing it is not the same as us keeping it.
@@ -174,6 +178,29 @@ export function StepWhoYouAre({ draft, update, onUnderage, onCodeSent }: StepWho
             style={TAP_CONTROL}
             onChange={(e) => setEmail(e.target.value)}
           />
+        </Field>
+
+        <Field
+          label={
+            <>
+              {t("join.step1.genderLabel")}
+              <span className="r17-optional">{t("common.optional")}</span>
+            </>
+          }
+          hint={t("join.step1.genderHint")}
+          style={{ maxWidth: "var(--measure-narrow)" }}
+        >
+          <Select
+            value={draft.gender}
+            style={TAP_CONTROL}
+            onChange={(e) => update({ gender: e.target.value as GenderIdentity })}
+          >
+            {GENDERS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {t(`join.genders.${option.key}`)}
+              </option>
+            ))}
+          </Select>
         </Field>
       </div>
 

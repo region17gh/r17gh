@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { clearLinkError, currentLinkError, type LinkProblem } from "@/lib/auth/linkError";
 import { checkAge } from "@/lib/join/age";
 import type { ChallengeProblem } from "@/lib/security/turnstile";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import {
   clearDraft,
   emptyDraft,
@@ -110,6 +111,8 @@ function JoinPage() {
   const [reserving, setReserving] = useState(false);
   const [lapse, setLapse] = useState<LapseReason | null>(null);
   const [challengeProblem, setChallengeProblem] = useState<ChallengeProblem | null>(null);
+  /** Consecutive failures, so a member stuck for reasons of their own gets a way out. */
+  const [challengeAttempts, setChallengeAttempts] = useState(0);
   const [resumed, setResumed] = useState(false);
   const [affirmed, setAffirmed] = useState(false);
   const [handleProblem, setHandleProblem] = useState<HandleProblem | "taken" | "reserved" | null>(
@@ -158,6 +161,19 @@ function JoinPage() {
   );
 
   /**
+   * Records a challenge problem and counts it, so a member who keeps failing
+   * through no fault of their own is offered a way out rather than left to
+   * keep hitting the same disabled Continue button. Passing null clears the
+   * problem but never the count: the count exists to notice a losing streak,
+   * and a widget that briefly clears between failures is still a member
+   * stuck on this screen.
+   */
+  const reportChallengeProblem = useCallback((problem: ChallengeProblem | null) => {
+    setChallengeProblem(problem);
+    if (problem) setChallengeAttempts((n) => n + 1);
+  }, []);
+
+  /**
    * Claims or re-checks the member number. Also catches an account that already
    * joined.
    *
@@ -186,10 +202,11 @@ function JoinPage() {
         if (result.status === "challenge_refused") {
           // Nothing was reserved, which is the point. The member is told what
           // happened and given the check again, not a raw error.
-          setChallengeProblem(result.problem);
+          reportChallengeProblem(result.problem);
           return null;
         }
         setChallengeProblem(null);
+        setChallengeAttempts(0);
         if (result.status === "reissued") setLapse(result.reason ?? "unknown");
         else setLapse(null);
 
@@ -207,7 +224,7 @@ function JoinPage() {
         setReserving(false);
       }
     },
-    [locale, navigate, t],
+    [locale, navigate, reportChallengeProblem, t],
   );
 
   /** The member asking for the check again after it would not complete. */
@@ -414,7 +431,9 @@ function JoinPage() {
   const cardValues = useMemo(() => {
     const name = [draft.firstName.trim(), draft.lastName.trim()].filter(Boolean).join(" ");
     const countryName = countries.find((c) => c.code === draft.country)?.name ?? "";
-    const location = [draft.city.trim(), countryName].filter(Boolean).join(", ");
+    const location = [draft.city.trim(), draft.subdivision.trim(), countryName]
+      .filter(Boolean)
+      .join(", ");
 
     const chosen = CONNECTIONS.filter((c) => draft.connections.includes(c.value)).map((c) =>
       t(`join.connections.${c.key}`),
@@ -567,7 +586,7 @@ function JoinPage() {
               Cloudflare wants a person to do something.
             */}
             {step !== "issued" && !refused ? (
-              <Challenge handle={challengeRef} onProblem={setChallengeProblem} />
+              <Challenge handle={challengeRef} onProblem={reportChallengeProblem} />
             ) : null}
 
             {challengeProblem && !refused ? (
@@ -579,6 +598,14 @@ function JoinPage() {
                     {reserving ? t("join.challenge.retrying") : t("join.challenge.retry")}
                   </Button>
                 </p>
+                {challengeAttempts >= 2 ? (
+                  <p style={{ marginTop: "var(--space-3)" }}>
+                    {t("join.challenge.stillStuck")}{" "}
+                    <a href={`mailto:${SUPPORT_EMAIL}`}>
+                      {t("join.challenge.contactSupport", { email: SUPPORT_EMAIL })}
+                    </a>
+                  </p>
+                ) : null}
               </div>
             ) : null}
 

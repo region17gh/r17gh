@@ -109,6 +109,24 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
   useEffect(() => {
     if (STUBBED) return;
 
+    if (!TURNSTILE_SITE_KEY) {
+      // Reached only outside development: STUBBED already covers the
+      // dev-with-no-key case. A production build with no site key is a
+      // deployment misconfiguration, not a member failing a challenge, and
+      // handing an empty sitekey to Cloudflare's widget would produce
+      // whatever undocumented failure mode it has for that input -- which is
+      // exactly the kind of unexplained, repeatable "try again" this
+      // component exists to avoid. Caught here, deterministically, before
+      // the widget is ever asked to render.
+      console.error(
+        "[turnstile] VITE_TURNSTILE_SITE_KEY is empty in a production build. No challenge can " +
+          "run and no member number can be issued until it is set.",
+      );
+      onProblemRef.current("unavailable");
+      settle(null);
+      return;
+    }
+
     let cancelled = false;
     void loadTurnstile().then((api) => {
       if (cancelled) return;
