@@ -195,7 +195,7 @@ function HomePage() {
         <p
           className="r17-cite"
           style={{
-            fontFamily: "var(--font-sans)",
+            
             color: "var(--text-muted)",
             marginTop: "var(--space-12)",
           }}
