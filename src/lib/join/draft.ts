@@ -30,6 +30,7 @@ export interface JoinDraft {
   email: string;
   city: string;
   country: string;
+  subdivision: string;
   gender: GenderIdentity;
   connections: ConnectionType[];
   regions: string[];
@@ -52,6 +53,7 @@ export function emptyDraft(): JoinDraft {
     email: "",
     city: "",
     country: "",
+    subdivision: "",
     gender: "prefer_not_to_say",
     connections: [],
     regions: [],
@@ -104,6 +106,7 @@ function reviveDraft(raw: unknown): JoinDraft {
     email: str(raw["email"]),
     city: str(raw["city"]),
     country: str(raw["country"]),
+    subdivision: str(raw["subdivision"]),
     gender: (str(raw["gender"], base.gender) as GenderIdentity) || base.gender,
     connections: strList(raw["connections"]) as ConnectionType[],
     regions: strList(raw["regions"]),

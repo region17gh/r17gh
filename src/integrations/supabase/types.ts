@@ -665,6 +665,7 @@ export type Database = {
           pseudonymized_at: string | null
           region_interests: string[]
           status: Database["public"]["Enums"]["member_status"]
+          subdivision: string | null
           timezone: string
           updated_at: string
           user_id: string | null
@@ -698,6 +699,7 @@ export type Database = {
           pseudonymized_at?: string | null
           region_interests?: string[]
           status?: Database["public"]["Enums"]["member_status"]
+          subdivision?: string | null
           timezone?: string
           updated_at?: string
           user_id?: string | null
@@ -731,6 +733,7 @@ export type Database = {
           pseudonymized_at?: string | null
           region_interests?: string[]
           status?: Database["public"]["Enums"]["member_status"]
+          subdivision?: string | null
           timezone?: string
           updated_at?: string
           user_id?: string | null
@@ -841,6 +844,7 @@ export type Database = {
           p_member_number: number
           p_primary_connection?: Database["public"]["Enums"]["connection_type"]
           p_region_interests?: string[]
+          p_subdivision?: string
           p_timezone?: string
         }
         Returns: {

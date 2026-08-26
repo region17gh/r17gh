@@ -1,6 +1,6 @@
 import { Button, Field, Input, Select } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { useT } from "@/i18n";
-import { GENDERS, type GenderIdentity } from "@/lib/join/options";
+import { subdivisionConfig } from "@/lib/join/subdivisions";
 
 import { TAP_CONTROL, type StepProps } from "./shared";
 
@@ -19,9 +19,16 @@ export interface StepWhereYouLiveProps extends StepProps {
 /**
  * The rest of step 1, once the address is confirmed.
  *
- * Location is city-level and gender is optional and never shown to anyone. Both
- * are asked after confirmation because neither is worth collecting from an
- * address that turns out not to exist.
+ * Country, broadest to narrowest, down to city. Asked after confirmation
+ * because none of it is worth collecting from an address that turns out not
+ * to exist.
+ *
+ * The middle tier -- state, province, prefecture, county, region -- only
+ * exists once a country is chosen: it needs the country to know what to call
+ * itself and whether to ask at all. `subdivisionConfig` decides both, and a
+ * country change that makes the answer stale (a city-state chosen after a
+ * state was typed) clears it rather than submitting a leftover value for a
+ * country that has no such tier.
  */
 export function StepWhereYouLive({
   draft,
@@ -31,6 +38,7 @@ export function StepWhereYouLive({
   reserving,
 }: StepWhereYouLiveProps) {
   const t = useT();
+  const subdivision = subdivisionConfig(draft.country);
 
   return (
     <>
@@ -49,22 +57,17 @@ export function StepWhereYouLive({
         >
           {t("join.step1.locationLabel")}
         </legend>
-        <div className="r17-field-grid">
-          <Field label={t("join.step1.cityLabel")}>
-            <Input
-              autoComplete="address-level2"
-              placeholder={t("join.step1.cityPlaceholder")}
-              value={draft.city}
-              style={TAP_CONTROL}
-              onChange={(e) => update({ city: e.target.value })}
-            />
-          </Field>
+        <div style={{ display: "grid", gap: "var(--space-5)" }}>
           <Field label={t("join.step1.countryLabel")}>
             <Select
               autoComplete="country"
               value={draft.country}
-              style={TAP_CONTROL}
-              onChange={(e) => update({ country: e.target.value })}
+              style={{ ...TAP_CONTROL, maxWidth: "var(--measure-narrow)" }}
+              onChange={(e) => {
+                const country = e.target.value;
+                const stillApplies = subdivisionConfig(country) !== null;
+                update({ country, subdivision: stillApplies ? draft.subdivision : "" });
+              }}
             >
               <option value="">{t("join.step1.countryPlaceholder")}</option>
               {countries.map((country) => (
@@ -74,34 +77,37 @@ export function StepWhereYouLive({
               ))}
             </Select>
           </Field>
+
+          <div className="r17-field-grid">
+            {subdivision ? (
+              <Field
+                label={t(`join.subdivisionLabels.${subdivision.labelKey}`)}
+                required={subdivision.required}
+              >
+                <Input
+                  autoComplete="address-level1"
+                  placeholder={t("join.step1.subdivisionPlaceholder")}
+                  value={draft.subdivision}
+                  style={TAP_CONTROL}
+                  onChange={(e) => update({ subdivision: e.target.value })}
+                />
+              </Field>
+            ) : null}
+            <Field label={t("join.step1.cityLabel")}>
+              <Input
+                autoComplete="address-level2"
+                placeholder={t("join.step1.cityPlaceholder")}
+                value={draft.city}
+                style={TAP_CONTROL}
+                onChange={(e) => update({ city: e.target.value })}
+              />
+            </Field>
+          </div>
         </div>
         <p className="r17-cite" style={{ color: "var(--text-cite)", marginTop: "var(--space-2)" }}>
           {t("join.step1.locationHint")}
         </p>
       </fieldset>
-
-      <Field
-        label={
-          <>
-            {t("join.step1.genderLabel")}
-            <span className="r17-optional">{t("common.optional")}</span>
-          </>
-        }
-        hint={t("join.step1.genderHint")}
-        style={{ marginTop: "var(--space-5)" }}
-      >
-        <Select
-          value={draft.gender}
-          style={{ ...TAP_CONTROL, maxWidth: "var(--measure-narrow)" }}
-          onChange={(e) => update({ gender: e.target.value as GenderIdentity })}
-        >
-          {GENDERS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {t(`join.genders.${option.key}`)}
-            </option>
-          ))}
-        </Select>
-      </Field>
 
       <div className="r17-step-nav">
         <span />

@@ -89,15 +89,26 @@
       "emailConfirmed": "Address confirmed.",
 
       "detailsHeading": "Where you live",
-      "detailsLede": "City-level, and one optional question we use only for counting.",
+      "detailsLede": "City-level, broadest to narrowest.",
       "locationLabel": "Where you live",
       "cityLabel": "City",
       "cityPlaceholder": "Houston",
       "countryLabel": "Country",
       "countryPlaceholder": "Select a country",
+      "subdivisionPlaceholder": "Texas",
       "locationHint": "City-level. You choose later how precisely this shows to anyone else, or whether it shows at all.",
       "genderLabel": "Gender",
       "genderHint": "Used only for counting, so we can see whether Region 17 is reaching everyone. Never shown on your profile, never searchable, never shared with anyone including government. Skip it freely."
+    },
+
+    "subdivisionLabels": {
+      "generic": "State/Province/Region",
+      "us": "State",
+      "ca": "Province/Territory",
+      "au": "State/Territory",
+      "jp": "Prefecture",
+      "gb": "County",
+      "fr": "Region"
     },
 
     "step2": {
@@ -223,12 +234,14 @@
     },
 
     "challenge": {
-      "unavailable": "We could not run the check that protects member numbers. That is usually a browser extension or a blocked connection rather than anything you did. Try again, and if it keeps happening, try a different browser or network.",
-      "failed": "The check that protects member numbers did not pass. No number was taken and nothing was lost.",
-      "expired": "The check that protects member numbers did not finish in time. No number was taken.",
-      "kept": "Everything you entered is still here.",
+      "unavailable": "We could not run the check that protects member numbers, so we can't give you one yet. That is usually a browser extension or a blocked connection rather than anything you did. Try again, and if it keeps happening, try a different browser or network.",
+      "failed": "The check that protects member numbers did not pass, so we can't give you one yet. No number was taken and nothing was lost.",
+      "expired": "The check that protects member numbers did not finish in time, so we can't give you one yet. No number was taken.",
+      "kept": "Everything you entered is still here. You'll be able to continue as soon as this check passes.",
       "retry": "Run the check again",
       "retrying": "Checking",
+      "stillStuck": "Still not going through after a few tries?",
+      "contactSupport": "Email {email} and we'll get you your number by hand.",
       "stub": "Development build: the member-number check is stubbed and no real challenge is running. This does not exist in a production build."
     }
   },
