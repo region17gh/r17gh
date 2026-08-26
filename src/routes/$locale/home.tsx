@@ -116,7 +116,7 @@ function HomePage() {
         ) : null}
 
         <Card
-          elevation={1}
+          elevation={0}
           padding="var(--space-8) var(--space-6)"
           style={{ marginTop: "var(--space-8)", textAlign: "center" }}
         >
