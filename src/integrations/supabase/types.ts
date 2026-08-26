@@ -813,7 +813,46 @@ export type Database = {
     Functions: {
       activate_membership: {
         Args: { p_handle?: string }
-        Returns: Database["public"]["Tables"]["members"]["Row"]
+        Returns: {
+          birth_month: number | null
+          birth_year: number | null
+          chapter_id: string | null
+          city: string | null
+          class_year: number
+          connection_types: Database["public"]["Enums"]["connection_type"][]
+          country: string | null
+          created_at: string
+          credential_id: string
+          display_name: string | null
+          email: string | null
+          email_verified_at: string | null
+          first_name: string | null
+          founding_member: boolean
+          handle: string | null
+          handle_changed_at: string | null
+          id: string
+          joined_at: string
+          last_affirmed_at: string | null
+          last_name: string | null
+          member_number: number
+          primary_connection:
+            | Database["public"]["Enums"]["connection_type"]
+            | null
+          pseudonymized_at: string | null
+          region_interests: string[]
+          status: Database["public"]["Enums"]["member_status"]
+          subdivision: string | null
+          timezone: string
+          updated_at: string
+          user_id: string | null
+          welcome_email_sent_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       credential_id: {
         Args: { join_year: number; member_number: number }
