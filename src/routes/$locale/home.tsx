@@ -115,15 +115,10 @@ function HomePage() {
           </div>
         ) : null}
 
-        <section
-          style={{
-            marginTop: "var(--space-8)",
-            padding: "var(--space-8) var(--space-6)",
-            border: "var(--border-width) solid var(--border-hairline)",
-            borderRadius: "var(--radius-card)",
-            background: "var(--surface-card)",
-            textAlign: "center",
-          }}
+        <Card
+          elevation={1}
+          padding="var(--space-8) var(--space-6)"
+          style={{ marginTop: "var(--space-8)", textAlign: "center" }}
         >
           <h2 className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
             {t("home.credentialHeading")}
@@ -142,7 +137,7 @@ function HomePage() {
               {member.handle}
             </p>
           ) : null}
-        </section>
+        </Card>
 
         <section style={{ marginTop: "var(--space-10)" }}>
           <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.askOfferHeading")}</h2>
