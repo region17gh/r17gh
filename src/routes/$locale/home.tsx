@@ -90,20 +90,14 @@ function HomePage() {
           padding: "var(--space-12) var(--gutter) var(--space-20)",
         }}
       >
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            gap: "var(--space-4)",
-            flexWrap: "wrap",
-          }}
-        >
-          <h1 style={{ font: "var(--type-section)" }}>{t("home.heading", { name })}</h1>
-          <Button size="lg" variant="ghost" onClick={() => void signOut()}>
-            {t("home.signOut")}
-          </Button>
-        </header>
+        <SectionHeader
+          title={t("home.heading", { name })}
+          action={
+            <Button size="lg" variant="ghost" onClick={() => void signOut()}>
+              {t("home.signOut")}
+            </Button>
+          }
+        />
 
         {pending ? (
           <div
