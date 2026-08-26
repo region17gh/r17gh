@@ -150,6 +150,11 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
           tokenRef.current = token;
           onProblemRef.current(null);
           settle(token);
+          // Cloudflare's own confirmation ("Success!") has nothing left to tell
+          // a member who was never shown a challenge, and for the rare member
+          // who was, the credential they are about to receive is the
+          // confirmation. A passing check announces nothing.
+          container.style.setProperty("display", "none");
         },
         "error-callback": () => {
           tokenRef.current = null;
@@ -207,6 +212,9 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
       reset: () => {
         tokenRef.current = null;
         onProblemRef.current(null);
+        // Undoes the hide from a prior success: a fresh check may yet need to
+        // interact with this member, and it cannot if the widget stays hidden.
+        containerRef.current?.style.removeProperty("display");
         const api = apiRef.current;
         if (api && widgetIdRef.current !== undefined) api.reset(widgetIdRef.current);
       },

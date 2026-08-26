@@ -384,6 +384,12 @@ function JoinPage() {
             handle: draft.handle,
             incomplete: outcome.incomplete,
           });
+          // The check already did its job: a number would not exist otherwise.
+          // Anything it reported earlier, including a background refresh that
+          // failed after the token it produced was already spent, is stale the
+          // moment a credential is in hand.
+          setChallengeProblem(null);
+          setChallengeAttempts(0);
           goToStep("issued");
           break;
         }
@@ -589,7 +595,7 @@ function JoinPage() {
               <Challenge handle={challengeRef} onProblem={reportChallengeProblem} />
             ) : null}
 
-            {challengeProblem && !refused ? (
+            {challengeProblem && !refused && step !== "issued" ? (
               <div className="r17-notice" data-tone="alert" role="alert">
                 <p>{t(`join.challenge.${challengeProblem}`)}</p>
                 <p style={{ marginTop: "var(--space-2)" }}>{t("join.challenge.kept")}</p>

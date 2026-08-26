@@ -5,6 +5,7 @@ import { Credential } from "@/components/join/Credential";
 import { Button, Card, PanBand, SectionHeader } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { downloadCredentialPdf } from "@/lib/credential/pdf";
 import { sendWelcomeEmail } from "@/server/welcome";
 import {
   fetchCurrentMember,
@@ -30,6 +31,8 @@ function HomePage() {
   const [intent, setIntent] = useState<MemberIntent>({ ask: null, offer: null });
   const [cutoff, setCutoff] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -64,6 +67,30 @@ function HomePage() {
   const signOut = async () => {
     await supabase.auth.signOut();
     void navigate({ to: localePath(locale, "/signin") });
+  };
+
+  const downloadCredential = async () => {
+    if (!member) return;
+    setDownloadFailed(false);
+    setDownloading(true);
+    try {
+      await downloadCredentialPdf(
+        {
+          memberNumber: member.member_number,
+          credentialId: member.credential_id,
+          firstName: member.first_name,
+          lastName: member.last_name,
+          foundingMember: member.founding_member,
+          classYear: member.class_year,
+          handle: member.handle,
+        },
+        locale,
+      );
+    } catch {
+      setDownloadFailed(true);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading || !member) {
@@ -135,6 +162,23 @@ function HomePage() {
             <p className="r17-cite" style={{ marginTop: "var(--space-5)", color: "var(--navy-700)" }}>
               {t("join.step4.handlePrefix")}
               {member.handle}
+            </p>
+          ) : null}
+
+          <p style={{ marginTop: "var(--space-6)" }}>
+            <Button
+              size="lg"
+              variant="secondary"
+              icon="download"
+              onClick={() => void downloadCredential()}
+              disabled={downloading}
+            >
+              {downloading ? t("home.downloadingCredential") : t("home.downloadCredential")}
+            </Button>
+          </p>
+          {downloadFailed ? (
+            <p className="r17-notice" data-tone="alert" role="alert" style={{ marginTop: "var(--space-3)" }}>
+              {t("home.downloadFailed")}
             </p>
           ) : null}
         </Card>

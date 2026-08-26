@@ -20,6 +20,7 @@
     "@tanstack/react-start": "^1.168.26",
     "@tanstack/router-plugin": "^1.168.18",
     "date-fns": "^4.1.0",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^2.15.4",
