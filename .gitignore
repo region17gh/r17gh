@@ -23,10 +23,24 @@ src/.generated/
 .wrangler/
 .dev.vars
 
-# Local env overrides. NOTE: .env itself is tracked in this repo and holds only
-# public values (project URL, publishable keys). Server-only secrets --
-# SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, TURNSTILE_SECRET_KEY -- belong in
-# .dev.vars or .env.local, both ignored here, and never in .env.
+# Environment files. Every one of them is ignored, .env included: an
+# environment file is a local file, not a repo file.
+#
+# .env was tracked here until 20260827. Nothing secret was ever committed to
+# it -- both keys it carried decode to role "anon", the Turnstile key is the
+# site key, and the rest is the project ref and URL -- and git history was
+# checked across every .env blob in history before it was untracked (114
+# commits at the time; two distinct blobs, one anon JWT). This is not
+# remediation. It is removing the slot. A tracked .env in a public repository
+# is a file the next contributor edits by habit, and the edit that finally
+# matters is the one that adds SUPABASE_SERVICE_ROLE_KEY to it.
+#
+# Names and shapes go in .env.example, which stays tracked and holds no
+# values. Values go in .env, .dev.vars, or .env.local on your own machine,
+# and in the deployment's environment in production. Server-only secrets --
+# SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, TURNSTILE_SECRET_KEY -- never
+# reach this repository at all.
+.env
 .env.local
 .env.*.local
 
