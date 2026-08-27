@@ -17,7 +17,12 @@
 -- Role discipline: FIXTURES (state that merely has to exist) are written as
 -- service_role, matching how they're actually created in production --
 -- reserve_member_number() and register_member() are both SECURITY DEFINER
--- running as service_role internally, and GoTrue alone owns auth.users.
+-- running as service_role internally. The one exception is a fixture or read
+-- that touches something service_role genuinely cannot reach on production:
+-- auth.users, which GoTrue owns and reaches as supabase_auth_admin (section
+-- 11b), and member_gender, whose SELECT was deliberately revoked from
+-- service_role (section 12c). Those use RESET ROLE to drop to the connecting
+-- role instead. Never widen a production grant to make a case run.
 -- ASSERTIONS (the thing each case is testing) run as authenticated, because a
 -- check performed by an elevated role proves nothing about what a signed-in
 -- member can actually do. A connection with BYPASSRLS or superuser sails past
@@ -378,32 +383,44 @@ BEGIN
   END IF;
 
   -- 11b. Activation depends on a confirmation GoTrue actually issued ---------
-  -- Every fixture below (auth.users, the 999006 reservation, member C, and
-  -- every later write to auth.users or to member C's status) runs as
-  -- service_role: GoTrue owns auth.users, register_member is service_role
-  -- internally, and no member can set their own status -- that is exactly
-  -- the vulnerability this migration closes. Only the activate_membership()
-  -- calls run as authenticated, because that is the one surface a real
-  -- signed-in member actually reaches.
+  -- The public-schema fixtures below (the 999006 reservation, member C, and
+  -- the later suspension of member C) run as service_role: register_member is
+  -- service_role internally, and no member can set their own status -- that is
+  -- exactly the vulnerability this migration closes. Only the
+  -- activate_membership() calls run as authenticated, because that is the one
+  -- surface a real signed-in member actually reaches.
   --
-  -- COVERAGE GAP, not a defect: on production, service_role has no table
-  -- access to auth.users -- GoTrue owns that schema outright and connects as
-  -- its own role, separate from what PostgREST/service_role can reach. The
-  -- INSERT into auth.users below fails there with "permission denied for
-  -- table users," this whole block is caught by the EXCEPTION handler below,
-  -- and every activation-specific assertion inside it -- unconfirmed refused,
+  -- The auth.users fixtures and reads are the exception, and they use RESET
+  -- ROLE rather than service_role, for the same reason section 12c does.
+  -- service_role has no table access to auth.users on production: GoTrue owns
+  -- that schema outright and connects as supabase_auth_admin, a role entirely
+  -- separate from what PostgREST/service_role reaches. Written as
+  -- service_role, the INSERT below raises "permission denied for table users"
+  -- there, the EXCEPTION handler at the end of this block swallows it, and all
+  -- seven activation assertions -- unconfirmed refused, record left pending,
   -- wrong-address refused, confirmed address activates, email_verified_at
   -- sourced from GoTrue not the caller, double-activation is a no-op,
-  -- suspended can't self-activate -- is SKIPPED with an INFO line rather than
-  -- run. That degrade-not-fail behavior is correct and should stay an INFO.
-  -- But it means activate_membership()'s actual behavior under authenticated
-  -- is UNVERIFIED ON PRODUCTION by this harness. It has been proven locally
-  -- and on the preview branch, where auth.users is writable, but production
-  -- itself has never exercised these six cases. That gap is real and belongs
-  -- in the open rather than folded into a skipped line further down.
+  -- suspended can't self-activate -- silently degrade to one skipped line.
+  -- That went unnoticed for as long as it did precisely because local and
+  -- preview DO give service_role auth.users, so the block ran everywhere it
+  -- was looked at and only skipped where it mattered.
+  --
+  -- Granting service_role access to auth.users would "fix" this by inventing
+  -- a privilege production does not have, which D-050 forbids. RESET ROLE
+  -- instead drops to the connecting role this function already runs under --
+  -- the role that owns these tables and genuinely holds auth.users -- which is
+  -- the same move, for the same reason, that section 12c makes for
+  -- member_gender. The fixture is the only thing elevated; every assertion
+  -- still runs as authenticated.
   BEGIN
-    PERFORM set_config('role', 'service_role', true);
+    -- [connecting role] fixture: auth.users, per the note above. NOT
+    -- service_role -- it has no auth.users grant on production.
+    RESET ROLE;
     INSERT INTO auth.users (id, email) VALUES (uid_c, 'c@example.test');
+
+    -- [service_role] fixture: public-schema rows, elevated exactly as they
+    -- are everywhere else in this file.
+    PERFORM set_config('role', 'service_role', true);
     INSERT INTO public.number_reservations (member_number, expires_at)
     VALUES (999006, now() + interval '1 hour');
     PERFORM set_config('request.jwt.claim.sub', uid_c::text, true);
@@ -435,9 +452,11 @@ BEGIN
         log := log || E'\nFAIL  record moved to ' || t || ' despite the refusal';
       END IF;
 
-      -- [service_role] fixture: GoTrue confirming a different inbox --
-      -- authenticated has no path to auth.users at all.
-      PERFORM set_config('role', 'service_role', true);
+      -- [connecting role] fixture: GoTrue confirming a different inbox --
+      -- authenticated has no path to auth.users at all, and neither does
+      -- service_role on production. RESET ROLE, per the note at the top of
+      -- this section.
+      RESET ROLE;
       UPDATE auth.users SET email_confirmed_at = now(), email = 'other@example.test'
        WHERE id = uid_c;
       PERFORM set_config('role', 'authenticated', true);
@@ -452,8 +471,8 @@ BEGIN
         END IF;
       END;
 
-      -- [service_role] fixture: GoTrue confirming the record's real address
-      PERFORM set_config('role', 'service_role', true);
+      -- [connecting role] fixture: GoTrue confirming the record's real address
+      RESET ROLE;
       UPDATE auth.users SET email = 'c@example.test' WHERE id = uid_c;
       PERFORM set_config('role', 'authenticated', true);
       PERFORM public.activate_membership('harnessc');
@@ -465,10 +484,10 @@ BEGIN
         log := log || E'\nFAIL  confirmed activation left status ' || t || ', handle ' || COALESCE(tmp, 'null');
       END IF;
 
-      -- [service_role] read: comparing members.email_verified_at against
+      -- [connecting role] read: comparing members.email_verified_at against
       -- auth.users.email_confirmed_at needs auth.users, which authenticated
-      -- cannot read directly.
-      PERFORM set_config('role', 'service_role', true);
+      -- cannot read directly and service_role cannot read on production.
+      RESET ROLE;
       SELECT count(*) INTO cnt FROM public.members m, auth.users u
        WHERE m.id = m_c AND u.id = uid_c AND m.email_verified_at = u.email_confirmed_at;
       PERFORM set_config('role', 'authenticated', true);
@@ -513,8 +532,14 @@ BEGIN
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
     PERFORM set_config('role', 'authenticated', true);
   EXCEPTION WHEN OTHERS THEN
-    log := log || E'\nINFO  activation cases skipped (' || SQLERRM ||
-      '). activate_membership() under authenticated is UNVERIFIED ON PRODUCTION by this harness -- proven locally/preview only, where auth.users is writable.';
+    -- FAIL, not INFO. The auth.users fixture now runs as the connecting role,
+    -- which holds auth.users on production as well as locally, so there is no
+    -- longer an environment where skipping this block is the correct outcome.
+    -- Anything that lands here has taken the seven activation assertions out
+    -- of the run, and a harness that quietly reports fewer checks than it
+    -- claims is the failure mode this file exists to prevent.
+    log := log || E'\nFAIL  activation cases skipped (' || SQLERRM ||
+      '). activate_membership() under authenticated went UNVERIFIED this run -- the seven assertions in 11b did not execute.';
     PERFORM set_config('request.jwt.claim.sub', uid_a::text, true);
     PERFORM set_config('role', 'authenticated', true);
   END;
