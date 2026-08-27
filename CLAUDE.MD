@@ -31,6 +31,31 @@ Work proceeds in passes. **One pass per PR.** A pass has a stated scope and a st
 
 ---
 
+## Repo surface protocol
+
+Chat has no GitHub access and will not get it. Claude Code owns the repo: files,
+diffs, migrations, workflow runs, PR certification. Chat owns decisions and
+institutional state, and holds verified read on production Postgres. Drift
+between what the repo says and what production has is the failure mode
+`.github/workflows/check-migrations.yml` exists for, and diagnosing it needs
+both surfaces.
+
+**`docs/repo-surface-protocol.md`** is the contract for that split. It carries
+the standing prompt for a repo session, the `certify-pr-merge` method, and the
+handback block Claude Code returns so chat can cross-check migrations against
+production without reading the repo. Read it before answering any question about
+repo state, and produce the handback block rather than a summary.
+
+Two rules from it that bind every repo session:
+
+- **Pull `main` and re-derive HEAD live before answering anything about repo
+  state, and report the SHA you read at.** Never answer from a cached read, a PR
+  title, a merge notification, or a green check.
+- **Merged is not applied.** A migration on `main` is not a migration in
+  production. State plainly when you cannot confirm which.
+
+---
+
 ## Database invariants — do not relax
 
 These are enforced in the database, not the UI. The security memory in Supabase records the same list.
