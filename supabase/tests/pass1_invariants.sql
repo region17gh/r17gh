@@ -745,6 +745,51 @@ BEGIN
   END IF;
   PERFORM set_config('role', 'authenticated', true);
 
+  -- 16. reserve_member_number() cannot reach the reserved test range --------
+  -- 20260826030000 reserves 999000+ for test data and gives it its own path,
+  -- reserve_test_member_number(), so reserve_member_number() never needs a
+  -- branch for it. The guarantee lives on member_number_seq itself (MAXVALUE
+  -- 998999): nextval() physically cannot return 999000 or above, it raises
+  -- once the sequence is exhausted instead.
+  --
+  -- This checks the guarantee structurally, via pg_sequences, rather than by
+  -- calling reserve_member_number() and inspecting the number it hands back.
+  -- Calling it would prove the same thing today, but nextval() is NOT
+  -- undone by this harness's rollback -- sequence advances are the one piece
+  -- of Postgres state a transaction abort never reverts. A harness that
+  -- always rolls back would otherwise permanently burn one real founding
+  -- member number on every single run, which is the exact cost this whole
+  -- migration exists to stop paying.
+  SELECT max_value INTO cnt FROM pg_sequences
+   WHERE schemaname = 'public' AND sequencename = 'member_number_seq';
+  IF cnt < 999000 THEN
+    log := log || E'\nPASS  member_number_seq is capped below the test range (max_value = ' || cnt || ')';
+  ELSE
+    log := log || E'\nFAIL  member_number_seq could reach the test range (max_value = ' || cnt || ')';
+  END IF;
+
+  -- The test range's own sequence starts distinct from the harness's own
+  -- fixtures (999001-999006, inserted directly into number_reservations
+  -- above) so a persistent test registration through reserve_test_member_number()
+  -- can never collide with a harness run.
+  SELECT min_value INTO cnt FROM pg_sequences
+   WHERE schemaname = 'public' AND sequencename = 'test_member_number_seq';
+  IF cnt >= 999007 THEN
+    log := log || E'\nPASS  test_member_number_seq starts clear of the harness fixture range (min_value = ' || cnt || ')';
+  ELSE
+    log := log || E'\nFAIL  test_member_number_seq overlaps the harness fixture range (min_value = ' || cnt || ')';
+  END IF;
+
+  -- reserve_test_member_number() is exactly as locked down as
+  -- reserve_member_number(): service_role only, nothing reachable from a
+  -- signed-in member or an anonymous request.
+  IF has_function_privilege('authenticated', 'public.reserve_test_member_number()', 'EXECUTE')
+     OR has_function_privilege('anon', 'public.reserve_test_member_number()', 'EXECUTE') THEN
+    log := log || E'\nFAIL  reserve_test_member_number is executable outside service_role';
+  ELSE
+    log := log || E'\nPASS  reserve_test_member_number is service_role only';
+  END IF;
+
   ----------------------------------------------------------------------------
   -- Always abort. The results ride out on the exception message.
   ----------------------------------------------------------------------------
