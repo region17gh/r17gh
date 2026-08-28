@@ -177,6 +177,10 @@
       "handlePrefix": "r17gh.com/m/",
       "handlePlaceholder": "yourname",
       "handleLive": "Your address goes live when you confirm your email.",
+      "handleChecking": "Checking whether that address is free.",
+      "handleFree": "That address is free.",
+      "handleSuggestionsLabel": "Here are some that are free. Choose one, or keep typing.",
+      "handleSuggestionTake": "Use the address {handle}",
       "submit": "Join Region 17",
       "submitting": "Entering you into the register",
       "footnote": "Next you'll confirm your address. Your record goes live then."

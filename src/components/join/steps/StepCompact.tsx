@@ -9,6 +9,13 @@ export interface StepCompactProps extends StepProps {
   affirmed: boolean;
   onAffirm: (value: boolean) => void;
   handleProblem: HandleProblem | "taken" | "reserved" | null;
+  /** The register is being asked about the address currently typed. */
+  handleChecking: boolean;
+  /** The register was asked about this address and said it is free. */
+  handleFree: boolean;
+  /** Addresses that were free when the register was asked. */
+  handleSuggestions: string[];
+  onPickHandle: (handle: string) => void;
   onBack: () => void;
   onSubmit: () => void;
   submitting: boolean;
@@ -29,12 +36,28 @@ export function StepCompact({
   affirmed,
   onAffirm,
   handleProblem,
+  handleChecking,
+  handleFree,
+  handleSuggestions,
+  onPickHandle,
   onBack,
   onSubmit,
   submitting,
   showAffirmRequired,
 }: StepCompactProps) {
   const t = useT();
+
+  /**
+   * An address someone else already holds, or one that was never on offer.
+   *
+   * Held apart from the format problems below it because it is not an error and
+   * must not read as one. Many members want the same first name, so this is
+   * expected to be the commonest thing that happens on this screen. It is a
+   * normal step in choosing a name: no red, no alert, and somewhere to go next.
+   */
+  const unavailable = handleProblem === "taken" || handleProblem === "reserved";
+  /** A malformed address is the member's own typing, and does read as an error. */
+  const formatProblem = unavailable ? null : handleProblem;
 
   const toggleConsent = (value: ConsentType, on: boolean) => {
     update({
@@ -136,20 +159,83 @@ export function StepCompact({
             autoCapitalize="off"
             autoCorrect="off"
             aria-label={t("join.step4.handleLabel")}
-            aria-invalid={handleProblem ? true : undefined}
+            aria-invalid={formatProblem ? true : undefined}
+            aria-describedby="r17-handle-note"
             placeholder={t("join.step4.handlePlaceholder")}
             onChange={(e) => update({ handle: normaliseHandle(e.target.value) })}
           />
         </div>
-        {handleProblem ? (
+
+        {formatProblem ? (
           <p className="r17-error" role="alert" style={{ marginTop: "var(--space-2)" }}>
-            {t(`join.handleErrors.${handleProblem}`)}
+            {t(`join.handleErrors.${formatProblem}`)}
           </p>
-        ) : (
+        ) : null}
+
+        {/*
+          One live region for everything the register says back, so a member on a
+          screen reader hears the answer change instead of hearing the whole
+          section again. `status`, not `alert`: nothing here is going wrong.
+        */}
+        <div id="r17-handle-note" role="status" aria-live="polite">
+          {unavailable ? (
+            <p
+              className="r17-cite"
+              style={{ color: "var(--text-cite)", marginTop: "var(--space-2)" }}
+            >
+              {t(`join.handleErrors.${handleProblem}`)}
+            </p>
+          ) : handleChecking ? (
+            <p
+              className="r17-cite"
+              style={{ color: "var(--text-cite)", marginTop: "var(--space-2)" }}
+            >
+              {t("join.step4.handleChecking")}
+            </p>
+          ) : handleFree ? (
+            <p
+              className="r17-cite"
+              style={{ color: "var(--text-cite)", marginTop: "var(--space-2)" }}
+            >
+              {t("join.step4.handleFree")}
+            </p>
+          ) : null}
+
+          {unavailable && handleSuggestions.length > 0 ? (
+            <>
+              <p
+                className="r17-cite"
+                style={{ color: "var(--text-cite)", marginTop: "var(--space-2)" }}
+              >
+                {t("join.step4.handleSuggestionsLabel")}
+              </p>
+              {/*
+                Every one of these was checked against the live register before
+                it was offered, so clicking one cannot land the member back here.
+                `r17-chip` carries the 48px tap target.
+              */}
+              <div className="r17-chips" style={{ marginTop: "var(--space-2)" }}>
+                {handleSuggestions.map((suggestion) => (
+                  <button
+                    type="button"
+                    key={suggestion}
+                    className="r17-chip"
+                    aria-label={t("join.step4.handleSuggestionTake", { handle: suggestion })}
+                    onClick={() => onPickHandle(suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        {!formatProblem && !unavailable && !handleChecking && !handleFree ? (
           <p className="r17-cite" style={{ color: "var(--text-cite)", marginTop: "var(--space-2)" }}>
             {t("join.step4.handleHint")} {t("join.step4.handleLive")}
           </p>
-        )}
+        ) : null}
       </section>
 
       <div className="r17-step-nav">
