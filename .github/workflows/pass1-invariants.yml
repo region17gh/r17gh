@@ -1,0 +1,310 @@
+name: Register invariants
+
+# Runs supabase/tests/pass1_invariants.sql -- the regression suite for the
+# member register -- on every pull request and on every push to main.
+#
+# Until now this ran only when a human remembered to paste the file into the
+# SQL editor and paste the output back into a PR body. Three PRs merged on
+# 27 Aug with no verification at all. This is O-051 part 1.
+#
+# Four things this workflow is deliberately built to avoid, because each one
+# produces a green build that verifies nothing (D-060):
+#
+# 1. THE EXIT CODE IS NOT THE RESULT. The harness ends in a deliberate
+#    RAISE EXCEPTION so PostgreSQL rolls its transaction back -- a completely
+#    successful run therefore exits non-zero. psql's exit status is recorded
+#    below for diagnostics and is never gated on. The verdict comes from
+#    parsing the output: no FAIL and no SKIP line, and exactly EXPECTED_PASS
+#    PASS lines. A run that produced no output at all fails; so does one that
+#    never reached the closing RAISE. Never put `|| true` on the psql call --
+#    that is the same bug wearing a different hat.
+#
+# 2. PREVIEW ALONE IS NOT ENOUGH. The bug this control exists to catch was
+#    invisible precisely because service_role holds auth.users on preview and
+#    locally and does NOT hold it on production. A suite that only ever runs
+#    against a preview branch reproduces that exact blind spot. So: preview
+#    branch on pull_request, production on push to main. The production run is
+#    the one that catches environment divergence, and it is safe because the
+#    harness always rolls back.
+#
+# 3. THE CONNECTING ROLE MATTERS. Section 11b uses RESET ROLE to drop to the
+#    connecting role for its auth.users fixtures, so that role must actually
+#    hold auth.users -- on production that is `postgres`, not `service_role`.
+#    Hence a database connection string, not a service role key. Note also
+#    that `supabase branches get` cannot return production credentials at all
+#    ("password-dependent fields are not populated for the main branch"),
+#    which is the other reason production needs a stored secret.
+#
+# 4. THIS REPO IS PUBLIC. `pull_request`, never `pull_request_target`. Fork
+#    PRs correctly receive no secrets, so the harness cannot run on them; that
+#    case fails loudly rather than passing silently.
+#
+# Making check-migrations.yml bidirectional is O-051 part 2 and is not here.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: register-invariants-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PROJECT_REF: idmxottsjqeiatgiudvt
+  HARNESS: supabase/tests/pass1_invariants.sql
+
+  # The number of PASS lines a clean run produces. 43 assertion sites outside
+  # section 13's loop, plus 2 per table for the 14 tables that loop walks.
+  # Matches the production baseline recorded in CLAUDE.MD (71 PASS / 0 FAIL /
+  # 0 SKIP / 1 INFO). A PR that adds or removes a harness case must update
+  # this number and that line in the same commit -- that is the point of
+  # pinning it. Do not "fix" a red build by editing this to match the run.
+  EXPECTED_PASS: "71"
+
+jobs:
+  invariants:
+    name: Register invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A fork PR gets no secrets, by design, and we are not going to reach
+      # for pull_request_target to change that. So the harness genuinely
+      # cannot run here -- and a security suite that cannot run must say so
+      # instead of reporting green.
+      - name: Refuse to pass silently on a fork PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error title=Harness not run, fork PR::supabase/tests/pass1_invariants.sql did NOT run. This pull request comes from a fork (${{ github.event.pull_request.head.repo.full_name }}), and fork pull requests correctly receive no repository secrets, so there is no database to run against. Nothing about the member register has been verified by this build. A maintainer must re-run the harness from a branch in this repository, or run it by hand, before merging."
+          exit 1
+
+      - name: Install the PostgreSQL client
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          psql --version
+
+      - uses: supabase/setup-cli@v1
+        if: github.event_name == 'pull_request'
+        with:
+          version: latest
+
+      # On a pull request: the PR's own preview branch, so the harness sees
+      # the schema this PR actually proposes.
+      #
+      # SUPABASE_PREVIEW_DB_URL, when set, wins -- it is the escape hatch for a
+      # project that isn't using per-PR Supabase branching. Otherwise the
+      # preview branch's credentials are resolved through the Management API,
+      # which does return them for preview branches (unlike production).
+      #
+      # Either way this ends in a connection string or it ends the build. It
+      # never ends in "no database, carry on".
+      - name: Resolve the preview database (pull request)
+        if: github.event_name == 'pull_request'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PREVIEW_DB_URL: ${{ secrets.SUPABASE_PREVIEW_DB_URL }}
+        run: |
+          set -euo pipefail
+          url="$PREVIEW_DB_URL"
+          if [ -n "$url" ]; then
+            echo "Using the SUPABASE_PREVIEW_DB_URL secret."
+          else
+            if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
+              echo "::error title=Harness not run, no preview database::Neither the SUPABASE_PREVIEW_DB_URL secret nor the SUPABASE_ACCESS_TOKEN secret is set, so this build cannot reach a database and supabase/tests/pass1_invariants.sql did not run. Nothing has been verified. Set one of them in the repository's Actions secrets."
+              exit 1
+            fi
+            # Supabase's GitHub integration names the preview branch after the
+            # git branch. GITHUB_HEAD_REF is read from the environment rather
+            # than interpolated into this script: it is contributor-controlled
+            # text and does not belong in a shell command line.
+            echo "Resolving the preview branch named '$GITHUB_HEAD_REF'."
+            if ! env_out="$(supabase branches get "$GITHUB_HEAD_REF" --project-ref "$PROJECT_REF" -o env 2>"$RUNNER_TEMP/branches.err")"; then
+              echo "::error title=Harness not run, no preview database::Could not resolve a Supabase preview branch named '$GITHUB_HEAD_REF' for project $PROJECT_REF, so supabase/tests/pass1_invariants.sql did not run and nothing has been verified. Either enable per-PR branching for this repository, or set the SUPABASE_PREVIEW_DB_URL secret to a database this suite may run against. The CLI said:"
+              # Redact any credentials before echoing the CLI's own message.
+              sed -E 's#://[^:/@]*:[^@]*@#://***:***@#g' "$RUNNER_TEMP/branches.err" >&2
+              exit 1
+            fi
+            # POSTGRES_URL is the pooled connection; GitHub's runners are
+            # IPv4-only and the direct db.<ref>.supabase.co host is not, so
+            # the pooled URL is the one that can actually be reached from here.
+            url="$(printf '%s\n' "$env_out" | grep -m1 '^POSTGRES_URL=' | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/')"
+          fi
+          if [ -z "$url" ]; then
+            echo "::error title=Harness not run, no preview database::Resolved an empty connection string for the preview branch, so supabase/tests/pass1_invariants.sql did not run and nothing has been verified."
+            exit 1
+          fi
+          echo "::add-mask::$url"
+          echo "DB_URL=$url" >> "$GITHUB_ENV"
+          echo "TARGET=preview branch \`$GITHUB_HEAD_REF\`" >> "$GITHUB_ENV"
+
+      # On a push to main, and on a manual run: production. This is the run
+      # that matters. service_role holds auth.users on preview and locally and
+      # does NOT hold it on production, so preview alone would reproduce the
+      # exact blind spot that hid seven activation assertions for two days.
+      #
+      # SUPABASE_PROD_DB_URL must connect as `postgres` (the role section 11b
+      # reaches via RESET ROLE), through the session-mode pooler so an
+      # IPv4-only runner can reach it. It writes nothing that survives: the
+      # harness always raises at the end and the transaction rolls back.
+      - name: Resolve the production database (push to main)
+        if: github.event_name != 'pull_request'
+        env:
+          PROD_DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PROD_DB_URL" ]; then
+            echo "::error title=Harness not run, no production connection string::The SUPABASE_PROD_DB_URL secret is not set, so supabase/tests/pass1_invariants.sql did not run against production and nothing has been verified. It must be a connection string for the \`postgres\` role -- not a service role key, and not service_role: section 11b needs a role that holds auth.users, which service_role does not have on production."
+            exit 1
+          fi
+          echo "::add-mask::$PROD_DB_URL"
+          echo "DB_URL=$PROD_DB_URL" >> "$GITHUB_ENV"
+          echo "TARGET=**production** (\`$PROJECT_REF\`)" >> "$GITHUB_ENV"
+
+      # --single-transaction pins the whole file to one backend session, which
+      # pg_temp requires: the CREATE FUNCTION and the SELECT that calls it must
+      # land on the same connection, and a transaction-mode pooler would
+      # otherwise be free to split them. It also makes the rollback explicit
+      # rather than relying solely on the closing RAISE.
+      #
+      # -w so a connection string missing its password fails instead of
+      # blocking forever on a password prompt; -X so no psqlrc can change how
+      # results are rendered under us.
+      #
+      # The exit status is captured, reported, and NOT acted on: a clean run of
+      # this harness exits non-zero by design. See note 1 in the header.
+      - name: Run the harness
+        env:
+          PGCONNECT_TIMEOUT: "20"
+        run: |
+          set -uo pipefail
+          psql "$DB_URL" -X -w -v ON_ERROR_STOP=1 --single-transaction -f "$HARNESS" \
+            > "$RUNNER_TEMP/harness.out" 2>&1
+          echo "PSQL_RC=$?" >> "$GITHUB_ENV"
+          # Strip credentials out of anything libpq may have echoed before this
+          # file is read back into a PR comment.
+          sed -i -E 's#://[^:/@]*:[^@]*@#://***:***@#g' "$RUNNER_TEMP/harness.out"
+          exit 0
+
+      - name: Read the result out of the output
+        id: verdict
+        run: |
+          set -uo pipefail
+          out="$RUNNER_TEMP/harness.out"
+          reasons="$RUNNER_TEMP/reasons.md"
+          : > "$reasons"
+          ok=1
+
+          # A run that produced nothing is a failure, not a pass.
+          if [ ! -s "$out" ]; then
+            echo "- The harness produced **no output at all**. Nothing was verified." >> "$reasons"
+            echo "::error title=Harness produced no output::supabase/tests/pass1_invariants.sql returned nothing. Nothing was verified."
+            ok=0
+          fi
+
+          # The closing RAISE EXCEPTION is how the harness signals it ran to the
+          # end. Without it the run stopped early -- a connection failure, a
+          # syntax error, a permission error on the very first fixture -- and
+          # whatever PASS lines did appear cover only part of the suite.
+          if ! grep -q 'REGISTER INVARIANTS (transaction rolled back)' "$out"; then
+            echo "- The harness never reached its closing \`RAISE EXCEPTION\`, so it did not run to the end. Any PASS lines above cover only part of the suite." >> "$reasons"
+            echo "::error title=Harness did not run to completion::supabase/tests/pass1_invariants.sql never reached its closing RAISE EXCEPTION."
+            ok=0
+          fi
+
+          # Counted with a leading-whitespace tolerance so an indented
+          # continuation line can never hide a FAIL from this grep.
+          n_pass=$(grep -cE '^[[:space:]]*PASS  ' "$out"); n_pass=${n_pass:-0}
+          n_fail=$(grep -cE '^[[:space:]]*FAIL  ' "$out"); n_fail=${n_fail:-0}
+          n_skip=$(grep -cE '^[[:space:]]*SKIP'   "$out"); n_skip=${n_skip:-0}
+          n_info=$(grep -cE '^[[:space:]]*INFO  ' "$out"); n_info=${n_info:-0}
+          n_note=$(grep -cE '^[[:space:]]*NOTE  ' "$out"); n_note=${n_note:-0}
+
+          # A skipped test is a failed test.
+          if [ "$n_fail" -ne 0 ] || [ "$n_skip" -ne 0 ]; then
+            ok=0
+            echo "- $n_fail \`FAIL\` and $n_skip \`SKIP\` line(s). A skipped test is a failed test." >> "$reasons"
+            while IFS= read -r line; do
+              echo "::error title=Register invariant::$line"
+            done < <(grep -hE '^[[:space:]]*(FAIL|SKIP)' "$out")
+          fi
+
+          # And the count, which is what catches a case that stopped running
+          # rather than one that started failing.
+          if [ "$n_pass" -ne "$EXPECTED_PASS" ]; then
+            ok=0
+            echo "- **$n_pass PASS lines, expected $EXPECTED_PASS.** Assertions that stop running do not report themselves; the count is what catches them. If this PR legitimately adds or removes a case, update \`EXPECTED_PASS\` in \`.github/workflows/pass1-invariants.yml\` and the baseline in \`CLAUDE.MD\` in the same commit." >> "$reasons"
+            echo "::error title=Unexpected PASS count::$n_pass PASS lines, expected $EXPECTED_PASS."
+          fi
+
+          if [ "$ok" -eq 1 ]; then
+            headline="✅ **$n_pass PASS / 0 FAIL / 0 SKIP** — the register invariants hold."
+          else
+            headline="❌ **The register invariants harness did not come back clean.**"
+          fi
+
+          {
+            echo "### Register invariants harness"
+            echo
+            echo "$headline"
+            echo
+            echo "Target: ${TARGET:-unknown} · commit \`${GITHUB_SHA:0:7}\`"
+            echo "Lines: **$n_pass PASS** (expected $EXPECTED_PASS) · $n_fail FAIL · $n_skip SKIP · $n_info INFO · $n_note NOTE"
+            echo
+            if [ "$ok" -ne 1 ]; then
+              echo "Why this build is red:"
+              echo
+              cat "$reasons"
+              echo
+            fi
+            echo "<details><summary>Full harness output</summary>"
+            echo
+            echo '```'
+            # Trimmed so a pathological run cannot blow the 65536-character
+            # comment limit; the job summary and the raw log keep the whole thing.
+            head -c 50000 "$out"
+            echo
+            echo '```'
+            echo
+            echo "</details>"
+            echo
+            echo "<sub>psql exited ${PSQL_RC:-unknown}. That is not the result: the harness ends in a deliberate \`RAISE EXCEPTION\` so its transaction rolls back, so a clean run exits non-zero. The verdict above comes from the output.</sub>"
+          } > "$RUNNER_TEMP/comment.md"
+
+          cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      # One comment per PR, updated in place rather than a new one each push.
+      - name: Post the harness output on the pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- register-invariants-harness -->';
+            const body = marker + '\n' + fs.readFileSync(process.env.RUNNER_TEMP + '/comment.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const mine = comments.find(c => c.user?.type === 'Bot' && c.body?.includes(marker));
+            if (mine) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Fail the build if the harness did not come back clean
+        if: steps.verdict.outputs.ok != '1'
+        run: exit 1
