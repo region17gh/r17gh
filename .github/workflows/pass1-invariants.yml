@@ -38,11 +38,24 @@ name: Register invariants
 #    Hence a database connection string, not a service role key. Note also
 #    that `supabase branches get` cannot return production credentials at all
 #    ("password-dependent fields are not populated for the main branch"),
-#    which is the other reason production needs a stored secret.
+#    which is why production's string is composed here rather than looked up.
 #
 # 4. THIS REPO IS PUBLIC. `pull_request`, never `pull_request_target`. Fork
 #    PRs correctly receive no secrets, so the harness cannot run on them; that
 #    case fails loudly rather than passing silently.
+#
+# ONE CREDENTIAL, ONE PLACE. Production's connection string is BUILT below,
+# from `SUPABASE_DB_PASSWORD` -- the same secret check-migrations.yml
+# authenticates `supabase link` with, and which that workflow proves works --
+# plus the user, host, port and database name, none of which are secret and
+# all of which are in this file's `env:` block where they can be read and
+# corrected. There was a second secret here once, SUPABASE_PROD_DB_URL,
+# holding that same password hand-assembled into a URL. Something in the
+# assembly was wrong, and a GitHub secret cannot be read back, so the only
+# way to debug it was to guess. Composing it removes the guessing: every part
+# except the password is visible, and the password is encoded here rather
+# than by hand. It also means rotating the password is one edit instead of
+# two that drift. Do not reintroduce a whole-URL secret.
 #
 # Making check-migrations.yml bidirectional is O-051 part 2 and is not here.
 
@@ -63,6 +76,24 @@ concurrency:
 env:
   PROJECT_REF: idmxottsjqeiatgiudvt
   HARNESS: supabase/tests/pass1_invariants.sql
+
+  # The non-secret half of production's connection string. The secret half is
+  # SUPABASE_DB_PASSWORD and nothing else; the two are joined in "Compose the
+  # production connection string" below. These live here, in the clear, on
+  # purpose: they are not secrets, and keeping them out of the secret is what
+  # makes the secret a single value that can be rotated in one place.
+  #
+  # Port 5432 on the pooler host is SESSION mode, which is required, not
+  # incidental: the harness runs --single-transaction and builds pg_temp
+  # functions it then calls, so every statement has to land on one backend
+  # session. 6543 is transaction mode and is free to split them. The pooler
+  # rather than db.<ref>.supabase.co because GitHub's runners are IPv4-only
+  # and the direct host is not. The user carries the project ref after a dot
+  # because that is how the pooler routes to a project; it authenticates as
+  # `postgres`, which is the role section 11b's RESET ROLE needs.
+  PROD_DB_HOST: aws-0-us-west-2.pooler.supabase.com
+  PROD_DB_PORT: "5432"
+  PROD_DB_NAME: postgres
 
   # The number of PASS lines a clean run produces. 43 assertion sites outside
   # section 13's loop, plus 2 per table for the 14 tables that loop walks.
@@ -211,10 +242,12 @@ jobs:
       # does NOT hold it on production, so preview alone would reproduce the
       # exact blind spot that hid seven activation assertions for two days.
       #
-      # SUPABASE_PROD_DB_URL must connect as `postgres` (the role section 11b
-      # reaches via RESET ROLE), through the session-mode pooler so an
-      # IPv4-only runner can reach it. It writes nothing that survives: the
-      # harness always raises at the end and the transaction rolls back.
+      # The string is composed here from SUPABASE_DB_PASSWORD and the
+      # non-secret parts pinned in this file's `env:` block, rather than read
+      # whole out of a second secret. It connects as `postgres` (the role
+      # section 11b reaches via RESET ROLE), through the session-mode pooler
+      # so an IPv4-only runner can reach it. It writes nothing that survives:
+      # the harness always raises at the end and the transaction rolls back.
       #
       # This is the most powerful credential this repository's CI holds, on a
       # public repository. That is the other reason the trigger above is
@@ -228,18 +261,72 @@ jobs:
       # RESET ROLE must land on for section 12c's member_gender read -- would
       # give CI the reach it needs and nothing else. Not a blocker for getting
       # the harness running, which is what this workflow is for.
-      - name: Resolve the production database (push to main)
+      - name: Compose the production connection string (push to main)
         if: github.event_name != 'pull_request'
         env:
-          PROD_DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -euo pipefail
-          if [ -z "$PROD_DB_URL" ]; then
-            echo "::error title=Harness not run, no production connection string::The SUPABASE_PROD_DB_URL secret is not set, so supabase/tests/pass1_invariants.sql did not run against production and nothing has been verified. It must be a connection string for the \`postgres\` role -- not a service role key, and not service_role: section 11b needs a role that holds auth.users, which service_role does not have on production."
+
+          if [ -z "${DB_PASSWORD:-}" ]; then
+            echo "::error title=Harness not run, no database password::The SUPABASE_DB_PASSWORD secret is not set, so supabase/tests/pass1_invariants.sql did not run against production and nothing has been verified. It is the password for the \`postgres\` role -- the same secret .github/workflows/check-migrations.yml authenticates \`supabase link\` with. Not a service role key and not service_role: section 11b needs a role that holds auth.users, which service_role does not have on production."
             exit 1
           fi
-          echo "::add-mask::$PROD_DB_URL"
-          echo "DB_URL=$PROD_DB_URL" >> "$GITHUB_ENV"
+
+          # Percent-encode the password rather than trusting whoever set the
+          # secret to have done it by hand. A raw `@`, `:`, `/`, `?`, `#` or
+          # `%` in a URI's userinfo re-parses the whole string -- an `@`
+          # relocates the host, a `%` starts an escape that is not there --
+          # and the failure surfaces as a connection error naming a host
+          # nobody configured, which is exactly the kind of thing that cannot
+          # be diagnosed through a write-only secret.
+          #
+          # LC_ALL=C so the loop walks BYTES: a non-ASCII password has to be
+          # encoded as its UTF-8 bytes, not as characters. `printf -v` rather
+          # than a command substitution so no subshell ever holds the value.
+          # Unreserved set is RFC 3986's: ALPHA / DIGIT / "-" / "." / "_" / "~".
+          urlencode() {
+            local LC_ALL=C s=$1 out= hex i c
+            for (( i = 0; i < ${#s}; i++ )); do
+              c=${s:i:1}
+              case $c in
+                [A-Za-z0-9._~-]) out+=$c ;;
+                *) printf -v hex '%%%02X' "'$c"; out+=$hex ;;
+              esac
+            done
+            printf '%s' "$out"
+          }
+
+          encoded="$(urlencode "$DB_PASSWORD")"
+          url="postgresql://postgres.$PROJECT_REF:$encoded@$PROD_DB_HOST:$PROD_DB_PORT/$PROD_DB_NAME"
+
+          # Neither of these strings is the secret's exact value, so GitHub's
+          # automatic masking does not cover either one: it matches the secret
+          # literally, and a percent-encoded password is a different string.
+          # Registering them explicitly is what stops an accidental echo --
+          # here or in any later step -- from printing the password.
+          #
+          # `%` doubled to `%25` because the DATA of a workflow command is
+          # unescaped by the runner: `%25` -> `%`, `%0D` -> CR, `%0A` -> LF.
+          # Passing the encoded string through raw would register a mask for
+          # something other than the string actually in use -- a password
+          # containing `%` becomes `%25` here, and would be unescaped back to
+          # `%`, masking a value that never appears while the real one goes
+          # unmasked. There are no raw CR or LF left to escape: the encoder
+          # above has already turned them into %0D and %0A.
+          printf '::add-mask::%s\n' "${encoded//%/%25}"
+          printf '::add-mask::%s\n' "${url//%/%25}"
+
+          # Said without the secret in it, so a connection failure can still
+          # be read against what this step actually built. The composed URL
+          # itself is never echoed -- masking is the backstop, not the plan.
+          echo "Composed a session-mode pooler connection string: postgresql://postgres.$PROJECT_REF:<password>@$PROD_DB_HOST:$PROD_DB_PORT/$PROD_DB_NAME"
+          echo "Password: ${#DB_PASSWORD} characters in, ${#encoded} after percent-encoding."
+
+          # GITHUB_ENV, not the log. A single-line value needs no heredoc
+          # delimiter here and cannot smuggle one in: the encoder has left no
+          # newline anywhere in the string.
+          echo "DB_URL=$url" >> "$GITHUB_ENV"
           echo "TARGET=**production** (\`$PROJECT_REF\`)" >> "$GITHUB_ENV"
 
       # --single-transaction pins the whole file to one backend session, which
