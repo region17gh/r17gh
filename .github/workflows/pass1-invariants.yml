@@ -73,6 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history so the base of the pull request can be diffed to see
+          # whether it proposes a schema change at all.
+          fetch-depth: 0
 
       # A fork PR gets no secrets, by design, and we are not going to reach
       # for pull_request_target to change that. So the harness genuinely
@@ -83,6 +87,39 @@ jobs:
         run: |
           echo "::error title=Harness not run, fork PR::supabase/tests/pass1_invariants.sql did NOT run. This pull request comes from a fork (${{ github.event.pull_request.head.repo.full_name }}), and fork pull requests correctly receive no repository secrets, so there is no database to run against. Nothing about the member register has been verified by this build. A maintainer must re-run the harness from a branch in this repository, or run it by hand, before merging."
           exit 1
+
+      # Supabase's GitHub integration only builds a preview branch for a PR
+      # that changes something under supabase/ -- it says so on the PR itself
+      # ("ignored ... because there are no changes detected in supabase
+      # directory"). So the absence of a preview branch means one of two very
+      # different things, and this step is what tells them apart:
+      #
+      #   - this PR touches no SQL, so there is no schema delta to verify and
+      #     no preview branch was ever going to exist. Reported as an explicit
+      #     non-run below.
+      #   - this PR DOES touch SQL and still has no preview branch. That is
+      #     branching being broken or switched off, with a schema change
+      #     riding through unverified. Hard failure.
+      #
+      # Nothing here can turn a schema change into a skip, which is the only
+      # property that actually matters.
+      - name: Work out whether this pull request proposes a schema change
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          changed="$(git diff --name-only "$base" "$HEAD_SHA" -- supabase/ || true)"
+          if [ -n "$changed" ]; then
+            echo "SCHEMA_TOUCHED=1" >> "$GITHUB_ENV"
+            echo "This pull request changes files under supabase/:"
+            printf '%s\n' "$changed" | sed 's/^/  /'
+          else
+            echo "SCHEMA_TOUCHED=0" >> "$GITHUB_ENV"
+            echo "This pull request changes no files under supabase/."
+          fi
 
       - name: Install the PostgreSQL client
         run: |
@@ -105,9 +142,6 @@ jobs:
       # project that isn't using per-PR Supabase branching. Otherwise the
       # preview branch's credentials are resolved through the Management API,
       # which does return them for preview branches (unlike production).
-      #
-      # Either way this ends in a connection string or it ends the build. It
-      # never ends in "no database, carry on".
       - name: Resolve the preview database (pull request)
         if: github.event_name == 'pull_request'
         env:
@@ -115,13 +149,20 @@ jobs:
           PREVIEW_DB_URL: ${{ secrets.SUPABASE_PREVIEW_DB_URL }}
         run: |
           set -euo pipefail
+
+          # Used by both failure paths below to say why nothing was verified.
+          no_database() {
+            echo "::error title=Harness not run, no preview database::$1"
+            echo "HARNESS_SKIPPED=0" >> "$GITHUB_ENV"
+            exit 1
+          }
+
           url="$PREVIEW_DB_URL"
           if [ -n "$url" ]; then
             echo "Using the SUPABASE_PREVIEW_DB_URL secret."
           else
             if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
-              echo "::error title=Harness not run, no preview database::Neither the SUPABASE_PREVIEW_DB_URL secret nor the SUPABASE_ACCESS_TOKEN secret is set, so this build cannot reach a database and supabase/tests/pass1_invariants.sql did not run. Nothing has been verified. Set one of them in the repository's Actions secrets."
-              exit 1
+              no_database "Neither the SUPABASE_PREVIEW_DB_URL secret nor the SUPABASE_ACCESS_TOKEN secret is set, so this build cannot reach a database and supabase/tests/pass1_invariants.sql did not run. Nothing has been verified. Set one of them in the repository's Actions secrets."
             fi
             # Supabase's GitHub integration names the preview branch after the
             # git branch. GITHUB_HEAD_REF is read from the environment rather
@@ -129,7 +170,21 @@ jobs:
             # text and does not belong in a shell command line.
             echo "Resolving the preview branch named '$GITHUB_HEAD_REF'."
             if ! env_out="$(supabase branches get "$GITHUB_HEAD_REF" --project-ref "$PROJECT_REF" -o env 2>"$RUNNER_TEMP/branches.err")"; then
-              echo "::error title=Harness not run, no preview database::Could not resolve a Supabase preview branch named '$GITHUB_HEAD_REF' for project $PROJECT_REF, so supabase/tests/pass1_invariants.sql did not run and nothing has been verified. Either enable per-PR branching for this repository, or set the SUPABASE_PREVIEW_DB_URL secret to a database this suite may run against. The CLI said:"
+              if grep -qiE 'branch not found|404' "$RUNNER_TEMP/branches.err" && [ "${SCHEMA_TOUCHED:-}" = "0" ]; then
+                # No preview branch and no SQL in the diff: the two agree, and
+                # there is genuinely no schema delta for the harness to check.
+                # Recorded as an explicit non-run, not as a verification.
+                echo "No preview branch, and this pull request changes nothing under supabase/. Nothing to verify here."
+                echo "HARNESS_SKIPPED=1" >> "$GITHUB_ENV"
+                exit 0
+              fi
+              # Either the CLI failed for some other reason, or -- worse --
+              # this PR changes SQL and still has no preview branch.
+              if [ "${SCHEMA_TOUCHED:-0}" = "1" ]; then
+                echo "::error title=Schema change with no preview database::This pull request changes files under supabase/, but no Supabase preview branch named '$GITHUB_HEAD_REF' exists for project $PROJECT_REF, so supabase/tests/pass1_invariants.sql did not run against the schema this PR proposes. A schema change is going unverified. Check that branching is enabled for this repository in the Supabase GitHub integration, or set the SUPABASE_PREVIEW_DB_URL secret. The CLI said:"
+              else
+                echo "::error title=Harness not run, no preview database::Could not reach the Supabase Management API to resolve a preview branch for project $PROJECT_REF, so supabase/tests/pass1_invariants.sql did not run and nothing has been verified. The CLI said:"
+              fi
               # Redact any credentials before echoing the CLI's own message.
               sed -E 's#://[^:/@]*:[^@]*@#://***:***@#g' "$RUNNER_TEMP/branches.err" >&2
               exit 1
@@ -140,8 +195,7 @@ jobs:
             url="$(printf '%s\n' "$env_out" | grep -m1 '^POSTGRES_URL=' | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/')"
           fi
           if [ -z "$url" ]; then
-            echo "::error title=Harness not run, no preview database::Resolved an empty connection string for the preview branch, so supabase/tests/pass1_invariants.sql did not run and nothing has been verified."
-            exit 1
+            no_database "Resolved an empty connection string for the preview branch, so supabase/tests/pass1_invariants.sql did not run and nothing has been verified."
           fi
           echo "::add-mask::$url"
           echo "DB_URL=$url" >> "$GITHUB_ENV"
@@ -183,6 +237,7 @@ jobs:
       # The exit status is captured, reported, and NOT acted on: a clean run of
       # this harness exits non-zero by design. See note 1 in the header.
       - name: Run the harness
+        if: env.HARNESS_SKIPPED != '1'
         env:
           PGCONNECT_TIMEOUT: "20"
         run: |
@@ -197,6 +252,7 @@ jobs:
 
       - name: Read the result out of the output
         id: verdict
+        if: env.HARNESS_SKIPPED != '1'
         run: |
           set -uo pipefail
           out="$RUNNER_TEMP/harness.out"
@@ -284,6 +340,25 @@ jobs:
           echo "ok=$ok" >> "$GITHUB_OUTPUT"
           exit 0
 
+      # The one case that is allowed to be green without a run, said out loud
+      # rather than left to look like a verification.
+      - name: Say plainly that nothing was verified
+        if: env.HARNESS_SKIPPED == '1'
+        run: |
+          set -euo pipefail
+          {
+            echo "### Register invariants harness"
+            echo
+            echo "⏭️ **Not run — this pull request proposes no schema change.**"
+            echo
+            echo "No files under \`supabase/\` differ from the base branch, so Supabase built no preview branch for this PR and there is no schema delta for the harness to check against."
+            echo
+            echo "**Nothing about the member register has been verified by this check.** It is green because there was nothing here to verify, not because anything passed. Production is verified by the run on every push to \`main\`; a pull request that does touch \`supabase/\` and still has no preview branch fails instead of landing here."
+            echo
+            echo "<sub>To run the harness against production on demand, use the workflow's <code>workflow_dispatch</code> trigger.</sub>"
+          } > "$RUNNER_TEMP/comment.md"
+          cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
+
       # One comment per PR, updated in place rather than a new one each push.
       - name: Post the harness output on the pull request
         if: github.event_name == 'pull_request'
@@ -306,5 +381,5 @@ jobs:
             }
 
       - name: Fail the build if the harness did not come back clean
-        if: steps.verdict.outputs.ok != '1'
+        if: env.HARNESS_SKIPPED != '1' && steps.verdict.outputs.ok != '1'
         run: exit 1
