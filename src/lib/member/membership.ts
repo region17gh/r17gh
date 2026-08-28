@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { HANDLE_SUGGESTIONS_WANTED } from "@/lib/join/handle";
 import type { Database } from "@/integrations/supabase/types";
 
 export type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -107,4 +108,84 @@ export async function isHandleReserved(handle: string): Promise<boolean> {
     .maybeSingle();
   if (error) return false; // Never block a join on this check; the trigger still holds.
   return data !== null;
+}
+
+/**
+ * The two address functions, typed here rather than in the generated types.
+ *
+ * `src/integrations/supabase/types.ts` is generated from the database and is
+ * not edited by hand. It has not been regenerated since the 27 Aug migrations
+ * added `handle_available()` and `suggest_handles()`, so it does not know them
+ * yet. The shapes below are the signatures the database declares. Regenerating
+ * the types is its own change; when it happens, these go.
+ */
+interface HandleRpcs {
+  handle_available: {
+    Args: { candidate: string };
+    Returns: boolean;
+  };
+  suggest_handles: {
+    Args: { first_name: string; last_name: string; wanted: string; want: number };
+    Returns: { handle: string; basis: string }[];
+  };
+}
+
+interface RpcResult<T> {
+  data: T | null;
+  error: { message: string } | null;
+}
+
+/** The client's own `rpc`, narrowed to the two functions above. */
+function handleRpc<K extends keyof HandleRpcs>(
+  fn: K,
+  args: HandleRpcs[K]["Args"],
+): PromiseLike<RpcResult<HandleRpcs[K]["Returns"]>> {
+  const call = supabase.rpc as unknown as (
+    name: string,
+    params: Record<string, unknown>,
+  ) => PromiseLike<RpcResult<HandleRpcs[K]["Returns"]>>;
+  return call(fn, args);
+}
+
+/**
+ * Whether an address can still be claimed.
+ *
+ * `handle_available()` is SECURITY DEFINER and settles format, the live
+ * register and the reserved list in one statement, so the answer is consistent
+ * with itself in a way three separate reads would not be.
+ *
+ * `null` means the question could not be asked. A member is never held up by a
+ * check that failed: the address is not committed here, and
+ * `activate_membership()` still refuses a taken one at /verify.
+ */
+export async function isHandleAvailable(handle: string): Promise<boolean | null> {
+  const { data, error } = await handleRpc("handle_available", { candidate: handle });
+  if (error) return null;
+  return data === true;
+}
+
+/**
+ * Addresses the member could take instead, built from their own name.
+ *
+ * Every option is checked against the live register inside `suggest_handles()`
+ * before it is returned, so anything offered here is claimable. Deterministic,
+ * not generated: the same name and the same typed address give the same list,
+ * which means a member who comes back sees what they saw before.
+ *
+ * An empty list is a normal answer, not a failure. The member keeps typing.
+ */
+export async function fetchHandleSuggestions(
+  firstName: string,
+  lastName: string,
+  wanted: string,
+  want: number = HANDLE_SUGGESTIONS_WANTED,
+): Promise<string[]> {
+  const { data, error } = await handleRpc("suggest_handles", {
+    first_name: firstName,
+    last_name: lastName,
+    wanted,
+    want,
+  });
+  if (error || !data) return [];
+  return data.map((row) => row.handle);
 }

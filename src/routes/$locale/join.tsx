@@ -6,6 +6,7 @@ import { Confetti } from "@/components/join/Confetti";
 import { Issued } from "@/components/join/Issued";
 import { Progress } from "@/components/join/Progress";
 import { RegisterCard } from "@/components/join/RegisterCard";
+import { useHandleAvailability } from "@/components/join/useHandleAvailability";
 import { useHeadingFocus } from "@/components/join/useHeadingFocus";
 import { StepCompact } from "@/components/join/steps/StepCompact";
 import { StepConfirmEmail } from "@/components/join/steps/StepConfirmEmail";
@@ -299,6 +300,32 @@ function JoinPage() {
       prev.handle ? prev : { ...prev, handle: suggestHandle(prev.firstName, prev.lastName) },
     );
   }, [step]);
+
+  /**
+   * Availability, checked while the address is being chosen rather than at the
+   * end of the flow.
+   *
+   * Collision is expected to be the highest-volume case at launch: African and
+   * diaspora naming means many members want the same first name. Discovering it
+   * at /verify, after the whole flow, is the wrong place to find out. Only
+   * asked on the Compact, which is the only screen with an address on it, so no
+   * request is spent on a member who has not reached it.
+   *
+   * This does not replace the `handle_taken` check at /verify. The address is
+   * committed there, so it can still be taken in between; that race is now rare
+   * rather than routine.
+   */
+  const {
+    checking: handleChecking,
+    free: handleFree,
+    suggestions: handleSuggestions,
+  } = useHandleAvailability({
+    handle: draft.handle,
+    firstName: draft.firstName,
+    lastName: draft.lastName,
+    enabled: step === 4,
+    onResult: setHandleProblem,
+  });
 
   // Landing on the credential without one in hand: read it back off the record.
   useEffect(() => {
@@ -695,6 +722,10 @@ function JoinPage() {
                 }}
                 showAffirmRequired={showAffirmRequired}
                 handleProblem={handleProblem}
+                handleChecking={handleChecking}
+                handleFree={handleFree}
+                handleSuggestions={handleSuggestions}
+                onPickHandle={(handle) => update({ handle })}
                 submitting={submitting}
                 onBack={() => goToStep(3)}
                 onSubmit={() => void submit()}

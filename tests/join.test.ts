@@ -20,7 +20,15 @@ import {
   saveDraft,
   savePendingHandle,
 } from "../src/lib/join/draft";
-import { checkHandle, normaliseHandle, suggestHandle } from "../src/lib/join/handle";
+import {
+  HANDLE_SUGGESTIONS_WANTED,
+  checkHandle,
+  normaliseHandle,
+  readHandleAvailability,
+  suggestHandle,
+  worthCheckingHandle,
+} from "../src/lib/join/handle";
+import { HANDLE_CHECK_DEBOUNCE_MS } from "../src/components/join/useHandleAvailability";
 import { looksSendable, submitIdentity } from "../src/lib/join/identity";
 import { readLinkError } from "../src/lib/auth/linkError";
 import {
@@ -651,5 +659,206 @@ describe("the challenge that stands in front of a member number", () => {
     const stub = (en.join.challenge as Record<string, string>)["stub"] ?? "";
     expect(stub.toLowerCase()).toContain("stubbed");
     expect(stub.toLowerCase()).toContain("production");
+  });
+});
+
+describe("the address, checked while it is being chosen", () => {
+  /**
+   * Why this suite exists: before it, there was no availability check in the
+   * join flow at all. `taken` was in the union type and had copy against it,
+   * and `setHandleProblem("taken")` was never called from anywhere. A member
+   * found out their address was gone at /verify, after completing every step.
+   *
+   * Collision is expected to be the highest-volume case at launch, not an edge
+   * case: African and diaspora naming means many members want the same first
+   * name. So most of what is asserted below is about tone and placement, which
+   * is where that requirement actually lives.
+   */
+
+  const hook = readSource("src/components/join/useHandleAvailability.ts");
+  const compact = readSource("src/components/join/steps/StepCompact.tsx");
+  const membership = readSource("src/lib/member/membership.ts");
+  const join = readSource("src/routes/$locale/join.tsx");
+  const verify = readSource("src/routes/$locale/verify.tsx");
+
+  test("what the register said becomes what the member is told", () => {
+    expect(readHandleAvailability(true, false)).toBe("available");
+    // Reserved and taken are different things and must read differently.
+    expect(readHandleAvailability(false, true)).toBe("reserved");
+    expect(readHandleAvailability(false, false)).toBe("taken");
+  });
+
+  test("a check that could not run is not a problem the member is shown", () => {
+    // Nothing on this screen commits the address. A failed check must never be
+    // the reason a member cannot proceed.
+    expect(readHandleAvailability(null, false)).toBe("unknown");
+    expect(readHandleAvailability(null, true)).toBe("unknown");
+  });
+
+  test("only an address that could be claimed is worth a request", () => {
+    expect(worthCheckingHandle("ama-mensah")).toBe(true);
+    expect(worthCheckingHandle("  ama  ")).toBe(true);
+    // Every one of these is answered on the device, for free.
+    expect(worthCheckingHandle("")).toBe(false);
+    expect(worthCheckingHandle("ab")).toBe(false);
+    expect(worthCheckingHandle("-ama")).toBe(false);
+    expect(worthCheckingHandle("Ama")).toBe(false);
+    expect(worthCheckingHandle("a".repeat(31))).toBe(false);
+  });
+
+  test("format is settled before the register is asked, not after", () => {
+    // The ordering is the whole point: a malformed address costs no request.
+    // Matched on the guard statement, not on the identifier: the identifier
+    // also appears in the import line at the top of the file, which would sit
+    // before the request no matter what the body actually did.
+    const guard = hook.indexOf("if (!worthCheckingHandle(candidate)) {");
+    const request = hook.indexOf("isHandleAvailable(candidate)");
+    expect(guard).toBeGreaterThan(-1);
+    expect(request).toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(request);
+    // And the guard returns, rather than merely noting the problem and
+    // carrying on into the request.
+    expect(hook.slice(guard, request)).toContain("return;");
+  });
+
+  test("the check is debounced, so it is not one request per keystroke", () => {
+    expect(hook).toContain("HANDLE_CHECK_DEBOUNCE_MS");
+    expect(hook).toMatch(/setTimeout\(/);
+    expect(hook).toContain("}, HANDLE_CHECK_DEBOUNCE_MS);");
+    // Cleared on the way out, or a member typing fast queues a request per keystroke
+    // after all.
+    expect(hook).toContain("clearTimeout(timer)");
+    expect(HANDLE_CHECK_DEBOUNCE_MS).toBeGreaterThan(0);
+    expect(HANDLE_CHECK_DEBOUNCE_MS).toBeLessThanOrEqual(1000);
+  });
+
+  test("an answer that arrives late cannot overwrite a newer one", () => {
+    // Members on unreliable connections get responses out of order. Without
+    // this, a slow "taken" lands against an address they have since changed.
+    expect(hook).toContain("const ticket = ++latest.current");
+    expect(hook.match(/if \(ticket !== latest\.current\) return;/g)?.length).toBeGreaterThanOrEqual(
+      2,
+    );
+  });
+
+  test("nothing is asked until the member is on the screen with an address on it", () => {
+    expect(hook).toContain("if (!enabled) return;");
+    expect(join).toContain("enabled: step === 4");
+  });
+
+  test("it fires the existing 'taken' state rather than inventing a new one", () => {
+    // `handleProblem` already carried "taken" and "reserved" and already had
+    // copy against both. The check feeds that, so there is one path to the
+    // message and one place it is rendered.
+    expect(join).toContain("onResult: setHandleProblem");
+    expect(hook).toContain('onResult(outcome)');
+    expect(hook).toContain('readHandleAvailability(available, reserved)');
+  });
+
+  test("suggestions are asked for with the member's own name and what they typed", () => {
+    expect(hook).toContain("fetchHandleSuggestions(firstName, lastName, candidate)");
+    // Alongside the reason, not after it: the member sees the problem and the
+    // way out together.
+    expect(hook).toContain("await Promise.all([");
+  });
+
+  test("between three and five suggestions, which is a choice and not a list", () => {
+    expect(HANDLE_SUGGESTIONS_WANTED).toBeGreaterThanOrEqual(3);
+    expect(HANDLE_SUGGESTIONS_WANTED).toBeLessThanOrEqual(5);
+  });
+
+  test("a failed availability check returns null and never blocks", () => {
+    const body = membership.slice(membership.indexOf("export async function isHandleAvailable"));
+    expect(body).toContain("if (error) return null;");
+    // And an empty suggestion list is a normal answer, not a thrown error.
+    const suggestions = membership.slice(
+      membership.indexOf("export async function fetchHandleSuggestions"),
+    );
+    expect(suggestions).toContain("if (error || !data) return [];");
+  });
+
+  test("a taken address is not rendered as an error", () => {
+    // The requirement this suite exists for. Collision is the commonest thing
+    // that happens on this screen, so it must read as a normal step in choosing
+    // a name: no red, no alarm.
+    expect(compact).toContain(
+      'const unavailable = handleProblem === "taken" || handleProblem === "reserved";',
+    );
+    expect(compact).toContain("const formatProblem = unavailable ? null : handleProblem;");
+
+    const region = compact.slice(
+      compact.indexOf('id="r17-handle-note"'),
+      compact.indexOf("{!formatProblem && !unavailable"),
+    );
+    expect(region.length).toBeGreaterThan(0);
+    // `r17-error` is the red one, and `alert` interrupts a screen reader.
+    expect(region).not.toContain("r17-error");
+    expect(region).not.toContain('role="alert"');
+    expect(region).toContain('role="status"');
+    // The taken and reserved copy is rendered here, in the calm region.
+    expect(region).toContain("join.handleErrors.${handleProblem}");
+  });
+
+  test("the field is not marked invalid for an address someone else simply has", () => {
+    // aria-invalid on a taken address tells a screen reader the member did
+    // something wrong. They did not.
+    expect(compact).toContain("aria-invalid={formatProblem ? true : undefined}");
+  });
+
+  test("suggestions are clickable, and clicking one fills the field", () => {
+    expect(compact).toContain("onClick={() => onPickHandle(suggestion)}");
+    expect(join).toContain("onPickHandle={(handle) => update({ handle })}");
+    // r17-chip carries min-height: var(--join-tap-min), which is the 48px rule.
+    expect(compact).toContain('className="r17-chip"');
+  });
+
+  test("the handle_taken path at /verify is kept as the last line of defence", () => {
+    // The address is committed at /verify, not at /join, so it can still be
+    // taken in between. The check on the join screen makes that race rare; it
+    // does not remove it, and removing this would be the actual regression.
+    expect(verify).toContain('case "handle_taken":');
+    expect(verify).toContain('setProblem("taken")');
+    expect(verify).toContain('case "handle_reserved":');
+  });
+
+  test("every new string is in en.json, and none is hardcoded in the screen", () => {
+    const step4 = en.join.step4 as Record<string, string>;
+    for (const key of [
+      "handleChecking",
+      "handleFree",
+      "handleSuggestionsLabel",
+      "handleSuggestionTake",
+    ]) {
+      expect(step4[key]).toBeTruthy();
+      expect(compact).toContain(`join.step4.${key}`);
+    }
+    // The one string that takes the address itself keeps its placeholder.
+    expect(step4["handleSuggestionTake"]).toContain("{handle}");
+  });
+
+  test("the reason reads differently for reserved than for taken", () => {
+    const errors = en.join.handleErrors as Record<string, string>;
+    expect(errors["taken"]).toBeTruthy();
+    expect(errors["reserved"]).toBeTruthy();
+    expect(errors["taken"]).not.toBe(errors["reserved"]);
+  });
+
+  test("the copy keeps the house voice and never blames the member", () => {
+    const banned =
+      /\b(unlock|empower|seamless|revolutionize|revolutionise|world-class|leverage|journey|elevate)\b/i;
+    const blame = /you failed|your fault|not allowed|invalid|error|sorry/i;
+    const step4 = en.join.step4 as Record<string, string>;
+    const strings = [
+      step4["handleChecking"],
+      step4["handleFree"],
+      step4["handleSuggestionsLabel"],
+      step4["handleSuggestionTake"],
+      ...Object.values(en.join.handleErrors as Record<string, string>),
+    ];
+    for (const value of strings) {
+      expect(value).not.toMatch(/[—–]/);
+      expect(value).not.toMatch(banned);
+      expect(value).not.toMatch(blame);
+    }
   });
 });

@@ -38,3 +38,41 @@ export function checkHandle(input: string): HandleProblem | null {
   if (!HANDLE_PATTERN.test(handle)) return "format";
   return null;
 }
+
+/**
+ * How many alternatives to ask the register for when an address is gone.
+ *
+ * Enough to feel like a choice, few enough to read on a phone without
+ * scrolling. `suggest_handles()` returns at most this many, and fewer when the
+ * member's name yields fewer readable options.
+ */
+export const HANDLE_SUGGESTIONS_WANTED = 5;
+
+/** Whether an address is worth asking the register about. */
+export function worthCheckingHandle(input: string): boolean {
+  // Format is settled here, on the device, instantly and without a request.
+  // Only an address that could actually be claimed justifies a round trip:
+  // members are frequently on metered connections.
+  return checkHandle(input.trim()) === null;
+}
+
+/**
+ * What the member is told, given what the register said.
+ *
+ * `available` is null when the check could not run at all. That is deliberately
+ * not treated as a problem: nothing on this screen blocks a join, and the
+ * address is not committed here. `activate_membership()` has the final word
+ * when it is committed at /verify.
+ *
+ * Reserved and taken are different things and are kept apart. Taken is the
+ * ordinary case and says nothing about the member; reserved means the address
+ * was never available to anyone.
+ */
+export function readHandleAvailability(
+  available: boolean | null,
+  reserved: boolean,
+): "available" | "taken" | "reserved" | "unknown" {
+  if (available === null) return "unknown";
+  if (available) return "available";
+  return reserved ? "reserved" : "taken";
+}
