@@ -103,6 +103,7 @@ only door out of `pending_verification` was asserted about by nothing.
   connecting role. **Never elevate to a privilege the target environment does not grant.**
   Elevation that exists only in the test is a test of the test.
 - Production baseline: **71 PASS / 0 FAIL / 0 SKIP / 1 INFO**. A drop means look. CI enforces the PASS count as `EXPECTED_PASS` in `.github/workflows/pass1-invariants.yml`; a change that adds or removes a case must update that number and this line in the same commit.
+- **Lowering `EXPECTED_PASS` is a security change, not housekeeping.** The count fails safe in one direction only. Remove a case and the count drops, the build goes red, and someone looks — that is the control working. But lower the constant in the same commit and the build goes green with less coverage than it had before, in a one-line diff that reads like tidying. A change that *decreases* `EXPECTED_PASS` must state in the PR body which case went and why, and is reviewed as a policy change, the same as relaxing an invariant in the table above. Raising it needs no ceremony.
 
 **Writing harness cases:**
 - Use `has_table_privilege()`, `has_function_privilege()`, `has_column_privilege()` for any

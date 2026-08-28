@@ -210,6 +210,19 @@ jobs:
       # reaches via RESET ROLE), through the session-mode pooler so an
       # IPv4-only runner can reach it. It writes nothing that survives: the
       # harness always raises at the end and the transaction rolls back.
+      #
+      # This is the most powerful credential this repository's CI holds, on a
+      # public repository. That is the other reason the trigger above is
+      # `pull_request` and never `pull_request_target`: a fork PR must not be
+      # able to reach it, and on `pull_request` it cannot.
+      #
+      # Worth tightening later, and written down here because this is where
+      # the next person to touch the credential will be standing: `postgres`
+      # is far more than this harness needs. A dedicated role granted exactly
+      # what section 11b requires -- table access to auth.users, and whatever
+      # RESET ROLE must land on for section 12c's member_gender read -- would
+      # give CI the reach it needs and nothing else. Not a blocker for getting
+      # the harness running, which is what this workflow is for.
       - name: Resolve the production database (push to main)
         if: github.event_name != 'pull_request'
         env:
