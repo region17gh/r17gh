@@ -70,10 +70,49 @@ These are enforced in the database, not the UI. The security memory in Supabase 
 | Released handles stay in `reserved_handles` with reason `released` | A handle may be changed once; reissuing the old one defeats the reason for allowing the change. |
 | Every visibility column and every consent defaults to the most private value | Nothing is public or opted-in by default. |
 | `member_gender` readable only by the member and `r17_reporting` | See the gender section below. |
+| Erasure is two steps, not one | `pseudonymize_member()` returns the `auth.users` id that still holds the member's email, and records it in `erasure_log`. The erasure is incomplete until that auth user is deleted and `mark_auth_user_deleted()` is called. `public.incomplete_erasures` must always be empty; a row there is an unfulfilled deletion right. |
+| Handle matching is two-tier | Exact match on the normalized form (punctuation stripped, lookalikes folded, repeats collapsed) is a hard block. Containment of a reserved token is ALLOWED and written to `handle_reviews` for human review. Blocking on containment is the Scunthorpe problem and falls hardest on African names. |
+| `reserved_handles` never contains personal or family names | Mahama, Akufo, Kufuor, Rawlings, Mills, Atta, Nana, Nii, Naa, Osei and Togbe are ordinary Ghanaian names. Reserving them tells verified members they may not use their own name. Individual impersonation is handled by identity verification and the Code of Conduct, not the reserved list. Adding a surname is a reversal. |
+| The register is permanent; the directory is live | Dormancy after six months sets `status = 'dormant'`, which hides a member from the directory, search and active counts. It never deletes, never voids a member number, never touches Founding Member. There is no inactivity-based deletion. |
+| A member exits only by their own request or Code of Conduct enforcement | There is no third route. Not data hygiene, not a migration that wants a clean dataset, not an integration that cannot handle nulls. |
+| The credential check character is Damm, alphabet `ACDEFHJKMN`, frozen | Catches every single-character error and every adjacent transposition. Letters omit B, G, I, L, O, S, Z, each confusable with a digit. Changing either invalidates every credential ever issued, and credentials are never reissued. |
 
 **Intentional linter flags, do not "fix":** deny-all RLS on `number_reservations`, `conduct_actions`, `erasure_log` · `current_member_id()` and `register_member()` as `SECURITY DEFINER`.
 
 `register_member()` is the most security-sensitive function in the system. Any edit needs a real read, not a quick patch.
+
+---
+
+## Testing and migration discipline
+
+**A skipped test is a failed test.** Seven activation assertions silently skipped on
+production for two days because the harness elevated itself to `service_role` to build an
+`auth.users` fixture, and `service_role` has no access to `auth.users` on production. It
+does locally and on preview, which is why nobody saw it. The suite reported clean while the
+only door out of `pending_verification` was asserted about by nothing.
+
+- Fixtures run at the lowest privilege that can build them. Use `RESET ROLE` to drop to the
+  connecting role. **Never elevate to a privilege the target environment does not grant.**
+  Elevation that exists only in the test is a test of the test.
+- Production baseline: **71 PASS / 0 FAIL / 0 SKIP / 1 INFO**. A drop means look.
+
+**Writing harness cases:**
+- Use `has_table_privilege()`, `has_function_privilege()`, `has_column_privilege()` for any
+  claim about a role other than the active one. The `information_schema.*_privileges` views
+  silently return zero rows when you ask about another role, and zero rows reads as PASS.
+  That is a false-green generator inside a security suite.
+- Assert the outcome, never the absence of an error. A zero-row UPDATE does not raise.
+- Append before the final `RAISE EXCEPTION`. Fixtures elevated, assertions as `authenticated`.
+
+**Never grant `TRUNCATE` to `anon` or `authenticated`.** TRUNCATE is not filtered by row
+level security. Postgres checks the privilege and empties the table. The Supabase default
+grants it on every new table; revoke it. RLS being correct is not protection here.
+
+**A migration applied to production must be written to `supabase/migrations/` in the same
+change.** Nine were applied through the MCP connection on 27 Aug and never landed in the
+repo, and `check-migrations.yml` compares repo to production in one direction only, so
+drift introduced at the production end is invisible to it. The repo is the source of truth
+(D-043) or it is not.
 
 ---
 
@@ -178,6 +217,12 @@ Act 843 applies extraterritorially, plus every host-country regime members live 
 - Every stored consent needs a corresponding control in settings the member can find and change.
 - Draft state persists to local storage on any multi-step flow — a refresh on a poor connection must not lose the session.
 
+**Registration with Ghana's Data Protection Commission is decided and in
+progress.** Act 843 reaches processing of data about people in Ghana regardless
+of where the controller sits, and UK and EU law applies based on where members
+are, not where we are incorporated. Being a US 501(c)(3) settles the tax
+question, not this one.
+
 ---
 
 ## Pre-launch gates
@@ -194,8 +239,12 @@ Tracked and unresolved. Do not treat the product as launch-ready while any are o
   stub is guarded by `import.meta.env.DEV` and cannot be switched on in a
   production build, because the branch is not compiled into one.
 - Privacy policy, terms, and Code of Conduct live before the first signup.
-- Counsel read on the age-gate implementation.
-- Data Protection Commission registration determined.
+- **The minor-discovery procedure live in the Code of Conduct, with a named
+  owner.** The policy is settled: self-declared birth month and year is adequate,
+  18+ holds across member jurisdictions, and the procedure is suspend on sight,
+  delete within thirty days, never contact a parent, log only member number and
+  three dates. What is not done is writing it where the person on duty can find
+  it. A procedure that exists only in a decision log is not a procedure.
 - **Confirm signup email exercised with a real send.** Only Magic Link has been
   seen live. Which template fires is decided by GoTrue, not by the screen, and
   the address used for testing already had an auth account, so `confirmation`
