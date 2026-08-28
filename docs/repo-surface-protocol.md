@@ -122,6 +122,7 @@ so the handback must carry enough that chat is not asked to trust a summary.
 REPO HANDBACK
 Repo: region17gh/r17ghana
 HEAD read at: <full SHA>
+Open PRs touching the files read: none | #NN <branch>, touching <path>
 Read at (UTC): <timestamp>
 
 Files read (full path, not glob):
@@ -136,6 +137,12 @@ Migrations on disk not in the applied list, or vice versa:
 Position: <certified | certified with findings | not certified | N/A>
 Unverifiable from this surface: <list>
 ```
+
+A SHA is a claim about a moment, and an open PR is the gap between reading it
+and reporting it. "none" here means the list was checked and was empty, never
+that it was not checked. A handback that omits this line has not answered the
+question, and a capability reported absent without it is reported at a SHA, not
+on main.
 
 Chat then cross-checks the migration list against production with
 `list_migrations` on `idmxottsjqeiatgiudvt` and reports drift in either
