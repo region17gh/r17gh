@@ -17,7 +17,12 @@ name: Register invariants
 #    parsing the output: no FAIL and no SKIP line, and exactly EXPECTED_PASS
 #    PASS lines. A run that produced no output at all fails; so does one that
 #    never reached the closing RAISE. Never put `|| true` on the psql call --
-#    that is the same bug wearing a different hat.
+#    that is the same bug wearing a different hat, and so is leaving GitHub's
+#    default `bash -e` in force over a command that is SUPPOSED to exit
+#    non-zero: `set -uo pipefail` does not clear an inherited -e, only
+#    `set +e` does. Both steps below open with it; see the note on each. The
+#    reporting steps carry `!cancelled()` for the same reason one step out --
+#    a build that knows why it failed and says nothing is the same failure.
 #
 # 2. PREVIEW ALONE IS NOT ENOUGH. The bug this control exists to catch was
 #    invisible precisely because service_role holds auth.users on preview and
@@ -279,9 +284,17 @@ jobs:
           cat "$RUNNER_TEMP/harness.out"
           exit 0
 
+      # `!cancelled()` rather than a plain condition: the reason a build went
+      # red is exactly what this step exists to say out loud, so a failure
+      # ABOVE it must not be what silences it. Without this, a step that dies
+      # before psql -- an unset secret, a preview branch that will not resolve
+      # -- skips the verdict and the comment with it, and the pull request
+      # shows a red check with nothing anywhere saying what happened. Same
+      # failure shape as note 1, one step further out: the build knows why it
+      # failed and does not tell anyone.
       - name: Read the result out of the output
         id: verdict
-        if: env.HARNESS_SKIPPED != '1'
+        if: ${{ !cancelled() && env.HARNESS_SKIPPED != '1' }}
         run: |
           # Same reason as the step above: GitHub's `bash -e` is already in
           # force, and this script counts result lines with `grep -c`, which
@@ -291,6 +304,10 @@ jobs:
           set +e
           set -uo pipefail
           out="$RUNNER_TEMP/harness.out"
+          # A step above may have died before psql ever created this file, and
+          # this step now runs in that case. An empty file reads as "no output
+          # at all", which the check below already treats as a failure.
+          [ -f "$out" ] || : > "$out"
           reasons="$RUNNER_TEMP/reasons.md"
           : > "$reasons"
           ok=1
@@ -395,8 +412,12 @@ jobs:
           cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
 
       # One comment per PR, updated in place rather than a new one each push.
+      # Also `!cancelled()`, for the reason given on the verdict step -- and
+      # guarded on comment.md existing, because a job that died before either
+      # step wrote one has nothing to post and must not fail a second time
+      # trying.
       - name: Post the harness output on the pull request
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles(format('{0}/comment.md', runner.temp)) != '' }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -416,5 +437,5 @@ jobs:
             }
 
       - name: Fail the build if the harness did not come back clean
-        if: env.HARNESS_SKIPPED != '1' && steps.verdict.outputs.ok != '1'
+        if: ${{ !cancelled() && env.HARNESS_SKIPPED != '1' && steps.verdict.outputs.ok != '1' }}
         run: exit 1
