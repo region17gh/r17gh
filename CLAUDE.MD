@@ -25,7 +25,15 @@ Work proceeds in passes. **One pass per PR.** A pass has a stated scope and a st
 
 - State the plan before writing a migration, and wait.
 - Migrations are reviewed as their own commit, never mixed with UI.
-- Run `supabase/tests/pass1_invariants.sql` after **any** change touching member tables, policies, or triggers. Paste the output into the PR body.
+- `supabase/tests/pass1_invariants.sql` runs in CI. `.github/workflows/pass1-invariants.yml` runs it against the PR's preview branch on every pull request and against **production** on every push to `main`, and posts the output as a single PR comment that it updates in place. You no longer paste the output into the PR body; the comment is the record. Production is the run that matters — `service_role` holds `auth.users` on preview and locally and does **not** hold it on production, so a preview-only suite reproduces the exact blind spot described below.
+  - CI parses the output; it never gates on psql's exit code. The harness ends in a deliberate `RAISE EXCEPTION` to force its rollback, so a completely clean run exits non-zero. The build fails on any `FAIL` or `SKIP` line, on empty output, on a run that never reached that closing `RAISE`, and on a PASS count other than the pinned baseline. Never "fix" that with `|| true`.
+  - Supabase builds a preview branch only for a pull request that changes something under `supabase/`. A PR that changes no SQL therefore has no preview branch and no schema delta, and the check reports an explicit **not run** — green because there was nothing to verify, and it says so in the comment rather than implying a pass. A PR that *does* touch `supabase/` and still has no preview branch **fails**: that is branching being broken with a schema change riding through unverified. Nothing can turn a schema change into a skip.
+  - A pull request from a **fork** cannot run the harness: forks correctly get no secrets. That case reports a loud failure (`harness not run, fork PR`), never a pass. A maintainer re-runs it from a branch in this repository before merging.
+  - **Still run it by hand before pushing.** CI is the backstop, not the first look, and a contributor without CI access needs it. Paste the whole file into the SQL editor, or:
+    ```
+    psql "$SUPABASE_DB_URL" -X -w -v ON_ERROR_STOP=1 --single-transaction -f supabase/tests/pass1_invariants.sql
+    ```
+    Connect as `postgres`, not `service_role`: section 11b drops to the connecting role with `RESET ROLE` for its `auth.users` fixtures, and `service_role` has no access to `auth.users` on production. `--single-transaction` keeps the `CREATE FUNCTION` and the `SELECT` that calls it on one session, which `pg_temp` requires through a pooler.
 - If a fix fails twice, stop and re-examine the cause. Three attempts at the same fix means the diagnosis is wrong.
 - Ask when a requirement is ambiguous. Guessing on the data model or consent behaviour is expensive to undo once real members exist.
 
@@ -94,7 +102,8 @@ only door out of `pending_verification` was asserted about by nothing.
 - Fixtures run at the lowest privilege that can build them. Use `RESET ROLE` to drop to the
   connecting role. **Never elevate to a privilege the target environment does not grant.**
   Elevation that exists only in the test is a test of the test.
-- Production baseline: **71 PASS / 0 FAIL / 0 SKIP / 1 INFO**. A drop means look.
+- Production baseline: **71 PASS / 0 FAIL / 0 SKIP / 1 INFO**. A drop means look. CI enforces the PASS count as `EXPECTED_PASS` in `.github/workflows/pass1-invariants.yml`; a change that adds or removes a case must update that number and this line in the same commit.
+- **Lowering `EXPECTED_PASS` is a security change, not housekeeping.** The count fails safe in one direction only. Remove a case and the count drops, the build goes red, and someone looks — that is the control working. But lower the constant in the same commit and the build goes green with less coverage than it had before, in a one-line diff that reads like tidying. A change that *decreases* `EXPECTED_PASS` must state in the PR body which case went and why, and is reviewed as a policy change, the same as relaxing an invariant in the table above. Raising it needs no ceremony.
 
 **Writing harness cases:**
 - Use `has_table_privilege()`, `has_function_privilege()`, `has_column_privilege()` for any
