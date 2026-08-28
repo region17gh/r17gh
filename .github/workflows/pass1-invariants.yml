@@ -254,19 +254,41 @@ jobs:
         env:
           PGCONNECT_TIMEOUT: "20"
         run: |
+          # `set +e` FIRST, and not negotiable. GitHub runs every step as
+          # `bash -e {0}`, so errexit is already on before this script gets a
+          # say, and `set -uo pipefail` does not clear it. The harness ALWAYS
+          # exits non-zero -- that is the whole point of its closing RAISE --
+          # so leaving errexit on kills this step the instant psql returns,
+          # before a single line has been parsed. That is failure mode 1 in
+          # this file's header wearing a third hat, and it is how this
+          # workflow failed on its first real run against production.
+          set +e
           set -uo pipefail
           psql "$DB_URL" -X -w -v ON_ERROR_STOP=1 --single-transaction -f "$HARNESS" \
             > "$RUNNER_TEMP/harness.out" 2>&1
-          echo "PSQL_RC=$?" >> "$GITHUB_ENV"
+          rc=$?
+          echo "PSQL_RC=$rc" >> "$GITHUB_ENV"
           # Strip credentials out of anything libpq may have echoed before this
-          # file is read back into a PR comment.
+          # file is read back into the log and into a PR comment.
           sed -i -E 's#://[^:/@]*:[^@]*@#://***:***@#g' "$RUNNER_TEMP/harness.out"
+          # Echoed to the log too, so a connection failure is legible here and
+          # not only in the job summary. Exit codes worth knowing: 2 is a
+          # connection problem, 3 is the harness's own closing RAISE under
+          # ON_ERROR_STOP, which is what a clean run looks like.
+          echo "psql exited $rc; output follows."
+          cat "$RUNNER_TEMP/harness.out"
           exit 0
 
       - name: Read the result out of the output
         id: verdict
         if: env.HARNESS_SKIPPED != '1'
         run: |
+          # Same reason as the step above: GitHub's `bash -e` is already in
+          # force, and this script counts result lines with `grep -c`, which
+          # exits 1 on a zero count. Zero FAILs and zero SKIPs is the outcome
+          # this whole workflow is hoping for, so errexit here would kill the
+          # parser on precisely the clean run it exists to confirm.
+          set +e
           set -uo pipefail
           out="$RUNNER_TEMP/harness.out"
           reasons="$RUNNER_TEMP/reasons.md"
