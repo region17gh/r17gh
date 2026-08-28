@@ -46,6 +46,22 @@ Before you answer anything about repo state, pull main and re-derive HEAD live.
 Report the SHA you actually read at. Never answer from a cached read, a PR title,
 a merge notification, or a green check.
 
+Absent from main is not "did not land." Re-deriving HEAD live is necessary and
+not sufficient. A SHA is a claim about a single moment, and an open PR can close
+the gap between reading it and reporting it. Before asserting that a capability
+does not exist, check the open PR list against main. On 27 Aug a handback said a
+feature had not landed, read at a SHA taken 58 seconds before the PR that added
+it merged. The read was live, the SHA was reported, and the conclusion was still
+wrong.
+
+A disagreement between an instruction and the artifact is evidence, not a
+preference. When a prompt asks for a change premised on a state the file
+contradicts, stop and report the contradiction rather than reconciling it. On 27
+Aug a correction premised on "Turnstile is stubbed" was applied to a file that
+already said it was wired, and the result replaced an accurate bullet with a
+worse one. The disagreement was the signal that the instruction was built on
+stale input.
+
 Non-negotiable, restated because they are expensive to undo:
 - RLS on every table containing member data. Verify by querying as anonymous.
 - Never grant INSERT on public.members to authenticated. register_member() only.
