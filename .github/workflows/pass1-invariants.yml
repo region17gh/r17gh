@@ -17,7 +17,11 @@ name: Register invariants
 #    parsing the output: no FAIL and no SKIP line, and exactly EXPECTED_PASS
 #    PASS lines. A run that produced no output at all fails; so does one that
 #    never reached the closing RAISE. Never put `|| true` on the psql call --
-#    that is the same bug wearing a different hat.
+#    that is the same bug wearing a different hat, and so is leaving GitHub's
+#    default `bash -e` in place over a command that is SUPPOSED to exit
+#    non-zero. Both steps below therefore start with `set +e`; see the notes on
+#    each. `set -uo pipefail` does not clear an inherited -e, which is what made
+#    that bug survive review here the first time.
 #
 # 2. PREVIEW ALONE IS NOT ENOUGH. The bug this control exists to catch was
 #    invisible precisely because service_role holds auth.users on preview and
@@ -249,26 +253,59 @@ jobs:
       #
       # The exit status is captured, reported, and NOT acted on: a clean run of
       # this harness exits non-zero by design. See note 1 in the header.
+      #
+      # `set +e` is load-bearing, and note 1 above is why. GitHub runs every
+      # `run:` block as `bash -e {0}`, and `set -uo pipefail` in the body does
+      # NOT clear the -e that bash was already launched with -- only `set +e`
+      # does. Without it the shell exits the instant psql returns non-zero,
+      # which a CLEAN run of this harness always does: it ends in a deliberate
+      # RAISE EXCEPTION, so psql exits 3. PSQL_RC was therefore never recorded,
+      # the redaction below never ran, and every step after this one was
+      # skipped, taking the verdict and the PR comment with them. The exit code
+      # was gating the build after all -- the precise failure this workflow was
+      # written to prevent, reintroduced by the default shell rather than by a
+      # `|| true`. The verdict still comes from parsing the output; this status
+      # is still only ever diagnostic.
       - name: Run the harness
         if: env.HARNESS_SKIPPED != '1'
         env:
           PGCONNECT_TIMEOUT: "20"
         run: |
+          set +e
           set -uo pipefail
           psql "$DB_URL" -X -w -v ON_ERROR_STOP=1 --single-transaction -f "$HARNESS" \
             > "$RUNNER_TEMP/harness.out" 2>&1
-          echo "PSQL_RC=$?" >> "$GITHUB_ENV"
+          rc=$?
+          echo "PSQL_RC=$rc" >> "$GITHUB_ENV"
           # Strip credentials out of anything libpq may have echoed before this
           # file is read back into a PR comment.
           sed -i -E 's#://[^:/@]*:[^@]*@#://***:***@#g' "$RUNNER_TEMP/harness.out"
+          # Into the job log as well as the summary. A connection that never
+          # opens produces a one-line libpq error and no PASS lines at all, and
+          # that line is the whole diagnosis -- it should not be reachable only
+          # through a PR comment.
+          echo "psql exited $rc. Harness output follows."
+          cat "$RUNNER_TEMP/harness.out"
           exit 0
 
+      #
+      # Runs even when a step above failed (`!cancelled()`), because the reason
+      # a build went red is exactly what this step exists to say out loud. And
+      # `set +e` here for a second reason, on the same shell behaviour: `grep -c`
+      # exits 1 when it counts zero, so `n_fail=$(grep -cE 'FAIL' ...)` KILLED
+      # this step under the inherited -e precisely when there were no FAIL lines
+      # -- the clean case. Between the two, this workflow could not report a
+      # green run by any path. The `${var:-0}` fallbacks below only ever helped
+      # once errexit was off.
       - name: Read the result out of the output
         id: verdict
-        if: env.HARNESS_SKIPPED != '1'
+        if: ${{ !cancelled() && env.HARNESS_SKIPPED != '1' }}
         run: |
+          set +e
           set -uo pipefail
           out="$RUNNER_TEMP/harness.out"
+          # A step above may have died before psql ever wrote this file.
+          [ -f "$out" ] || : > "$out"
           reasons="$RUNNER_TEMP/reasons.md"
           : > "$reasons"
           ok=1
@@ -374,7 +411,7 @@ jobs:
 
       # One comment per PR, updated in place rather than a new one each push.
       - name: Post the harness output on the pull request
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles(format('{0}/comment.md', runner.temp)) != '' }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -394,5 +431,5 @@ jobs:
             }
 
       - name: Fail the build if the harness did not come back clean
-        if: env.HARNESS_SKIPPED != '1' && steps.verdict.outputs.ok != '1'
+        if: ${{ !cancelled() && env.HARNESS_SKIPPED != '1' && steps.verdict.outputs.ok != '1' }}
         run: exit 1
