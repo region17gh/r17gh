@@ -125,7 +125,7 @@ export const CHARTER_IMAGES = {
     creditKey: "charter.index.credit",
     altKey: "charter.images.gateAlt",
     licensed: false,
-    blockedBy: "Provenance unresolved; possibly synthetic.",
+    blockedBy: "No file supplied yet for the index plate.",
   },
   /**
    * The pattern layer behind the ledger.

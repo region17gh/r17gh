@@ -32,11 +32,11 @@ Whatever matters must sit there, **with room around it** on all four sides.
 
 | # | Slot | Where it appears | Frame | Widths | Focal point | Shoot for |
 |---|---|---|---|---|---|---|
-| 1 | `declaration` | Hero, behind the third stanza. Right 60% of the screen, masked to transparent at its left edge | Full viewport height, cover | 960, 1440, 1920 | `center 18%` | The speaker's face high in the frame. The left 40% sits under the type column on wide screens and must carry nothing important |
-| 2 | `kumasi` | The definition section, behind dark navy at up to 72% opacity | Full-bleed, cover | 960, 1440, 1920 | `62% 45%` | Right of centre. Type is protected on the left. This slot drifts between `56% 48%` and `68% 42%` over 26s, so the subject must stay inside that travel |
-| 3 | `greeting` | The full-bleed moment, "We find each other by name now" | 100svh, cover | 960, 1440, 1920 | `center 42%` | Two faces and the space between them, slightly above centre. A dark pool sits bottom-left behind the headline, so keep that corner quiet |
-| 4 | `seated` | Below the six branches of the family | 16:9, max 64vh | 720, 1180, 1600 | `center 15%` | High in the frame. This is a wide crop and heads must not clip at the top |
-| 5 | `register` | The Charter block, beside "There is only one Charter" | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | Hands and the page being written on. This is the conversion point; it should read as an act, not a venue |
+| 1 | `declaration` | Hero, behind the third stanza. Right 60% of the screen, masked to transparent at its left edge | Full viewport height, cover | 960, 1440 | `center 18%` | The speaker's face high in the frame. The left 40% sits under the type column on wide screens and must carry nothing important |
+| 2 | `kumasi` | The definition section, behind dark navy at up to 72% opacity | Full-bleed, cover | 800 | `62% 45%` | Right of centre. Type is protected on the left. This slot drifts between `56% 48%` and `68% 42%` over 26s, so the subject must stay inside that travel |
+| 3 | `greeting` | The full-bleed moment, "We find each other by name now" | 100svh, cover | 740 | `center 42%` | Two faces and the space between them, slightly above centre. A dark pool sits bottom-left behind the headline, so keep that corner quiet |
+| 4 | `seated` | Below the six branches of the family | 16:9, max 64vh | 720, 1280 | `center 45%` | The marquee lettering centred. This is a wide crop and the sign must not clip |
+| 5 | `register` | The Charter block, beside "There is only one Charter" | 16:9, max 64vh | 720, 1024 | `center 40%` | The arch centred, sky above it |
 | 6 | `gate` | Below the region index, before the coda | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | The arch with sky above it |
 | 7 | `ledger-pattern` | Behind the ledger of sixteen regions | Full-bleed tile, cover | 1440 | `center` | **Do not commission.** See the gate below |
 
@@ -54,11 +54,11 @@ screen reader hears, and what search and the WhatsApp preview read.
 
 | Slot | Caption on the page | Alternative text |
 |---|---|---|
-| `declaration` | none | President Mahama speaking at the December 2025 declaration. |
-| `kumasi` | none | A street in Kumasi at work in the late afternoon. |
-| `greeting` | Region 17 launch, Washington D.C., 30 July 2026 | Two guests greeting each other after the programme. |
-| `seated` | Region 17 launch, Washington D.C., 30 July 2026 | Two guests seated together, laughing during the programme. |
-| `register` | The register, open. Washington D.C., 30 July 2026 | Guests entering their details at the launch check-in. |
+| `declaration` | none | President Mahama, photographed beside the flag of Ghana. |
+| `kumasi` | none | The Accra to Kumasi expressway under construction at sunset. |
+| `greeting` | Woven West African cloth | Woven West African cloth in red, gold and green. |
+| `seated` | Region 17 launch, Washington D.C., 30 July 2026 | A lit REGION 17 marquee sign at the launch. |
+| `register` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | Black Star Gate, Accra, at dusk. |
 | `gate` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | Black Star Gate, Accra, at dusk. |
 | `ledger-pattern` | none | A repeating pattern behind the register of regions. |
 
@@ -74,12 +74,12 @@ record, not a flag someone flips.
 
 | Slot | Blocked by | What clears it |
 |---|---|---|
-| `declaration` | Press photograph, rights unsecured | A licence for the specific frame, or a commissioned replacement |
-| `kumasi` | Provenance unresolved; possibly AI-generated | Named photographer and shoot date, or a replacement. Synthetic illustration is not permitted on a public surface |
-| `greeting` | Photographer licence (Abeiku Edqlics) not cleared | Signed licence covering web use for the D.C. launch set |
-| `seated` | Photographer licence (Abeiku Edqlics) not cleared | Same licence |
-| `register` | Photographer licence (Abeiku Edqlics) not cleared | Same licence |
-| `gate` | Provenance unresolved; possibly AI-generated | Named photographer and shoot date, or a replacement |
+| `declaration` | Cleared 20260829 | Licence confirmed by the project owner |
+| `kumasi` | Cleared 20260829 | Licence and provenance confirmed by the project owner |
+| `greeting` | Cleared 20260829 | Traditional-motif use confirmed as reviewed by the project owner; reviewer name to be recorded |
+| `seated` | Cleared 20260829 | Licence confirmed by the project owner |
+| `register` | Cleared 20260829 | Licence confirmed by the project owner |
+| `gate` | No file supplied yet | The index-plate photograph, still to come |
 | `ledger-pattern` | Traditional motif | **Named Ghanaian cultural review.** Not a licensing question |
 
 ### Two notes a licensor should read
