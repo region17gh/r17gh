@@ -79,16 +79,22 @@ describe("the sixteen regions", () => {
 });
 
 describe("photography gates", () => {
-  test("nothing ships while a licence or provenance is unresolved", () => {
-    // If this fails, someone has cleared a gate. That is a decision, and the
-    // PR that flips a flag should say who cleared it.
-    expect(unlicensedImages()).toHaveLength(Object.keys(CHARTER_IMAGES).length);
+  test("only the slots still waiting on a file are unlicensed", () => {
+    // Cleared on 20260829: declaration, kumasi, greeting, seated, register.
+    // Still out: the index plate, which has no file yet, and the traditional
+    // motif behind the ledger. Flipping either is a decision, and the PR that
+    // does it should say who cleared it.
+    expect(unlicensedImages().map((image) => image.name).sort()).toEqual([
+      "gate",
+      "ledger-pattern",
+    ]);
   });
 
-  test("every slot states what is blocking it", () => {
+  test("a slot that is still blocked says what is blocking it", () => {
     for (const image of Object.values(CHARTER_IMAGES)) {
-      expect(image.blockedBy.length).toBeGreaterThan(10);
       expect(image.altKey).toStartWith("charter.images.");
+      if (image.licensed) continue;
+      expect(image.blockedBy.length).toBeGreaterThan(10);
     }
   });
 
