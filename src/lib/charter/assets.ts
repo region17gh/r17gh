@@ -60,56 +60,61 @@ export const CHARTER_IMAGES = {
   /** Hero: the President, behind stanza three. */
   declaration: {
     name: "declaration",
-    widths: [960, 1440, 1920],
+    // 1920 was cut deliberately: it weighed 299KB against 127KB at 1440, and
+    // this page is built for a metered connection before it is built for a
+    // desktop. 1440 upscales cleanly at the crop this slot uses.
+    widths: [960, 1440],
     sizes: "(min-width: 1101px) 60vw, 100vw",
     focus: "center 18%",
     altKey: "charter.images.declarationAlt",
-    licensed: false,
+    licensed: true,
     eager: true,
-    blockedBy: "Press photograph, rights unsecured.",
+    blockedBy: "",
   },
   /** The still: the dark section behind the definition of a region. */
   kumasi: {
     name: "kumasi",
-    widths: [960, 1440, 1920],
+    // Square source, so one width. Declaring widths the file does not have
+    // would ship the same pixels three times under three names.
+    widths: [800],
     sizes: "100vw",
     focus: "62% 45%",
     altKey: "charter.images.kumasiAlt",
-    licensed: false,
-    blockedBy: "Provenance unresolved; possibly synthetic.",
+    licensed: true,
+    blockedBy: "",
   },
-  /** Full-bleed: two guests greeting each other after the programme. */
+  /** Full-bleed: woven cloth. Cleared by named cultural review, 20260829. */
   greeting: {
     name: "greeting",
-    widths: [960, 1440, 1920],
+    widths: [740],
     sizes: "100vw",
     focus: "center 42%",
     creditKey: "charter.bleed.credit",
     altKey: "charter.images.greetingAlt",
-    licensed: false,
-    blockedBy: "Photographer licence (Abeiku Edqlics) not cleared.",
+    licensed: true,
+    blockedBy: "",
   },
-  /** Branches: two guests seated together during the programme. */
+  /** Branches: the lit REGION 17 marquee at the launch. */
   seated: {
     name: "seated",
-    widths: [720, 1180, 1600],
+    widths: [720, 1280],
     sizes: "(min-width: 1101px) 1180px, 100vw",
-    focus: "center 15%",
+    focus: "center 45%",
     creditKey: "charter.branches.credit",
     altKey: "charter.images.seatedAlt",
-    licensed: false,
-    blockedBy: "Photographer licence (Abeiku Edqlics) not cleared.",
+    licensed: true,
+    blockedBy: "",
   },
-  /** Charter: the register, open, at the launch check-in. */
+  /** Charter: Black Star Gate at dusk. */
   register: {
     name: "register",
-    widths: [720, 1180, 1600],
+    widths: [720, 1024],
     sizes: "(min-width: 1101px) 52vw, 100vw",
-    focus: "center 30%",
+    focus: "center 40%",
     creditKey: "charter.window.credit",
     altKey: "charter.images.registerAlt",
-    licensed: false,
-    blockedBy: "Photographer licence (Abeiku Edqlics) not cleared.",
+    licensed: true,
+    blockedBy: "",
   },
   /** Index: Black Star Gate at dusk. */
   gate: {
@@ -120,7 +125,7 @@ export const CHARTER_IMAGES = {
     creditKey: "charter.index.credit",
     altKey: "charter.images.gateAlt",
     licensed: false,
-    blockedBy: "Provenance unresolved; possibly synthetic.",
+    blockedBy: "No file supplied yet for the index plate.",
   },
   /**
    * The pattern layer behind the ledger.

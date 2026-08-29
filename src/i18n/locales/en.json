@@ -382,7 +382,7 @@
       "eyebrow": "One people",
       "line1": "We find each other",
       "line2": "by name now.",
-      "credit": "Region 17 launch, Washington D.C., 30 July 2026"
+      "credit": "Woven West African cloth"
     },
     "branches": {
       "eyebrow": "This is us",
@@ -412,7 +412,7 @@
       "hinge": "Home cannot know your name until it is written.",
       "cta": "Add my name",
       "fineprint": "Free for family. Always. Three minutes to be counted.",
-      "credit": "The register, open. Washington D.C., 30 July 2026"
+      "credit": "Black Star Gate, Accra. Freedom and Justice, AD 1957"
     },
     "ticker": {
       "seventeenth": "The Seventeenth"
@@ -423,7 +423,7 @@
       "line2": "your people are from.",
       "body": "Take a deep dive into each of our sixteen regions and see where you fit. Every region has its own page, its own plans, and its own ways in.",
       "go": "Open {url}",
-      "credit": "Black Star Gate, Accra. Freedom and Justice, AD 1957"
+      "credit": "Photograph to follow"
     },
     "coda": "Akwaaba home!",
     "deadline": {
@@ -432,12 +432,12 @@
     },
     "imagePending": "Photograph pending licence",
     "images": {
-      "declarationAlt": "President Mahama speaking at the December 2025 declaration.",
-      "kumasiAlt": "A street in Kumasi at work in the late afternoon.",
-      "greetingAlt": "Two guests greeting each other after the programme.",
-      "seatedAlt": "Two guests seated together, laughing during the programme.",
-      "registerAlt": "Guests entering their details at the launch check-in.",
-      "gateAlt": "Black Star Gate, Accra, at dusk.",
+      "declarationAlt": "President Mahama, photographed beside the flag of Ghana.",
+      "kumasiAlt": "The Accra to Kumasi expressway under construction at sunset.",
+      "greetingAlt": "Woven West African cloth in red, gold and green.",
+      "seatedAlt": "A lit REGION 17 marquee sign at the launch.",
+      "registerAlt": "Black Star Gate, Accra, at dusk.",
+      "gateAlt": "A photograph of Ghana, still to be added.",
       "ledgerPatternAlt": "A repeating pattern behind the register of regions."
     },
     "regions": {

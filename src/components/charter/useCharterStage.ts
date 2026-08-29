@@ -43,6 +43,7 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
     const pin = host.querySelector<HTMLElement>("[data-charter-pin]");
     const stanzas = Array.from(host.querySelectorAll<HTMLElement>("[data-charter-stanza]"));
     const hint = host.querySelector<HTMLElement>("[data-charter-hint]");
+    const portrait = host.querySelector<HTMLElement>("[data-charter-portrait]");
     const ledger = host.querySelector<HTMLElement>("[data-charter-ledger]");
     const cells = Array.from(host.querySelectorAll<HTMLElement>("[data-charter-cell]"));
     const seventeenth = host.querySelector<HTMLElement>("[data-charter-seventeenth]");
@@ -170,6 +171,12 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
 
         stanza.style.opacity = opacity.toFixed(3);
         stanza.style.setProperty("--charter-dy", `${offset.toFixed(1)}px`);
+
+        // The portrait belongs to the last stanza and rides its fade, held
+        // under full strength so the type over it stays the loudest thing.
+        if (portrait && index === stanzas.length - 1) {
+          portrait.style.opacity = (opacity * 0.9).toFixed(3);
+        }
       });
 
       if (hint) hint.style.opacity = clamp(1 - progress * 6, 0, 1).toFixed(3);
