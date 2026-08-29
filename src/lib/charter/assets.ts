@@ -26,6 +26,15 @@ export interface CharterImage {
   readonly widths: readonly number[];
   /** The `sizes` attribute: how wide this slot is at each breakpoint. */
   readonly sizes: string;
+  /**
+   * The focal point the crop holds on to, as a CSS `object-position`.
+   *
+   * Every slot is `object-fit: cover`, so the frame changes shape with the
+   * viewport and this is the part of the picture that survives. It is the one
+   * piece of direction a photographer needs from us: whatever matters has to
+   * sit here, with room around it.
+   */
+  readonly focus: string;
   /** Dictionary key for the caption. Absent when the slot carries no credit. */
   readonly creditKey?: string;
   /** Dictionary key for the alternative text. */
@@ -53,6 +62,7 @@ export const CHARTER_IMAGES = {
     name: "declaration",
     widths: [960, 1440, 1920],
     sizes: "(min-width: 1101px) 60vw, 100vw",
+    focus: "center 18%",
     altKey: "charter.images.declarationAlt",
     licensed: false,
     eager: true,
@@ -63,6 +73,7 @@ export const CHARTER_IMAGES = {
     name: "kumasi",
     widths: [960, 1440, 1920],
     sizes: "100vw",
+    focus: "62% 45%",
     altKey: "charter.images.kumasiAlt",
     licensed: false,
     blockedBy: "Provenance unresolved; possibly synthetic.",
@@ -72,6 +83,7 @@ export const CHARTER_IMAGES = {
     name: "greeting",
     widths: [960, 1440, 1920],
     sizes: "100vw",
+    focus: "center 42%",
     creditKey: "charter.bleed.credit",
     altKey: "charter.images.greetingAlt",
     licensed: false,
@@ -82,6 +94,7 @@ export const CHARTER_IMAGES = {
     name: "seated",
     widths: [720, 1180, 1600],
     sizes: "(min-width: 1101px) 1180px, 100vw",
+    focus: "center 15%",
     creditKey: "charter.branches.credit",
     altKey: "charter.images.seatedAlt",
     licensed: false,
@@ -92,6 +105,7 @@ export const CHARTER_IMAGES = {
     name: "register",
     widths: [720, 1180, 1600],
     sizes: "(min-width: 1101px) 52vw, 100vw",
+    focus: "center 30%",
     creditKey: "charter.window.credit",
     altKey: "charter.images.registerAlt",
     licensed: false,
@@ -102,6 +116,7 @@ export const CHARTER_IMAGES = {
     name: "gate",
     widths: [720, 1180, 1600],
     sizes: "(min-width: 1101px) 1180px, 100vw",
+    focus: "center 30%",
     creditKey: "charter.index.credit",
     altKey: "charter.images.gateAlt",
     licensed: false,
@@ -120,6 +135,7 @@ export const CHARTER_IMAGES = {
     name: "ledger-pattern",
     widths: [1440],
     sizes: "100vw",
+    focus: "center",
     altKey: "charter.images.ledgerPatternAlt",
     licensed: false,
     blockedBy: "Traditional motif. Requires named Ghanaian cultural review before any public use.",

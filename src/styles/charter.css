@@ -594,6 +594,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Fallback only. Each slot names its own focal point; see lib/charter/assets. */
   object-position: center 30%;
   will-change: transform;
 }
@@ -669,7 +670,11 @@
   line-height: var(--lh-title);
   margin: 0;
   color: var(--charter-brass-lit);
-  max-width: 16ch;
+  /* Wide enough to hold "It closes 31 January." on one line. At the 16ch the
+     prototype used, the close date broke across two lines, which is the one
+     date on the page that may not be hard to read. */
+  max-width: 26ch;
+  text-wrap: balance;
 }
 .charter-hinge {
   font-style: italic;

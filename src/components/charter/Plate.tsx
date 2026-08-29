@@ -37,6 +37,9 @@ export function Media({
       srcSet={srcSet(image)}
       sizes={image.sizes}
       alt={alt}
+      // Every slot is object-fit: cover, so this is the part of the picture
+      // that survives every viewport. It is per-slot, not a page default.
+      style={{ objectPosition: image.focus }}
       // Only a real photograph gets the Ken Burns breath and the parallax; the
       // placeholder has nothing to move.
       data-charter-parallax=""

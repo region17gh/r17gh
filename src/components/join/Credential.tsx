@@ -1,5 +1,6 @@
 import { useT } from "@/i18n";
 import { Tag } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import { formatCutoff } from "@/lib/foundingWindow";
 
 import { formatMemberNumber } from "./memberNumber";
 import { RegisterStar } from "./RegisterCard";
@@ -81,17 +82,4 @@ export function Credential({
       ) : null}
     </>
   );
-}
-
-function formatCutoff(cutoff: Date, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    }).format(cutoff);
-  } catch {
-    return cutoff.toISOString().slice(0, 10);
-  }
 }

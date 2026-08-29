@@ -12,7 +12,13 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 
-import { CHARTER_IMAGES, srcSet, fallbackSrc, unlicensedImages } from "../src/lib/charter/assets";
+import {
+  CHARTER_IMAGES,
+  IMAGE_BUDGET_BYTES,
+  srcSet,
+  fallbackSrc,
+  unlicensedImages,
+} from "../src/lib/charter/assets";
 import { CHARTER_REGIONS, codesAreComplete } from "../src/lib/charter/regions";
 import { DEFERRED_REDIRECTS, LEGACY_REDIRECTS } from "../src/lib/charter/legacyPaths";
 import { cutoffDateTime, formatCutoff } from "../src/lib/foundingWindow";
@@ -351,5 +357,85 @@ describe("every string the page asks for exists", () => {
       expect(alternative, `${city} missing from the atlas alternative`).toContain(city);
     }
     expect(alternative.split(/\s+/).length).toBeGreaterThan(30);
+  });
+});
+
+describe("the credential and the welcome email agree on the close date", () => {
+  /**
+   * These are the two artefacts that prove a Charter standing, and they used to
+   * disagree: the credential formatted with a bare "en", which is the American
+   * order, while the email named "en-GB". For an organisation whose product is
+   * verification, two documents that do not match is the wrong first
+   * impression. Both now go through `lib/foundingWindow`.
+   */
+  const CUTOFF = new Date("2027-01-31T23:59:59Z");
+
+  test("the shared formatter writes the house form", () => {
+    expect(formatCutoff(CUTOFF, "en")).toBe("31 January 2027");
+  });
+
+  test("the welcome email writes the same string", async () => {
+    const { buildWelcomeEmail } = await import("../src/lib/email/welcome");
+    const email = buildWelcomeEmail(
+      {
+        firstName: "Ama",
+        handle: "ama",
+        memberNumber: 17,
+        credentialId: "R17-000017-A",
+        foundingMember: true,
+        classYear: 2026,
+        foundingCutoff: CUTOFF,
+      } as never,
+      { locale: "en", siteUrl: "https://r17gh.com" } as never,
+    );
+    const expected = formatCutoff(CUTOFF, "en");
+    expect(email.text).toContain(expected);
+    expect(email.html).toContain(expected);
+  });
+
+  test("the credential holds no formatter of its own", () => {
+    const source = readFileSync("src/components/join/Credential.tsx", "utf8");
+    expect(source).toContain('from "@/lib/foundingWindow"');
+    expect(source).not.toMatch(/function formatCutoff/);
+    expect(source).not.toContain("Intl.DateTimeFormat");
+  });
+});
+
+describe("the asset manifest stays in step with the slots", () => {
+  /**
+   * `docs/charter-asset-manifest.md` is what a photographer and a licensor are
+   * handed. A slot added to the code and not to that document is a slot nobody
+   * shoots, so the two are pinned together here.
+   */
+  const manifest = readFileSync("docs/charter-asset-manifest.md", "utf8");
+
+  test("every slot appears by name", () => {
+    for (const image of Object.values(CHARTER_IMAGES)) {
+      expect(manifest, `${image.name} missing from the manifest`).toContain(`\`${image.name}\``);
+    }
+  });
+
+  test("every slot's focal point and widths are stated", () => {
+    for (const image of Object.values(CHARTER_IMAGES)) {
+      expect(manifest, `focal point for ${image.name}`).toContain(`\`${image.focus}\``);
+      expect(manifest, `widths for ${image.name}`).toContain(image.widths.join(", "));
+    }
+  });
+
+  test("every slot's alternative text is quoted verbatim", () => {
+    for (const image of Object.values(CHARTER_IMAGES)) {
+      const alt = dictionary.charter.images[image.altKey.replace("charter.images.", "")];
+      expect(manifest, `alt text for ${image.name}`).toContain(alt);
+    }
+  });
+
+  test("the budget in the document is the budget in the code", () => {
+    expect(manifest).toContain(`${IMAGE_BUDGET_BYTES / 1024} KB`);
+  });
+
+  test("a focal point is a usable object-position", () => {
+    for (const image of Object.values(CHARTER_IMAGES)) {
+      expect(image.focus, image.name).toMatch(/^(center|left|right|\d+%)( (top|bottom|center|\d+%))?$/);
+    }
   });
 });

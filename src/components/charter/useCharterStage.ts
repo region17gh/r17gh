@@ -90,6 +90,18 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
 
     // The deadline bar arrives once the definition has been read, not before.
     // (The spec flags moving this to hero-exit as an accepted pending change.)
+    //
+    // The state is set from where the reader actually is, not left to the
+    // observer alone. This effect runs twice: `still` starts true so the server
+    // render and first paint are the reduced-motion version, then flips once
+    // the media query is read. Without this resync the bar raised on that first
+    // pass stayed raised, so the scarcity bar met the reader on the hero,
+    // before the page had said what a region is.
+    if (bar && stillSection) {
+      const passed = stillSection.getBoundingClientRect().top < 0;
+      bar.classList.toggle("is-up", passed);
+    }
+
     let barObserver: IntersectionObserver | null = null;
     if (bar && stillSection) {
       barObserver = new IntersectionObserver(
@@ -105,9 +117,8 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
 
     if (still) {
       // One frame of colour, then nothing. The stylesheet has already unpinned
-      // the tracks, lit every cell and shown the bar.
+      // the tracks, lit every cell, and shown the bar without needing a class.
       drawField(0, 0);
-      bar?.classList.add("is-up");
       const onResize = () => {
         sizeField();
         drawField(0, 0);

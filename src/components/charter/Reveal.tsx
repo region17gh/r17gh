@@ -36,7 +36,13 @@ export function Reveal({
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.25, rootMargin: "0px 0px -8% 0px" },
+      // threshold MUST stay 0. A fraction-of-the-target threshold is unmeetable
+      // once the group is taller than the viewport by more than that fraction:
+      // on a 390px-wide phone the region index is nearly 4000px tall, so a
+      // threshold of 0.25 asked for 989px of a group inside an 844px window and
+      // the whole section stayed at opacity 0, permanently. The negative bottom
+      // margin is what holds the reveal until the group is properly on screen.
+      { threshold: 0, rootMargin: "0px 0px -8% 0px" },
     );
 
     observer.observe(element);

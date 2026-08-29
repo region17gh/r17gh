@@ -1,0 +1,111 @@
+# Charter route: asset manifest
+
+Every image slot on `r17gh.com/<locale>/join`. This is the brief for a
+photographer and the checklist for a licensor.
+
+Source of truth is `src/lib/charter/assets.ts`. A slot added there and not added
+here fails `tests/charter.test.ts`, so this table cannot quietly go stale.
+
+**Nothing on this page ships today.** All seven slots render as plain paper at
+the correct aspect ratio, carrying their alternative text, and make no network
+request. Each goes live by setting `licensed: true` on its slot, one at a time.
+
+---
+
+## What we need delivered
+
+Per slot: **WebP**, at each width listed, named `<slot>-<width>.webp`, into
+`public/images/charter/`. sRGB. No text burned into the image.
+
+**Total budget for the page is 180 KB.** Seven slots is roughly 26 KB each; the
+full-bleed and hero slots can take more if the plates take less. The budget is
+the constraint, not a guideline: a large share of members are mobile-first on
+metered or unreliable connections.
+
+Every slot is `object-fit: cover`. The frame changes shape with the viewport, so
+the **focal point** column is the part of the picture that always survives.
+Whatever matters must sit there, **with room around it** on all four sides.
+
+---
+
+## The slots, in the order a reader meets them
+
+| # | Slot | Where it appears | Frame | Widths | Focal point | Shoot for |
+|---|---|---|---|---|---|---|
+| 1 | `declaration` | Hero, behind the third stanza. Right 60% of the screen, masked to transparent at its left edge | Full viewport height, cover | 960, 1440, 1920 | `center 18%` | The speaker's face high in the frame. The left 40% sits under the type column on wide screens and must carry nothing important |
+| 2 | `kumasi` | The definition section, behind dark navy at up to 72% opacity | Full-bleed, cover | 960, 1440, 1920 | `62% 45%` | Right of centre. Type is protected on the left. This slot drifts between `56% 48%` and `68% 42%` over 26s, so the subject must stay inside that travel |
+| 3 | `greeting` | The full-bleed moment, "We find each other by name now" | 100svh, cover | 960, 1440, 1920 | `center 42%` | Two faces and the space between them, slightly above centre. A dark pool sits bottom-left behind the headline, so keep that corner quiet |
+| 4 | `seated` | Below the six branches of the family | 16:9, max 64vh | 720, 1180, 1600 | `center 15%` | High in the frame. This is a wide crop and heads must not clip at the top |
+| 5 | `register` | The Charter block, beside "There is only one Charter" | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | Hands and the page being written on. This is the conversion point; it should read as an act, not a venue |
+| 6 | `gate` | Below the region index, before the coda | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | The arch with sky above it |
+| 7 | `ledger-pattern` | Behind the ledger of sixteen regions | Full-bleed tile, cover | 1440 | `center` | **Do not commission.** See the gate below |
+
+Every plate is rendered at 120% height with a 10% negative offset so it can
+carry an 11px parallax and a 1.05±0.012 Ken Burns scale without the frame
+showing. **Deliver at the widths above, not cropped to the aspect ratio** — the
+extra height is used.
+
+---
+
+## Captions and alternative text now in place
+
+Captions are visible on the page. Alternative text is what a member using a
+screen reader hears, and what search and the WhatsApp preview read.
+
+| Slot | Caption on the page | Alternative text |
+|---|---|---|
+| `declaration` | none | President Mahama speaking at the December 2025 declaration. |
+| `kumasi` | none | A street in Kumasi at work in the late afternoon. |
+| `greeting` | Region 17 launch, Washington D.C., 30 July 2026 | Two guests greeting each other after the programme. |
+| `seated` | Region 17 launch, Washington D.C., 30 July 2026 | Two guests seated together, laughing during the programme. |
+| `register` | The register, open. Washington D.C., 30 July 2026 | Guests entering their details at the launch check-in. |
+| `gate` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | Black Star Gate, Accra, at dusk. |
+| `ledger-pattern` | none | A repeating pattern behind the register of regions. |
+
+If a delivered photograph differs from its description, **the alternative text
+changes with it.** These are descriptions of specific frames, not placeholders.
+
+---
+
+## Licensing gates
+
+Nothing goes live until its row clears. Each is a decision someone makes on the
+record, not a flag someone flips.
+
+| Slot | Blocked by | What clears it |
+|---|---|---|
+| `declaration` | Press photograph, rights unsecured | A licence for the specific frame, or a commissioned replacement |
+| `kumasi` | Provenance unresolved; possibly AI-generated | Named photographer and shoot date, or a replacement. Synthetic illustration is not permitted on a public surface |
+| `greeting` | Photographer licence (Abeiku Edqlics) not cleared | Signed licence covering web use for the D.C. launch set |
+| `seated` | Photographer licence (Abeiku Edqlics) not cleared | Same licence |
+| `register` | Photographer licence (Abeiku Edqlics) not cleared | Same licence |
+| `gate` | Provenance unresolved; possibly AI-generated | Named photographer and shoot date, or a replacement |
+| `ledger-pattern` | Traditional motif | **Named Ghanaian cultural review.** Not a licensing question |
+
+### Two notes a licensor should read
+
+**The three D.C. launch photographs (3, 4, 5) all sit behind one licence.** They
+are the only images of real members on the page, and the page is about being
+counted by name. Clearing that one licence is what makes the page look like
+Region 17 rather than a stock brochure.
+
+**Slots 2 and 6 are suspected AI generation.** They are held not because the
+licence is missing but because the organisation's product is verification. A
+synthetic photograph on a public surface, presented as a place, contradicts the
+thing membership is supposed to mean. Replace them with real photography rather
+than clearing them.
+
+**Slot 7 is not a licensing question at all.** An adinkra pattern is not
+decoration: the symbols carry specific meanings and belong to specific
+communities. It needs named Ghanaian cultural review before any public use, and
+if that review does not happen the page ships without it, as it does today. It
+is listed here only so nobody commissions one by mistake.
+
+---
+
+## Also outstanding
+
+**There is no share card.** `og:image` is deliberately absent rather than
+pointing at a file that does not exist. The page arrives by WhatsApp forward, so
+the share card is the first thing most readers see and it is currently blank.
+It needs its own frame, at 1200×630, and it needs a licence like any other.
