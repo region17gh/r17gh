@@ -42,6 +42,7 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
     const fieldContext = field?.getContext("2d") ?? null;
     const pin = host.querySelector<HTMLElement>("[data-charter-pin]");
     const stanzas = Array.from(host.querySelectorAll<HTMLElement>("[data-charter-stanza]"));
+    const returnStanza = host.querySelector<HTMLElement>("[data-charter-return]");
     const hint = host.querySelector<HTMLElement>("[data-charter-hint]");
     const portrait = host.querySelector<HTMLElement>("[data-charter-portrait]");
     const ledger = host.querySelector<HTMLElement>("[data-charter-ledger]");
@@ -140,14 +141,19 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
 
     /* Hero: three stanzas cross-dissolving across the pinned track. Each owns
        an equal slice; the fades occupy the outer 26% of a slice so the slices
-       never overlap and a flick cannot land between two of them. */
+       never overlap and a flick cannot land between two of them. The last 14%
+       of the track belongs to the return: the opening words come back once the
+       third stanza has let go, and hold until the pin releases. */
+    const RETURN_FROM = 0.86;
+
     function paintHero() {
       if (!pin || stanzas.length === 0) return;
       const progress = trackProgress(pin);
-      const slice = 1 / stanzas.length;
+      const slice = RETURN_FROM / stanzas.length;
+      const p = Math.min(progress, RETURN_FROM);
 
       stanzas.forEach((stanza, index) => {
-        const local = (progress - index * slice) / slice;
+        const local = (p - index * slice) / slice;
         let opacity: number;
         let offset: number;
 
@@ -178,6 +184,16 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
           portrait.style.opacity = (opacity * 0.9).toFixed(3);
         }
       });
+
+      /* The return: rises over the first 60% of its share, then holds. It
+         starts exactly where stanza three's fade ends, so the two never
+         share a frame. */
+      if (returnStanza) {
+        const back = clamp((progress - RETURN_FROM) / (1 - RETURN_FROM), 0, 1);
+        const opacity = clamp(back / 0.6, 0, 1);
+        returnStanza.style.opacity = opacity.toFixed(3);
+        returnStanza.style.setProperty("--charter-dy", `${((1 - opacity) * lift).toFixed(1)}px`);
+      }
 
       if (hint) hint.style.opacity = clamp(1 - progress * 6, 0, 1).toFixed(3);
     }
