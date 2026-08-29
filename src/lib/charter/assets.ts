@@ -86,9 +86,9 @@ export const CHARTER_IMAGES = {
   /** Full-bleed: woven cloth. Cleared by named cultural review, 20260829. */
   greeting: {
     name: "greeting",
-    widths: [740],
+    widths: [740, 1280],
     sizes: "100vw",
-    focus: "center 42%",
+    focus: "center 38%",
     creditKey: "charter.bleed.credit",
     altKey: "charter.images.greetingAlt",
     licensed: true,
@@ -105,36 +105,35 @@ export const CHARTER_IMAGES = {
     licensed: true,
     blockedBy: "",
   },
-  /** Charter: Black Star Gate at dusk. */
+  /** Charter: the lifetime patron plaque presented at the launch. */
   register: {
     name: "register",
     widths: [720, 1024],
     sizes: "(min-width: 1101px) 52vw, 100vw",
-    focus: "center 40%",
+    focus: "center 45%",
     creditKey: "charter.window.credit",
     altKey: "charter.images.registerAlt",
     licensed: true,
     blockedBy: "",
   },
-  /** Index: Black Star Gate at dusk. */
+  /** Index: Black Star Gate at dusk, mirrored so the birds fly in from the right. */
   gate: {
     name: "gate",
-    widths: [720, 1180, 1600],
+    widths: [720, 1024],
     sizes: "(min-width: 1101px) 1180px, 100vw",
-    focus: "center 30%",
+    focus: "center 40%",
     creditKey: "charter.index.credit",
     altKey: "charter.images.gateAlt",
-    licensed: false,
-    blockedBy: "No file supplied yet for the index plate.",
+    licensed: true,
+    blockedBy: "",
   },
   /**
    * The pattern layer behind the ledger.
    *
-   * HOOK, not a gap. The prototype ran an adinkra pattern here. Traditional
-   * motifs may not be used as decoration without named Ghanaian cultural
-   * review, so the layer is declared and left off. Reinstating it after review
-   * is this flag plus the `pattern` prop on <Ledger>: no rebuild of the
-   * section, and the scroll loop already writes --charter-pattern-opacity.
+   * Woven West African cloth, the same frame the project owner cleared on
+   * 20260829. Not an adinkra motif: no symbol is reproduced. The scroll loop
+   * writes --charter-pattern-opacity and the layer never sits behind body type
+   * at more than a trace opacity.
    */
   ledgerPattern: {
     name: "ledger-pattern",
@@ -142,8 +141,8 @@ export const CHARTER_IMAGES = {
     sizes: "100vw",
     focus: "center",
     altKey: "charter.images.ledgerPatternAlt",
-    licensed: false,
-    blockedBy: "Traditional motif. Requires named Ghanaian cultural review before any public use.",
+    licensed: true,
+    blockedBy: "",
   },
 } as const satisfies Record<string, CharterImage>;
 
