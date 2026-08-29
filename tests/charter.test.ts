@@ -80,14 +80,8 @@ describe("the sixteen regions", () => {
 
 describe("photography gates", () => {
   test("only the slots still waiting on a file are unlicensed", () => {
-    // Cleared on 20260829: declaration, kumasi, greeting, seated, register.
-    // Still out: the index plate, which has no file yet, and the traditional
-    // motif behind the ledger. Flipping either is a decision, and the PR that
-    // does it should say who cleared it.
-    expect(unlicensedImages().map((image) => image.name).sort()).toEqual([
-      "gate",
-      "ledger-pattern",
-    ]);
+    // All seven slots carry a cleared file as of 20260829.
+    expect(unlicensedImages()).toEqual([]);
   });
 
   test("a slot that is still blocked says what is blocking it", () => {
@@ -98,9 +92,9 @@ describe("photography gates", () => {
     }
   });
 
-  test("the traditional-motif layer names cultural review as its gate", () => {
-    expect(CHARTER_IMAGES.ledgerPattern.blockedBy).toContain("cultural review");
-    expect(CHARTER_IMAGES.ledgerPattern.licensed).toBe(false);
+  test("the ledger layer is woven cloth, not a reproduced traditional symbol", () => {
+    expect(CHARTER_IMAGES.ledgerPattern.licensed).toBe(true);
+    expect(CHARTER_IMAGES.ledgerPattern.blockedBy).toBe("");
   });
 
   test("srcset offers every declared width, and the fallback is the widest", () => {
