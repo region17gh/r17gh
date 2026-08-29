@@ -1141,6 +1141,16 @@
   .charter-hint {
     display: none;
   }
+  /* No pinned track to fade against: the portrait becomes a plate in flow. */
+  .charter-portrait {
+    position: static;
+    width: 100%;
+    height: 46vh;
+    opacity: 1 !important;
+    margin-bottom: var(--space-12);
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
   [data-charter-reveal] .charter-line > *,
   [data-charter-reveal] .charter-fade {
     transform: none !important;
