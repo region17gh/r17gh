@@ -1,4 +1,5 @@
 import { useI18n } from "@/i18n";
+import { CHARTER_IMAGES, fallbackSrc } from "@/lib/charter/assets";
 import { CHARTER_REGIONS } from "@/lib/charter/regions";
 
 /**
