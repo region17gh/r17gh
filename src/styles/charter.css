@@ -9,8 +9,10 @@
 
    Two things the prototype had are deliberately absent: the kente band and the
    adinkra ledger backdrop. Traditional motifs may not be used as decoration
-   without named Ghanaian cultural review, so the band is the design system's
-   PanBand (its one sanctioned ornament) and the ledger has no pattern layer. */
+   without named Ghanaian cultural review, so the ledger has no pattern layer
+   and the band is not reinstated in any form. The design system's PanBand is
+   not used as a substitute either: it is scoped to official surfaces, and this
+   is a marketing story page. The golden thread holds the top edge alone. */
 
 .charter {
   /* Ground and ink */
@@ -97,19 +99,12 @@
 
 /* ---------- chrome ---------- */
 
-.charter-band {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 90;
-}
-
-/* Reading progress. The width is written by the scroll loop. */
+/* Reading progress, and the only thing on the top edge. The width is written
+   by the scroll loop. */
 .charter-thread {
   position: fixed;
   left: 0;
-  top: var(--space-1);
+  top: 0;
   height: var(--space-1);
   width: var(--charter-progress, 0%);
   background: linear-gradient(90deg, var(--charter-brass), var(--charter-brass-lit));
@@ -119,7 +114,8 @@
 
 .charter-masthead {
   position: fixed;
-  top: var(--space-2);
+  /* Flush under the thread. */
+  top: var(--space-1);
   left: 0;
   right: 0;
   z-index: 60;

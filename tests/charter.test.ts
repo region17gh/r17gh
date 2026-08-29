@@ -255,6 +255,32 @@ describe("copy rules", () => {
     expect(page).toContain("legal.notAGovernmentDocument");
   });
 
+  test("the story page carries no Pan-African band", () => {
+    /**
+     * Not an omission, a scoping decision. The design system scopes PanBand to
+     * a rule at the top of *official* surfaces; this is a marketing story page
+     * and the golden thread already holds the top edge. Rendering it here would
+     * also put four full-width bands in the flag's colours and order across the
+     * top of the story, which is the adjacency D-069 governs.
+     *
+     * The other seven surfaces that use PanBand are deliberately untouched:
+     * whether the component itself should change is a design-system question,
+     * not a per-page one.
+     */
+    const page = readFileSync("src/routes/$locale/join/index.tsx", "utf8");
+    expect(page).not.toMatch(/<PanBand/);
+    expect(page).not.toMatch(/^import \{ PanBand/m);
+  });
+
+  test("the golden thread holds the top edge alone", () => {
+    const css = readFileSync("src/styles/charter.css", "utf8");
+    const start = css.indexOf(".charter-thread {");
+    expect(start).toBeGreaterThan(-1);
+    const rule = css.slice(start, css.indexOf("}", start));
+    expect(rule).toContain("top: 0;");
+    expect(css).not.toContain(".charter-band");
+  });
+
   test("no traditional motif is used as decoration", () => {
     const css = readFileSync("src/styles/charter.css", "utf8");
     const page = readFileSync("src/routes/$locale/join/index.tsx", "utf8");

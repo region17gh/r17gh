@@ -10,7 +10,6 @@ import { RegionIndex } from "@/components/charter/RegionIndex";
 import { Line, Reveal } from "@/components/charter/Reveal";
 import { usePrefersReducedMotion } from "@/components/charter/motion";
 import { useCharterStage } from "@/components/charter/useCharterStage";
-import { PanBand } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { CHARTER_IMAGES, fallbackSrc } from "@/lib/charter/assets";
 import { CHARTER_REGIONS } from "@/lib/charter/regions";
@@ -28,9 +27,16 @@ import { translator } from "@/i18n/translate";
  * separately measurable URLs.
  *
  * Two things from the approved prototype are deliberately not here. The kente
- * band is the design system's PanBand instead, and the adinkra layer behind
- * the ledger is omitted: traditional motifs are not decoration and need named
- * Ghanaian cultural review first. Both are documented hooks, not deletions.
+ * band and the adinkra layer behind the ledger are both omitted: traditional
+ * motifs are not decoration and need named Ghanaian cultural review first.
+ * Both are documented hooks, not deletions.
+ *
+ * There is no PanBand here either, and that is a scoping decision rather than
+ * an omission. The design system scopes it to a rule at the top of *official*
+ * surfaces: the credential, the register, the legal screens. This is a
+ * marketing story page, and the golden thread already holds the top edge.
+ * Rendering it here would also put four full-width bands in the flag's colours
+ * and order across the top of the story, which is the adjacency D-069 governs.
  *
  * None of the seven photographs ship either. Every one is licence-unresolved
  * and two are suspected AI generation, so each slot renders as paper at the
@@ -74,8 +80,7 @@ function JoinStory() {
         {t("charter.skip")}
       </a>
 
-      {/* The system's one sanctioned ornament, in place of the kente band. */}
-      <PanBand className="charter-band" />
+      {/* The golden thread holds the top edge. See the note above on PanBand. */}
       <div className="charter-thread" aria-hidden="true" />
 
       <header className="charter-masthead">
