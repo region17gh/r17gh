@@ -37,7 +37,7 @@ Whatever matters must sit there, **with room around it** on all four sides.
 | 3 | `greeting` | The full-bleed moment, "We find each other by name now" | 100svh, cover | 740 | `center 42%` | Two faces and the space between them, slightly above centre. A dark pool sits bottom-left behind the headline, so keep that corner quiet |
 | 4 | `seated` | Below the six branches of the family | 16:9, max 64vh | 720, 1280 | `center 45%` | The marquee lettering centred. This is a wide crop and the sign must not clip |
 | 5 | `register` | The Charter block, beside "There is only one Charter" | 16:9, max 64vh | 720, 1024 | `center 40%` | The arch centred, sky above it |
-| 6 | `gate` | Below the region index, before the coda | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | The arch with sky above it |
+| 6 | `gate` | Below the region index, before the coda | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | Awaiting a file. Subject centred, sky above it |
 | 7 | `ledger-pattern` | Behind the ledger of sixteen regions | Full-bleed tile, cover | 1440 | `center` | **Do not commission.** See the gate below |
 
 Every plate is rendered at 120% height with a 10% negative offset so it can
@@ -59,7 +59,7 @@ screen reader hears, and what search and the WhatsApp preview read.
 | `greeting` | Woven West African cloth | Woven West African cloth in red, gold and green. |
 | `seated` | Region 17 launch, Washington D.C., 30 July 2026 | A lit REGION 17 marquee sign at the launch. |
 | `register` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | Black Star Gate, Accra, at dusk. |
-| `gate` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | Black Star Gate, Accra, at dusk. |
+| `gate` | Photograph to follow | A photograph of Ghana, still to be added. |
 | `ledger-pattern` | none | A repeating pattern behind the register of regions. |
 
 If a delivered photograph differs from its description, **the alternative text
