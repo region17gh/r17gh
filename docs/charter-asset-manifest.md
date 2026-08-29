@@ -108,4 +108,8 @@ is listed here only so nobody commissions one by mistake.
 **There is no share card.** `og:image` is deliberately absent rather than
 pointing at a file that does not exist. The page arrives by WhatsApp forward, so
 the share card is the first thing most readers see and it is currently blank.
-It needs its own frame, at 1200×630, and it needs a licence like any other.
+
+It needs its own 1200×630 frame, but **not a licence**: Design's S2 is
+deliberately typographic and carries no photography, so it clears immediately
+and is not gated with the rows above. It is the one asset on this page that can
+ship today.
