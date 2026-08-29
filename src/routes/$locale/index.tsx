@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { LinkRecovery } from "@/components/auth/LinkRecovery";
