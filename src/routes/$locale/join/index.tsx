@@ -111,6 +111,12 @@ function JoinStory() {
               </p>
             </div>
 
+            {/* The President, behind the third stanza only. It fades with that
+                stanza, so the opening screen is still paper and light. */}
+            <div className="charter-portrait" data-charter-portrait aria-hidden="true">
+              <Media image={CHARTER_IMAGES.declaration} />
+            </div>
+
             <div className="charter-stanza" data-charter-stanza>
               <p className="charter-stanza-mid">{t("charter.stanza3.lead")}</p>
               <p className="charter-lift">{t("charter.stanza3.lift")}</p>
