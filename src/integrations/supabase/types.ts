@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -231,6 +231,8 @@ export type Database = {
       erasure_log: {
         Row: {
           actor_id: string | null
+          auth_deleted_at: string | null
+          auth_user_id: string | null
           created_at: string
           erased_at: string
           id: string
@@ -239,6 +241,8 @@ export type Database = {
         }
         Insert: {
           actor_id?: string | null
+          auth_deleted_at?: string | null
+          auth_user_id?: string | null
           created_at?: string
           erased_at?: string
           id?: string
@@ -247,6 +251,8 @@ export type Database = {
         }
         Update: {
           actor_id?: string | null
+          auth_deleted_at?: string | null
+          auth_user_id?: string | null
           created_at?: string
           erased_at?: string
           id?: string
@@ -272,21 +278,95 @@ export type Database = {
       }
       ghana_regions: {
         Row: {
+          band: string | null
+          capital: string | null
+          created_2018_from: string | null
+          data_confidence: string | null
+          fill_token: string | null
+          former_name: string | null
+          ink_token: string | null
           name: string
+          pattern: number | null
+          reference_source: string | null
+          reference_verified: string | null
           slug: string
           sort_order: number
         }
         Insert: {
+          band?: string | null
+          capital?: string | null
+          created_2018_from?: string | null
+          data_confidence?: string | null
+          fill_token?: string | null
+          former_name?: string | null
+          ink_token?: string | null
           name: string
+          pattern?: number | null
+          reference_source?: string | null
+          reference_verified?: string | null
           slug: string
           sort_order: number
         }
         Update: {
+          band?: string | null
+          capital?: string | null
+          created_2018_from?: string | null
+          data_confidence?: string | null
+          fill_token?: string | null
+          former_name?: string | null
+          ink_token?: string | null
           name?: string
+          pattern?: number | null
+          reference_source?: string | null
+          reference_verified?: string | null
           slug?: string
           sort_order?: number
         }
         Relationships: []
+      }
+      handle_reviews: {
+        Row: {
+          created_at: string
+          handle: string
+          id: string
+          match_reason: string
+          matched: string
+          member_id: string
+          reviewed_at: string | null
+          reviewer_note: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          handle: string
+          id?: string
+          match_reason: string
+          matched: string
+          member_id: string
+          reviewed_at?: string | null
+          reviewer_note?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          handle?: string
+          id?: string
+          match_reason?: string
+          matched?: string
+          member_id?: string
+          reviewed_at?: string | null
+          reviewer_note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handle_reviews_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       member_consents: {
         Row: {
@@ -794,21 +874,52 @@ export type Database = {
       reserved_handles: {
         Row: {
           handle: string
+          norm: string | null
           reason: string
         }
         Insert: {
           handle: string
+          norm?: string | null
           reason?: string
         }
         Update: {
           handle?: string
+          norm?: string | null
           reason?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      incomplete_erasures: {
+        Row: {
+          auth_user_id: string | null
+          erased_at: string | null
+          member_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          erased_at?: string | null
+          member_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          erased_at?: string | null
+          member_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erasure_log_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       activate_membership: {
@@ -854,19 +965,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_change_handle: {
+        Args: { p_handle: string; p_member: string; p_note: string }
+        Returns: undefined
+      }
       credential_id: {
         Args: { join_year: number; member_number: number }
         Returns: string
       }
       current_member_id: { Args: never; Returns: string }
       damm_digit: { Args: { digits: string }; Returns: number }
+      handle_available: { Args: { candidate: string }; Returns: boolean }
       is_founding_member: {
         Args: { m: Database["public"]["Tables"]["members"]["Row"] }
         Returns: boolean
       }
+      mark_auth_user_deleted: { Args: { p_member: string }; Returns: undefined }
+      normalize_handle: { Args: { t: string }; Returns: string }
       pseudonymize_member: {
         Args: { actor?: string; reason?: string; target: string }
-        Returns: undefined
+        Returns: string
       }
       register_member: {
         Args: {
@@ -906,6 +1024,36 @@ export type Database = {
           credential_id: string
           expires_at: string
           member_number: number
+        }[]
+      }
+      reserve_test_member_number: {
+        Args: never
+        Returns: {
+          credential_id: string
+          expires_at: string
+          member_number: number
+        }[]
+      }
+      slug_part: { Args: { t: string }; Returns: string }
+      suggest_handles: {
+        Args: {
+          first_name: string
+          last_name: string
+          want?: number
+          wanted?: string
+        }
+        Returns: {
+          basis: string
+          handle: string
+        }[]
+      }
+      verify_credential_id: {
+        Args: { candidate: string }
+        Returns: {
+          join_year: number
+          member_number: number
+          normalized: string
+          valid: boolean
         }[]
       }
     }
