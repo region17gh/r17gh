@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { LinkRecovery } from "@/components/auth/LinkRecovery";
@@ -34,17 +34,26 @@ export const Route = createFileRoute("/$locale/")({
 // dictionary rather than being hardcoded here.
 function LocaleHome() {
   const { locale, t } = useI18n();
+  const navigate = useNavigate();
   const [linkProblem, setLinkProblem] = useState<LinkProblem | null>(null);
 
   // This is where a dead confirmation link lands: the site URL, carrying the
   // reason in the fragment. Unread, it shows a member the home page and no
   // explanation at all, so it is read here and answered.
+  //
+  // Absent that, the locale root goes to the join story. Until the marketing
+  // home page exists, nobody should land on this placeholder. The redirect is
+  // done here rather than in beforeLoad so a dead link's fragment, which the
+  // browser never sends to the server, still gets read and answered first.
   useEffect(() => {
     const failure = currentLinkError();
-    if (!failure) return;
+    if (!failure) {
+      void navigate({ to: "/$locale/join", params: { locale }, replace: true });
+      return;
+    }
     setLinkProblem(failure.problem);
     clearLinkError();
-  }, []);
+  }, [locale, navigate]);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>

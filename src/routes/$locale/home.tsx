@@ -159,7 +159,7 @@ function HomePage() {
             locale={locale}
           />
           {member.handle && !pending ? (
-            <p className="r17-cite" style={{ marginTop: "var(--space-5)", color: "var(--navy-700)" }}>
+            <p className="r17-cite" style={{ marginTop: "var(--space-5)" }}>
               {t("join.step4.handlePrefix")}
               {member.handle}
             </p>
