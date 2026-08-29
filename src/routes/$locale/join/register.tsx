@@ -67,19 +67,19 @@ function parseStage(raw: unknown): StageValue {
   return raw === "code" || raw === "details" ? raw : "identity";
 }
 
-export const Route = createFileRoute("/$locale/join")({
+export const Route = createFileRoute("/$locale/join/register")({
   // The step lives in the URL so the browser back button moves between steps
   // instead of leaving the flow. Nothing personal is ever put here.
   validateSearch: (search: Record<string, unknown>): JoinSearch => {
     const step = parseStep(search["step"]);
     const stage = parseStage(search["stage"]);
     // Left out of the URL entirely when it is the default, so the address a
-    // member sees at the start of the flow stays /join.
+    // member sees at the start of the flow stays /join/register.
     return stage === "identity" ? { step } : { step, stage };
   },
   head: () => ({
     meta: [
-      { title: "Join Region 17" },
+      { title: "Add my name | Region 17" },
       {
         name: "description",
         content:

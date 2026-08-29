@@ -62,10 +62,10 @@ export function StepWhoYouAre({ draft, update, onUnderage, onCodeSent }: StepWho
               shouldCreateUser: true,
               // A member who clicks the link instead of typing the code lands
               // back in the flow they left, and so does a link that has died:
-              // /join reads the failure out of the fragment and offers a fresh
+              // /join/register reads the failure out of the fragment and offers a fresh
               // code. Without this they land on the site root, which explains
               // nothing.
-              emailRedirectTo: `${window.location.origin}${localePath(locale, "/join")}`,
+              emailRedirectTo: `${window.location.origin}${localePath(locale, "/join/register")}`,
             },
           }),
       },

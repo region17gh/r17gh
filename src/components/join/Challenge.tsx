@@ -23,7 +23,7 @@ import { useT } from "@/i18n";
  * widget invisible until Cloudflare actually wants a person to do something,
  * which for almost every member is never, and matters on a metered connection.
  * When something does go wrong the screen says so in words: this component
- * reports the problem upward and `/join` renders it, the same way the
+ * reports the problem upward and `/join/register` renders it, the same way the
  * reservation recovery notice is rendered.
  */
 

@@ -58,7 +58,7 @@ export function LinkRecovery({ problem }: { problem: LinkProblem }) {
             alignItems: "center",
           }}
         >
-          <Link to={localePath(locale, "/join")} style={{ borderBottom: "none" }}>
+          <Link to={localePath(locale, "/join/register")} style={{ borderBottom: "none" }}>
             <Button size="lg" variant="gold">
               {t("authLink.continue")}
             </Button>

@@ -74,7 +74,7 @@ These are enforced in the database, not the UI. The security memory in Supabase 
 | Consents are rows, never booleans; only `revoked_at` may be set | A boolean has no history and a regulator asks for history. Act 843 applies extraterritorially. |
 | `member_consents` and `affirmations` are `ON DELETE RESTRICT` | Cascade would destroy the record that exists to prove consent. |
 | Erasure runs through `pseudonymize_member()`, never row deletion | Sets `status = 'erased'` (never `'revoked'` — that is expulsion), logs to `erasure_log`, never to `conduct_actions`. |
-| `founding_member` is a stored boolean, frozen on update | Cutoff is 31 Dec 2026 and never moves. Reading it live would let a config edit retroactively rewrite history. |
+| `founding_member` is a stored boolean, frozen on update | The Charter window closes `2027-01-31T23:59:59Z` (D-062) and never moves. The date lives in `app_config.founding_member_cutoff`; no surface may hardcode it. Reading it live at display time is right, but *storing* the boolean is what stops a config edit retroactively rewriting who was a Charter Member. |
 | Released handles stay in `reserved_handles` with reason `released` | A handle may be changed once; reissuing the old one defeats the reason for allowing the change. |
 | Every visibility column and every consent defaults to the most private value | Nothing is public or opted-in by default. |
 | `member_gender` readable only by the member and `r17_reporting` | See the gender section below. |
@@ -211,6 +211,22 @@ issue, and a length that cannot be a code is its own message. Only the provider
 gets to say a code was wrong. A mismatch between a hardcoded six and a project
 set to eight has already reached a member as "that code did not match" after
 they typed it correctly.
+
+**Routing (D-067):** locale-first, and the story and the form are separate
+funnel stages with separate, separately measurable URLs.
+
+| Path | What it is |
+|---|---|
+| `/<locale>/join` | The Charter story. Marketing surface, the WhatsApp forward target. |
+| `/<locale>/join/register` | The registration flow. Canonical, and the only path that issues a number. |
+
+Every CTA on the story goes to `/<locale>/join/register`. Legacy `/join`,
+`/register` and `/join/en` answer 301 from route files under `src/routes/`;
+`src/lib/charter/legacyPaths.ts` is the table and carries the reasoning,
+including why `/en` is deliberately *not* redirected (it is the locale root and
+the landing address for dead auth links, whose reason arrives in the URL
+fragment and would be lost on a redirect). Future locales mount as `/fr/`,
+`/pt/` with no route changes.
 
 **i18n:** scaffolding from day one — strings externalised, locale routing live, English the only populated locale. French later as a translation project.
 

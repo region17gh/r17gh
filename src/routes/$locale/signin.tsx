@@ -16,7 +16,7 @@ export const Route = createFileRoute("/$locale/signin")({
  *
  * `shouldCreateUser` is false on purpose: signing in must never quietly mint a
  * new auth account with no member record behind it. Someone who has not joined
- * is sent to /join, which is the only path that issues a number.
+ * is sent to /join/register, which is the only path that issues a number.
  */
 function SignInPage() {
   const { t, locale } = useI18n();
@@ -85,7 +85,7 @@ function SignInPage() {
         )}
 
         <p style={{ marginTop: "var(--space-8)", fontSize: "var(--text-body-sm)" }}>
-          {t("signin.notAMember")} <Link to={localePath(locale, "/join")}>{t("signin.join")}</Link>
+          {t("signin.notAMember")} <Link to={localePath(locale, "/join/register")}>{t("signin.join")}</Link>
         </p>
 
         {/* Safety control, not decoration. Its wording is fixed. */}

@@ -678,7 +678,7 @@ describe("the address, checked while it is being chosen", () => {
   const hook = readSource("src/components/join/useHandleAvailability.ts");
   const compact = readSource("src/components/join/steps/StepCompact.tsx");
   const membership = readSource("src/lib/member/membership.ts");
-  const join = readSource("src/routes/$locale/join.tsx");
+  const join = readSource("src/routes/$locale/join/register.tsx");
   const verify = readSource("src/routes/$locale/verify.tsx");
 
   test("what the register said becomes what the member is told", () => {

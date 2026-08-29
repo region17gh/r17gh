@@ -280,8 +280,8 @@ function renderHtml({
  * The date locale each content locale is written in.
  *
  * The house copy is British English, and the founding cutoff is written as
- * "31 December 2026" wherever it appears. Intl's bare "en" renders the American
- * order, "December 31, 2026", so the region is named rather than left to the
+ * "31 January 2027" wherever it appears. Intl's bare "en" renders the American
+ * order, "January 31, 2027", so the region is named rather than left to the
  * runtime's default.
  */
 const DATE_LOCALE: Record<Locale, string> = { en: "en-GB" };

@@ -9,21 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LocaleRouteRouteImport } from './routes/$locale/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JoinIndexRouteImport } from './routes/join/index'
 import { Route as LocaleIndexRouteImport } from './routes/$locale/index'
+import { Route as JoinEnRouteImport } from './routes/join/en'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as LocaleVerifyRouteImport } from './routes/$locale/verify'
 import { Route as LocaleSigninRouteImport } from './routes/$locale/signin'
-import { Route as LocaleJoinRouteImport } from './routes/$locale/join'
 import { Route as LocaleHomeRouteImport } from './routes/$locale/home'
+import { Route as LocaleJoinIndexRouteImport } from './routes/$locale/join/index'
 import { Route as Char91__mockupChar93PreviewSplatRouteImport } from './routes/[__mockup].preview.$'
 import { Route as Char91__componentChar93PreviewSplatRouteImport } from './routes/[__component].preview.$'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as LocaleJoinRegisterRouteImport } from './routes/$locale/join/register'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
@@ -39,10 +48,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinIndexRoute = JoinIndexRouteImport.update({
+  id: '/join/',
+  path: '/join/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocaleIndexRoute = LocaleIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LocaleRouteRoute,
+} as any)
+const JoinEnRoute = JoinEnRouteImport.update({
+  id: '/join/en',
+  path: '/join/en',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
@@ -66,14 +85,14 @@ const LocaleSigninRoute = LocaleSigninRouteImport.update({
   path: '/signin',
   getParentRoute: () => LocaleRouteRoute,
 } as any)
-const LocaleJoinRoute = LocaleJoinRouteImport.update({
-  id: '/join',
-  path: '/join',
-  getParentRoute: () => LocaleRouteRoute,
-} as any)
 const LocaleHomeRoute = LocaleHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
+const LocaleJoinIndexRoute = LocaleJoinIndexRouteImport.update({
+  id: '/join/',
+  path: '/join/',
   getParentRoute: () => LocaleRouteRoute,
 } as any)
 const Char91__mockupChar93PreviewSplatRoute =
@@ -99,54 +118,71 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocaleJoinRegisterRoute = LocaleJoinRegisterRouteImport.update({
+  id: '/join/register',
+  path: '/join/register',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteRouteWithChildren
   '/mcp': typeof McpRoute
+  '/register': typeof RegisterRoute
   '/$locale/home': typeof LocaleHomeRoute
-  '/$locale/join': typeof LocaleJoinRoute
   '/$locale/signin': typeof LocaleSigninRoute
   '/$locale/verify': typeof LocaleVerifyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/join/en': typeof JoinEnRoute
   '/$locale/': typeof LocaleIndexRoute
+  '/join/': typeof JoinIndexRoute
+  '/$locale/join/register': typeof LocaleJoinRegisterRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
   '/__mockup/preview/$': typeof Char91__mockupChar93PreviewSplatRoute
+  '/$locale/join/': typeof LocaleJoinIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/register': typeof RegisterRoute
   '/$locale/home': typeof LocaleHomeRoute
-  '/$locale/join': typeof LocaleJoinRoute
   '/$locale/signin': typeof LocaleSigninRoute
   '/$locale/verify': typeof LocaleVerifyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/join/en': typeof JoinEnRoute
   '/$locale': typeof LocaleIndexRoute
+  '/join': typeof JoinIndexRoute
+  '/$locale/join/register': typeof LocaleJoinRegisterRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
   '/__mockup/preview/$': typeof Char91__mockupChar93PreviewSplatRoute
+  '/$locale/join': typeof LocaleJoinIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteRouteWithChildren
   '/mcp': typeof McpRoute
+  '/register': typeof RegisterRoute
   '/$locale/home': typeof LocaleHomeRoute
-  '/$locale/join': typeof LocaleJoinRoute
   '/$locale/signin': typeof LocaleSigninRoute
   '/$locale/verify': typeof LocaleVerifyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/join/en': typeof JoinEnRoute
   '/$locale/': typeof LocaleIndexRoute
+  '/join/': typeof JoinIndexRoute
+  '/$locale/join/register': typeof LocaleJoinRegisterRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
   '/__mockup/preview/$': typeof Char91__mockupChar93PreviewSplatRoute
+  '/$locale/join/': typeof LocaleJoinIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,56 +190,71 @@ export interface FileRouteTypes {
     | '/'
     | '/$locale'
     | '/mcp'
+    | '/register'
     | '/$locale/home'
-    | '/$locale/join'
     | '/$locale/signin'
     | '/$locale/verify'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/join/en'
     | '/$locale/'
+    | '/join/'
+    | '/$locale/join/register'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
     | '/__mockup/preview/$'
+    | '/$locale/join/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/mcp'
+    | '/register'
     | '/$locale/home'
-    | '/$locale/join'
     | '/$locale/signin'
     | '/$locale/verify'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/join/en'
     | '/$locale'
+    | '/join'
+    | '/$locale/join/register'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
     | '/__mockup/preview/$'
+    | '/$locale/join'
   id:
     | '__root__'
     | '/'
     | '/$locale'
     | '/mcp'
+    | '/register'
     | '/$locale/home'
-    | '/$locale/join'
     | '/$locale/signin'
     | '/$locale/verify'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/join/en'
     | '/$locale/'
+    | '/join/'
+    | '/$locale/join/register'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
     | '/__mockup/preview/$'
+    | '/$locale/join/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LocaleRouteRoute: typeof LocaleRouteRouteWithChildren
   McpRoute: typeof McpRoute
+  RegisterRoute: typeof RegisterRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  JoinEnRoute: typeof JoinEnRoute
+  JoinIndexRoute: typeof JoinIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   Char91__componentChar93PreviewSplatRoute: typeof Char91__componentChar93PreviewSplatRoute
@@ -212,6 +263,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
@@ -233,12 +291,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/': {
+      id: '/join/'
+      path: '/join'
+      fullPath: '/join/'
+      preLoaderRoute: typeof JoinIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$locale/': {
       id: '/$locale/'
       path: '/'
       fullPath: '/$locale/'
       preLoaderRoute: typeof LocaleIndexRouteImport
       parentRoute: typeof LocaleRouteRoute
+    }
+    '/join/en': {
+      id: '/join/en'
+      path: '/join/en'
+      fullPath: '/join/en'
+      preLoaderRoute: typeof JoinEnRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/.well-known/oauth-protected-resource': {
       id: '/.well-known/oauth-protected-resource'
@@ -268,18 +340,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleSigninRouteImport
       parentRoute: typeof LocaleRouteRoute
     }
-    '/$locale/join': {
-      id: '/$locale/join'
-      path: '/join'
-      fullPath: '/$locale/join'
-      preLoaderRoute: typeof LocaleJoinRouteImport
-      parentRoute: typeof LocaleRouteRoute
-    }
     '/$locale/home': {
       id: '/$locale/home'
       path: '/home'
       fullPath: '/$locale/home'
       preLoaderRoute: typeof LocaleHomeRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
+    '/$locale/join/': {
+      id: '/$locale/join/'
+      path: '/join'
+      fullPath: '/$locale/join/'
+      preLoaderRoute: typeof LocaleJoinIndexRouteImport
       parentRoute: typeof LocaleRouteRoute
     }
     '/__mockup/preview/$': {
@@ -310,23 +382,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/join/register': {
+      id: '/$locale/join/register'
+      path: '/join/register'
+      fullPath: '/$locale/join/register'
+      preLoaderRoute: typeof LocaleJoinRegisterRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
   }
 }
 
 interface LocaleRouteRouteChildren {
   LocaleHomeRoute: typeof LocaleHomeRoute
-  LocaleJoinRoute: typeof LocaleJoinRoute
   LocaleSigninRoute: typeof LocaleSigninRoute
   LocaleVerifyRoute: typeof LocaleVerifyRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
+  LocaleJoinRegisterRoute: typeof LocaleJoinRegisterRoute
+  LocaleJoinIndexRoute: typeof LocaleJoinIndexRoute
 }
 
 const LocaleRouteRouteChildren: LocaleRouteRouteChildren = {
   LocaleHomeRoute: LocaleHomeRoute,
-  LocaleJoinRoute: LocaleJoinRoute,
   LocaleSigninRoute: LocaleSigninRoute,
   LocaleVerifyRoute: LocaleVerifyRoute,
   LocaleIndexRoute: LocaleIndexRoute,
+  LocaleJoinRegisterRoute: LocaleJoinRegisterRoute,
+  LocaleJoinIndexRoute: LocaleJoinIndexRoute,
 }
 
 const LocaleRouteRouteWithChildren = LocaleRouteRoute._addFileChildren(
@@ -337,9 +418,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRouteRoute: LocaleRouteRouteWithChildren,
   McpRoute: McpRoute,
+  RegisterRoute: RegisterRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  JoinEnRoute: JoinEnRoute,
+  JoinIndexRoute: JoinIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   Char91__componentChar93PreviewSplatRoute:
@@ -349,13 +433,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

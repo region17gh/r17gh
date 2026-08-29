@@ -88,7 +88,7 @@ export function StepConfirmEmail({ email, onConfirmed, onChangeEmail }: StepConf
       email,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: `${window.location.origin}${localePath(locale, "/join")}`,
+        emailRedirectTo: `${window.location.origin}${localePath(locale, "/join/register")}`,
       },
     });
     setBusy(false);
