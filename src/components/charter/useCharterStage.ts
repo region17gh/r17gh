@@ -185,6 +185,16 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
         }
       });
 
+      /* The return: rises over the first 60% of its share, then holds. It
+         starts exactly where stanza three's fade ends, so the two never
+         share a frame. */
+      if (returnStanza) {
+        const back = clamp((progress - RETURN_FROM) / (1 - RETURN_FROM), 0, 1);
+        const opacity = clamp(back / 0.6, 0, 1);
+        returnStanza.style.opacity = opacity.toFixed(3);
+        returnStanza.style.setProperty("--charter-dy", `${((1 - opacity) * lift).toFixed(1)}px`);
+      }
+
       if (hint) hint.style.opacity = clamp(1 - progress * 6, 0, 1).toFixed(3);
     }
 
