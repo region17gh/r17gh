@@ -168,10 +168,27 @@ describe("the founding window", () => {
 });
 
 describe("copy rules", () => {
-  test("no em or en dashes anywhere in the page copy", () => {
+  test("no em or en dashes anywhere in the page copy, bar one sanctioned line", () => {
+    /**
+     * House style bans the em and en rule as sentence punctuation. The
+     * seventeenth carries the one exception, and it is deliberate: "The
+     * seventeenth: you" labels the reader, "The seventeenth — you" addresses
+     * them, and this is the emotional peak of the page. It is approved copy,
+     * named here so the exception cannot spread by accident.
+     */
+    const sanctioned = new Set(["— you"]);
     for (const value of charterStrings()) {
+      if (sanctioned.has(value)) continue;
       expect(value, `dash in: ${value}`).not.toMatch(/[—–]/);
     }
+  });
+
+  test("the seventeenth is addressed with the rule, not labelled with a colon", () => {
+    expect(dictionary.charter.ledger.seventeenthName).toBe("The seventeenth");
+    expect(dictionary.charter.ledger.seventeenthYou).toBe("— you");
+    // The rule travels inside the gold italic, as the approved setting has it.
+    const ledger = readFileSync("src/components/charter/Ledger.tsx", "utf8");
+    expect(ledger).toContain("<em>{t(\"charter.ledger.seventeenthYou\")}</em>");
   });
 
   test("no banned marketing vocabulary", () => {
