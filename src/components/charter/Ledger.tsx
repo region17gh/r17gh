@@ -19,6 +19,13 @@ export function Ledger() {
   return (
     <div className="charter-ledger" data-charter-ledger>
       <div className="charter-ledger-stage">
+        {CHARTER_IMAGES.ledgerPattern.licensed ? (
+          <div
+            className="charter-ledger-pattern"
+            aria-hidden="true"
+            style={{ backgroundImage: `url(${fallbackSrc(CHARTER_IMAGES.ledgerPattern)})` }}
+          />
+        ) : null}
         <div className="charter-ledger-head">
           <p className="charter-eyebrow">{t("charter.ledger.eyebrow")}</p>
           <h2 className="charter-ledger-lede">
