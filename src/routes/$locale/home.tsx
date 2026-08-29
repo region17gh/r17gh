@@ -43,7 +43,7 @@ function HomePage() {
       }
       const current = await fetchCurrentMember().catch(() => null);
       if (!current) {
-        void navigate({ to: localePath(locale, "/join") });
+        void navigate({ to: localePath(locale, "/join/register") });
         return;
       }
       setMember(current);

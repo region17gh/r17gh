@@ -157,7 +157,7 @@ function VerifyPage() {
               {t("verify.noMember")}
             </p>
             <p style={{ marginTop: "var(--space-5)" }}>
-              <Link to={localePath(locale, "/join")}>{t("verify.toJoin")}</Link>
+              <Link to={localePath(locale, "/join/register")}>{t("verify.toJoin")}</Link>
             </p>
           </>
         ) : null}

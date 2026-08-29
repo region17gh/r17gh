@@ -52,7 +52,6 @@
     "stepCounter": "{current} / {total}",
     "alreadyMember": "Already a member?",
     "resumed": "We kept what you had already entered.",
-
     "step1": {
       "heading": "Who you are",
       "lede": "Enough to know you and to send you your credential. Nothing more.",
@@ -72,7 +71,6 @@
       "emailMissing": "Enter an email address so we can send your credential.",
       "sendCode": "Send me a code",
       "sendingCode": "Sending",
-
       "codeHeading": "Check your email",
       "codeLede": "One short step. Confirming this address is what lets us hold a member number for you.",
       "codeLabel": "Enter the code from your email",
@@ -87,7 +85,6 @@
       "codeResend": "Send another code",
       "codeChangeEmail": "Use a different address",
       "emailConfirmed": "Address confirmed.",
-
       "detailsHeading": "Where you live",
       "detailsLede": "City-level, broadest to narrowest.",
       "locationLabel": "Where you live",
@@ -100,7 +97,6 @@
       "genderLabel": "Gender",
       "genderHint": "Used only for counting, so we can see whether Region 17 is reaching everyone. Never shown on your profile, never searchable, never shared with anyone including government. Skip it freely."
     },
-
     "subdivisionLabels": {
       "generic": "State/Province/Region",
       "us": "State",
@@ -110,7 +106,6 @@
       "gb": "County",
       "fr": "Region"
     },
-
     "step2": {
       "heading": "How you connect",
       "lede": "Choose everything that's true. No option ranks above another, and we will never ask you to document any of it.",
@@ -118,7 +113,6 @@
       "regionsLabel": "Regions you want to follow",
       "regionsHint": "Where your interest lies, not where you're from. Many members have never been. Skip it freely."
     },
-
     "connections": {
       "ghanaianAbroad": "Ghanaian abroad",
       "ghanaianAbroadNote": "Ghanaian citizen living outside Ghana",
@@ -133,7 +127,6 @@
       "ally": "Ally",
       "allyNote": "Committed to the work"
     },
-
     "genders": {
       "preferNotToSay": "Prefer not to say",
       "woman": "Woman",
@@ -141,7 +134,6 @@
       "nonBinary": "Non-binary",
       "selfDescribed": "Another term"
     },
-
     "step3": {
       "heading": "What you need, what you bring",
       "lede": "This is the part that makes the register work. Two sentences give another member a real reason to reach out, and give you somewhere to turn. You can add them later.",
@@ -157,7 +149,6 @@
       "orgPlaceholder": "Organisation, school, or your own venture",
       "skip": "Skip for now"
     },
-
     "step4": {
       "heading": "The Compact",
       "lede": "Every member affirms this. It is what makes Region 17 a community rather than a list.",
@@ -185,7 +176,6 @@
       "submitting": "Entering you into the register",
       "footnote": "Next you'll confirm your address. Your record goes live then."
     },
-
     "consents": {
       "directory": "Show me in the member directory",
       "directoryNote": "Other members can find you. Your contact details stay hidden.",
@@ -200,7 +190,6 @@
       "programmes": "Programmes and the Skills Exchange",
       "programmesNote": "When something opens that matches what you've told us."
     },
-
     "handleErrors": {
       "empty": "Choose an address so members can find you.",
       "tooShort": "An address needs at least three characters.",
@@ -209,7 +198,6 @@
       "taken": "That address is taken. Try another.",
       "reserved": "That address is reserved. Try another."
     },
-
     "issued": {
       "eyebrow": "Entered into the register",
       "welcome": "Welcome, {name}.",
@@ -229,14 +217,12 @@
       "incomplete": "Your record is entered, but we could not save everything: {items}. Try again so your register entry is complete.",
       "retry": "Save the rest of my record"
     },
-
     "recovery": {
       "expired": "Your place was held while you filled this in, and that hold has now expired. Here is your number. Everything you entered is still here.",
       "claimed": "The number we were holding went to another registration while you were away. Here is your number. Everything you entered is still here.",
       "unknown": "We could not find the number we were holding for you. Here is your number. Everything you entered is still here.",
       "newNumber": "Your member number is now {number}."
     },
-
     "challenge": {
       "unavailable": "We could not run the check that protects member numbers, so we can't give you one yet. That is usually a browser extension or a blocked connection rather than anything you did. Try again, and if it keeps happening, try a different browser or network.",
       "failed": "The check that protects member numbers did not pass, so we can't give you one yet. No number was taken and nothing was lost.",
@@ -249,7 +235,6 @@
       "stub": "Development build: the member-number check is stubbed and no real challenge is running. This does not exist in a production build."
     }
   },
-
   "authLink": {
     "eyebrow": "Email link",
     "expiredHeading": "That link has expired.",
@@ -263,7 +248,6 @@
     "signIn": "Sign in instead",
     "joinAgain": "Ask for a fresh code below. Everything you entered is still here."
   },
-
   "verify": {
     "title": "Confirm your address",
     "heading": "Confirm your address",
@@ -281,7 +265,6 @@
     "alreadyVerified": "This record is already active.",
     "addressLabel": "Your address"
   },
-
   "home": {
     "title": "Your membership",
     "heading": "Welcome back, {name}.",
@@ -308,7 +291,6 @@
     "downloadingCredential": "Preparing your PDF",
     "downloadFailed": "Could not build the PDF. Try again."
   },
-
   "signin": {
     "title": "Sign in",
     "heading": "Sign in",
@@ -321,7 +303,6 @@
     "join": "Join Region 17",
     "failed": "We could not send a link to that address. Check it and try again."
   },
-
   "email": {
     "welcome": {
       "subject": "Welcome to Region 17. You are member {number}.",
@@ -345,12 +326,137 @@
       "footerOrg": "Region 17 is a US 501(c)(3) nonprofit and an initiative of the Embassy of Ghana to the United States."
     }
   },
-
   "errors": {
     "underage": "Members must be 18 or older.",
     "handleReserved": "That handle is reserved.",
     "handleAlreadyChanged": "A handle may be changed once only.",
     "notFoundTitle": "Page not found",
     "notFoundBody": "That address does not exist."
+  },
+  "charter": {
+    "meta": {
+      "title": "The seventeenth region | Region 17",
+      "description": "Ghana counts sixteen regions at home. The seventeenth is the global African diaspora, and Charter Membership is how the family gets counted.",
+      "ogTitle": "There is a version of Ghana that lives outside Ghana. We are it.",
+      "ogDescription": "The declaration did not create us. It caught up with us. Add your name to the Charter."
+    },
+    "skip": "Skip to Charter Membership",
+    "masthead": {
+      "home": "Region 17",
+      "join": "Add my name"
+    },
+    "atlas": {
+      "alt": "A map of the seventeenth region: a black star at Ghana, joined by threads to sixteen cities where the diaspora already lives. Toronto, New York, Washington, Havana, Kingston, Port of Spain, Cartagena, Salvador, Sao Paulo, London, Amsterdam, Berlin, Paris, Dubai, Johannesburg and Sydney. Light travels out from Ghana to each city and back again."
+    },
+    "hint": "Scroll",
+    "stanza1": {
+      "line1": "There is a version of Ghana that lives outside Ghana.",
+      "line2": "We are it."
+    },
+    "stanza2": {
+      "body": "We kept the language. We sent something home on the first of the month without being asked. We built the clinics and the school blocks and the boreholes, through associations meeting in church halls, in cities Ghana has never had on any map."
+    },
+    "stanza3": {
+      "lead": "In December 2025 the President said out loud what we have always been.",
+      "lift": "Ghana's seventeenth region.",
+      "sub": "The declaration did not create us. It caught up with us."
+    },
+    "still": {
+      "eyebrow": "What a region is",
+      "line1": "A region is not a line on a map.",
+      "line2": "It is a place where people can be found",
+      "line3": "by name, and reached when opportunity comes looking.",
+      "closeLead": "So when there is work in Kumasi that needs exactly what you do,",
+      "closeEm": "home will know your name."
+    },
+    "ledger": {
+      "eyebrow": "The ledger",
+      "ledeHome": "Ghana counts sixteen regions at home.",
+      "ledeUs": "We are the seventeenth.",
+      "seventeenthCode": "17",
+      "seventeenthName": "The seventeenth",
+      "seventeenthYou": "— you",
+      "aside": "No borders. Everywhere we already are, written down."
+    },
+    "bleed": {
+      "eyebrow": "One people",
+      "line1": "We find each other",
+      "line2": "by name now.",
+      "credit": "Region 17 launch, Washington D.C., 30 July 2026"
+    },
+    "branches": {
+      "eyebrow": "This is us",
+      "line1": "Every branch of the family,",
+      "line2": "counted as one.",
+      "bornInTitle": "Born in Ghana",
+      "bornInBody": "You left with a suitcase and a promise. The promise still stands.",
+      "bornToTitle": "Born to Ghana",
+      "bornToBody": "Raised abroad on jollof Sundays and long phone calls home. You never needed a stamp to belong.",
+      "descendedTitle": "Descended from the continent",
+      "descendedBody": "Through the Americas, the Caribbean, Europe. The ocean took much. It did not take the thread.",
+      "continentTitle": "African family abroad",
+      "continentBody": "Nigerian, Senegalese, Kenyan, all of us. Ghana's door has never been closed to the continent.",
+      "returnedTitle": "The returned",
+      "returnedBody": "Already home, or packing. Your seat is warm on both sides of the ocean.",
+      "friendsTitle": "Friends of Ghana",
+      "friendsBody": "Married in, moved in, or simply moved by it. Chosen family counts as family here.",
+      "close": "Six ways of carrying Ghana. One standing, no tiers. Every one of them begins with a name.",
+      "credit": "Region 17 launch, Washington D.C., 30 July 2026"
+    },
+    "window": {
+      "eyebrow": "The window",
+      "line1": "There is only",
+      "line2": "one Charter.",
+      "only": "It opens 5 October. It closes 31 January.",
+      "onlyAfter": "Every year after this one has a Cohort.",
+      "hinge": "Home cannot know your name until it is written.",
+      "cta": "Add my name",
+      "fineprint": "Free for family. Always. Three minutes to be counted.",
+      "credit": "The register, open. Washington D.C., 30 July 2026"
+    },
+    "ticker": {
+      "seventeenth": "The Seventeenth"
+    },
+    "index": {
+      "eyebrow": "Not ready to join yet?",
+      "line1": "Start with the one",
+      "line2": "your people are from.",
+      "body": "Take a deep dive into each of our sixteen regions and see where you fit. Every region has its own page, its own plans, and its own ways in.",
+      "go": "Open {url}",
+      "credit": "Black Star Gate, Accra. Freedom and Justice, AD 1957"
+    },
+    "coda": "Akwaaba home!",
+    "deadline": {
+      "label": "Charter Membership closes",
+      "cta": "Add my name"
+    },
+    "imagePending": "Photograph pending licence",
+    "images": {
+      "declarationAlt": "President Mahama speaking at the December 2025 declaration.",
+      "kumasiAlt": "A street in Kumasi at work in the late afternoon.",
+      "greetingAlt": "Two guests greeting each other after the programme.",
+      "seatedAlt": "Two guests seated together, laughing during the programme.",
+      "registerAlt": "Guests entering their details at the launch check-in.",
+      "gateAlt": "Black Star Gate, Accra, at dusk.",
+      "ledgerPatternAlt": "A repeating pattern behind the register of regions."
+    },
+    "regions": {
+      "ahafo": "Ghana's green newcomer: cocoa farms around Goaso, sacred groves, forest reserves. One of the youngest regions in the country, which means the ground floor is still wide open for family who want in early.",
+      "ashanti": "Kumasi, the Golden Stool, and the living heart of Asante heritage. The region most of our families trace first, and a manufacturing and trade engine second only to Accra.",
+      "bono": "Sunyani, regularly named Ghana's cleanest city, surrounded by cashew and cocoa country. A quiet powerhouse that has sent teachers, nurses, and farmers across the world for generations.",
+      "bono-east": "Techiman hosts one of West Africa's largest food markets, moving yam, maize, and cashew by the truckload. Kintampo's falls mark the old geographic centre of Ghana.",
+      "central": "Cape Coast and Elmina: the castles, the Door of No Return, and the ground where the diaspora's homecoming began. Also Ghana's densest concentration of historic schools.",
+      "eastern": "Akosombo's dam lit the nation. Aburi's gardens, Koforidua's beads, and the Akwapim hills sit an hour from Accra, which is why so many families keep land here.",
+      "greater-accra": "The capital region: Accra's energy, Tema's port, and W.E.B. Du Bois's resting place. The front door most of us walk through first, and the seat of the AfCFTA.",
+      "north-east": "Nalerigu, seat of Mamprugu, one of the oldest kingdoms in Ghana. Shea and groundnut country where traditional governance still runs deep and steady.",
+      "northern": "Tamale is one of West Africa's fastest-growing cities, and Larabanga's mud-and-stick mosque has stood since the 1400s. The north's commercial anchor.",
+      "oti": "Along Lake Volta's eastern shore: fishing towns, yam country, and the Breast Mountains. Carved out in 2019 and still writing its first chapter, with room in it for us.",
+      "savannah": "Ghana's largest region by land. Mole National Park's elephants, the old Gonja kingdom, Larabanga at its edge. Big sky, deep history, wide-open opportunity.",
+      "upper-east": "Bolgatanga's baskets travel the world; Paga's crocodiles greet visitors by name. Smart irrigation is turning dry-season farming into year-round business.",
+      "upper-west": "Wa's historic mosque, the hippo sanctuary at Wechiau, and some of the warmest hosting culture in Ghana. Shea country with serious agribusiness headroom.",
+      "volta": "Lake Volta, Wli Falls, Mount Afadja, and the Aflao border where Ghana meets West African trade. The corridor Ghana has named its next economy. Early still means something here.",
+      "western": "Takoradi's oil, gas, and harbour; Nzulezu standing on stilts; beaches running to the border. Where Ghana's energy economy meets the sea.",
+      "western-north": "Deep-forest cocoa heartland around Sefwi Wiawso, source of much of the chocolate the world eats, and home to one of Africa's most unexpected communities of faith."
+    }
   }
 }

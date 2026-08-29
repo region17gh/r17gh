@@ -31,7 +31,7 @@ export default defineTool({
         content: [
           {
             type: "text",
-            text: "No membership record for this account yet. Registration happens in the app at /join.",
+            text: "No membership record for this account yet. Registration happens in the app at /join/register.",
           },
         ],
       };
