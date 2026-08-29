@@ -42,6 +42,7 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
     const fieldContext = field?.getContext("2d") ?? null;
     const pin = host.querySelector<HTMLElement>("[data-charter-pin]");
     const stanzas = Array.from(host.querySelectorAll<HTMLElement>("[data-charter-stanza]"));
+    const returnStanza = host.querySelector<HTMLElement>("[data-charter-return]");
     const hint = host.querySelector<HTMLElement>("[data-charter-hint]");
     const portrait = host.querySelector<HTMLElement>("[data-charter-portrait]");
     const ledger = host.querySelector<HTMLElement>("[data-charter-ledger]");
