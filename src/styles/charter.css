@@ -412,6 +412,16 @@
   padding: 0 var(--charter-gutter);
   overflow: hidden;
 }
+/* The cloth behind the ledger. Trace opacity only, written by the scroll loop,
+   and it never sits behind body type at a strength that touches contrast. */
+.charter-ledger-pattern {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: var(--charter-pattern-opacity, 0);
+  pointer-events: none;
+}
 .charter-ledger-head {
   max-width: var(--charter-column);
   margin: 0 auto var(--space-10);

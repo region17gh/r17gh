@@ -34,11 +34,11 @@ Whatever matters must sit there, **with room around it** on all four sides.
 |---|---|---|---|---|---|---|
 | 1 | `declaration` | Hero, behind the third stanza. Right 60% of the screen, masked to transparent at its left edge | Full viewport height, cover | 960, 1440 | `center 18%` | The speaker's face high in the frame. The left 40% sits under the type column on wide screens and must carry nothing important |
 | 2 | `kumasi` | The definition section, behind dark navy at up to 72% opacity | Full-bleed, cover | 800 | `62% 45%` | Right of centre. Type is protected on the left. This slot drifts between `56% 48%` and `68% 42%` over 26s, so the subject must stay inside that travel |
-| 3 | `greeting` | The full-bleed moment, "We find each other by name now" | 100svh, cover | 740 | `center 42%` | Two faces and the space between them, slightly above centre. A dark pool sits bottom-left behind the headline, so keep that corner quiet |
+| 3 | `greeting` | The full-bleed moment, "We find each other by name now" | 100svh, cover | 740, 1280 | `center 38%` | Two faces and the space between them, slightly above centre. A dark pool sits bottom-left behind the headline, so keep that corner quiet |
 | 4 | `seated` | Below the six branches of the family | 16:9, max 64vh | 720, 1280 | `center 45%` | The marquee lettering centred. This is a wide crop and the sign must not clip |
-| 5 | `register` | The Charter block, beside "There is only one Charter" | 16:9, max 64vh | 720, 1024 | `center 40%` | The arch centred, sky above it |
-| 6 | `gate` | Below the region index, before the coda | 16:9, max 64vh | 720, 1180, 1600 | `center 30%` | Awaiting a file. Subject centred, sky above it |
-| 7 | `ledger-pattern` | Behind the ledger of sixteen regions | Full-bleed tile, cover | 1440 | `center` | **Do not commission.** See the gate below |
+| 5 | `register` | The Charter block, beside "There is only one Charter" | 16:9, max 64vh | 720, 1024 | `center 45%` | The plaque centred between both hands |
+| 6 | `gate` | Below the region index, before the coda | 16:9, max 64vh | 720, 1024 | `center 40%` | The arch centred, sky above it. Mirrored so the birds enter from the right |
+| 7 | `ledger-pattern` | Behind the ledger of sixteen regions | Full-bleed tile, cover | 1440 | `center` | Woven cloth at trace opacity, never behind type at strength |
 
 Every plate is rendered at 120% height with a 10% negative offset so it can
 carry an 11px parallax and a 1.05±0.012 Ken Burns scale without the frame
@@ -56,11 +56,11 @@ screen reader hears, and what search and the WhatsApp preview read.
 |---|---|---|
 | `declaration` | none | President Mahama, photographed beside the flag of Ghana. |
 | `kumasi` | none | The Accra to Kumasi expressway under construction at sunset. |
-| `greeting` | Woven West African cloth | Woven West African cloth in red, gold and green. |
+| `greeting` | Region 17 launch, Washington D.C., 30 July 2026 | Three members standing together at the Region 17 launch, one wearing kente. |
 | `seated` | Region 17 launch, Washington D.C., 30 July 2026 | A lit REGION 17 marquee sign at the launch. |
-| `register` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | Black Star Gate, Accra, at dusk. |
-| `gate` | Photograph to follow | A photograph of Ghana, still to be added. |
-| `ledger-pattern` | none | A repeating pattern behind the register of regions. |
+| `register` | Lifetime patron plaque presented at the Region 17 launch, Washington D.C. | A lifetime patron plaque presented to Ambassador Victor Emmanuel Smith at the Region 17 launch. |
+| `gate` | Black Star Gate, Accra. Freedom and Justice, AD 1957 | The Black Star Gate in Accra at dusk, birds crossing the sky. |
+| `ledger-pattern` | none | Woven West African cloth in red, gold and green, behind the register of regions. |
 
 If a delivered photograph differs from its description, **the alternative text
 changes with it.** These are descriptions of specific frames, not placeholders.
@@ -79,8 +79,8 @@ record, not a flag someone flips.
 | `greeting` | Cleared 20260829 | Traditional-motif use confirmed as reviewed by the project owner; reviewer name to be recorded |
 | `seated` | Cleared 20260829 | Licence confirmed by the project owner |
 | `register` | Cleared 20260829 | Licence confirmed by the project owner |
-| `gate` | No file supplied yet | The index-plate photograph, still to come |
-| `ledger-pattern` | Traditional motif | **Named Ghanaian cultural review.** Not a licensing question |
+| `gate` | Cleared 20260829 | Licence confirmed by the project owner |
+| `ledger-pattern` | Cleared 20260829 | Woven cloth, no reproduced symbol; confirmed by the project owner |
 
 ### Two notes a licensor should read
 
