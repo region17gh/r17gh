@@ -224,7 +224,7 @@
       "newNumber": "Your member number is now {number}."
     },
     "challenge": {
-      "unavailable": "We could not run the check that protects member numbers, so we can't give you one yet. That is usually a browser extension or a blocked connection rather than anything you did. Try again, and if it keeps happening, try a different browser or network.",
+      "unavailable": "The check that protects member numbers is not available right now, so we can't issue one yet. Nothing you did caused this. Try again in a moment. If it keeps happening, write to us and we will sort it out.",
       "failed": "The check that protects member numbers did not pass, so we can't give you one yet. No number was taken and nothing was lost.",
       "expired": "The check that protects member numbers did not finish in time, so we can't give you one yet. No number was taken.",
       "kept": "Everything you entered is still here. You'll be able to continue as soon as this check passes.",
