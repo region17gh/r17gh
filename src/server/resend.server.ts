@@ -2,8 +2,9 @@
  * The Resend transport.
  *
  * `.server.ts`, imported only from inside a server handler, so the API key
- * never reaches a client bundle. The key is read from the environment, is never
- * returned or logged, and leaves this module only as an Authorization header.
+ * never reaches a client bundle. The key is read from the vault, falling back
+ * to the environment, is never returned or logged, and leaves this module only
+ * as an Authorization header.
  *
  * Supabase custom SMTP already routes auth mail through Resend. That is GoTrue's
  * own path and has nothing to do with this one: this is the API, for mail the
@@ -34,9 +35,40 @@ export type SendResult =
   | { sent: true; id: string | null }
   | { sent: false; reason: string };
 
-/** The address mail is sent from. Configured, never guessed. */
-export function senderAddress(): string | null {
-  return process.env["RESEND_FROM"]?.trim() || null;
+/**
+ * The address mail is sent from.
+ *
+ * Vault first, environment second. The vault is the only store both this path
+ * and the notifier edge function can reach, so it is the single source; the
+ * environment stays as a fallback for local work and for the case where the
+ * database is unreachable but mail still has to leave.
+ */
+async function transportConfig(): Promise<{ apiKey: string | null; from: string | null }> {
+  const envKey = process.env["RESEND_API_KEY"]?.trim() || null;
+  const envFrom = process.env["RESEND_FROM"]?.trim() || null;
+
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("get_notifier_config");
+    if (error || !data) return { apiKey: envKey, from: envFrom };
+
+    const config = data as {
+      resend_api_key: string | null;
+      mail_from: string | null;
+    };
+    return {
+      apiKey: config.resend_api_key?.trim() || envKey,
+      from: config.mail_from?.trim() || envFrom,
+    };
+  } catch {
+    // Never let a config read failure be the reason mail stops.
+    return { apiKey: envKey, from: envFrom };
+  }
+}
+
+/** Kept for callers that only need the address. */
+export async function senderAddress(): Promise<string | null> {
+  return (await transportConfig()).from;
 }
 
 /**
@@ -48,11 +80,25 @@ export function senderAddress(): string | null {
  * take it.
  */
 export async function sendEmail(message: OutboundEmail): Promise<SendResult> {
-  const apiKey = process.env["RESEND_API_KEY"]?.trim();
-  if (!apiKey) return { sent: false, reason: "RESEND_API_KEY is not set" };
+  // Suppression is checked here rather than in each caller, so every path the
+  // application ever adds inherits it. An address that hard-bounced or
+  // complained is never written to again, whatever the message.
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: suppressed } = await supabaseAdmin.rpc("is_suppressed", {
+      p_address: message.to,
+    });
+    if (suppressed === true) {
+      return { sent: false, reason: "address is suppressed" };
+    }
+  } catch {
+    // A failed suppression check is not a reason to refuse. Sending to a
+    // suppressed address is bad; silently dropping all mail is worse.
+  }
 
-  const from = senderAddress();
-  if (!from) return { sent: false, reason: "RESEND_FROM is not set" };
+  const { apiKey, from } = await transportConfig();
+  if (!apiKey) return { sent: false, reason: "Resend API key is not configured" };
+  if (!from) return { sent: false, reason: "sender address is not configured" };
 
   const headers: Record<string, string> = {
     authorization: `Bearer ${apiKey}`,

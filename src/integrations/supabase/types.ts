@@ -4033,6 +4033,7 @@ export type Database = {
         Returns: boolean
       }
       is_operator: { Args: never; Returns: boolean }
+      is_suppressed: { Args: { p_address: string }; Returns: boolean }
       log_activity: {
         Args: {
           p_actor: string
