@@ -303,6 +303,52 @@
     "join": "Join Region 17",
     "failed": "We could not send a link to that address. Check it and try again."
   },
+  "declare": {
+    "heading": "What brings you",
+    "lede": "One line. It is how the platform knows what to bring you, and you can change it or add another whenever you like.",
+    "loading": "Loading.",
+    "sentence": {
+      "iAm": "I am",
+      "in": "in",
+      "around": ", around",
+      "stop": "."
+    },
+    "direction": {
+      "offer": "offering",
+      "seek": "looking for"
+    },
+    "field": {
+      "direction": "Offering or looking for",
+      "pathway": "What you bring or need",
+      "place": "Where",
+      "sector": "Sector"
+    },
+    "sector": {
+      "any": "any sector"
+    },
+    "headline": {
+      "label": "Say it in your own words",
+      "hint": "Short and specific beats broad. This is what a region sees."
+    },
+    "note": {
+      "label": "Anything worth knowing",
+      "hint": "Optional. Background, scale, how you usually work."
+    },
+    "visibility": {
+      "label": "Who can see this"
+    },
+    "consent": {
+      "heading": "What we may do with it",
+      "matchingRequired": "We will use this to tell you when a region posts something that fits. That is what a declaration is for, so it is not optional. Everything below is, and you can change any of it in settings.",
+      "directory_visibility": "Show me in the member directory, so other members can find me by what I offer.",
+      "programme_updates": "Send me programme updates for the places I follow.",
+      "institutional_discoverability": "Let verified regional bodies see this declaration."
+    },
+    "submit": "Finish",
+    "submitting": "Saving",
+    "failed": "That did not save. Try again, and if it keeps failing tell us.",
+    "window": "Your declaration runs for eighteen months. Renewing it is one tap, and it lapses quietly rather than going stale."
+  },
   "email": {
     "welcome": {
       "subject": "Welcome to Region 17. You are member {number}.",
