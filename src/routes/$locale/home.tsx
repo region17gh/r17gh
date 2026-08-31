@@ -2,12 +2,21 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { Credential } from "@/components/join/Credential";
-import { Badge, Button, Card, PanBand, SectionHeader } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import {
+  Button,
+  Card,
+  PanBand,
+  SectionHeader,
+} from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { localePath, useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadCredentialPdf } from "@/lib/credential/pdf";
 import { sendWelcomeEmail } from "@/server/welcome";
-import { fetchCurrentMember, fetchFoundingCutoff, type MemberRow } from "@/lib/member/membership";
+import {
+  fetchCurrentMember,
+  fetchFoundingCutoff,
+  type MemberRow,
+} from "@/lib/member/membership";
 
 export const Route = createFileRoute("/$locale/home")({
   head: () => ({ meta: [{ title: "Your membership | Region 17" }] }),
@@ -15,25 +24,40 @@ export const Route = createFileRoute("/$locale/home")({
 });
 
 /**
- * The member's standing dashboard.
+ * The signed-in member's page: their standing, and their work.
  *
- * This page used to render `member_intent`: one free-text ask, one free-text
- * offer. That table is superseded by `declarations`, which are scoped to a
- * place, bounded by a window, carry a pathway and a sector, and are the only
- * thing the matching engine can see. `member_intent` still exists in the
- * database, commented as superseded the way `chapter_roles` is; what stopped is
- * rendering it. A member who has just used /declare now reads their declaration
- * here rather than an empty ask-and-offer section.
+ * Previously this rendered `member_intent` — one free-text ask and one offer.
+ * That table is superseded by `declarations`, which are scoped to a place,
+ * bounded by a window, and the only thing the matching engine can see. A member
+ * who had just declared saw an empty ask-and-offer section here and could
+ * reasonably conclude nothing had saved.
  *
- * Everything on the page below the credential comes from one call to
- * `member_dashboard()`, which composes matches, engagements, declarations,
- * watched places and perks in a single statement so the page makes one request
- * rather than six. It is a plain STABLE function, so RLS still decides what a
- * member can see.
+ * Everything else stays: the credential and its PDF, the pending-verification
+ * prompt, sign out, and the welcome-email safety net.
+ *
+ * One call, `member_dashboard()`, returns the whole page. It runs security
+ * invoker, so RLS decides what comes back and this component cannot see past it.
  */
 
-/** One member-visible section fails quietly: a null dashboard renders nothing. */
-interface DashboardDeclaration {
+interface Ladder {
+  watching: number;
+  declared: number;
+  dormant: number;
+  expressed: number;
+  in_review: number;
+  matched: number;
+  active: number;
+  delivered: number;
+}
+
+interface Attention {
+  unread_notifications: number;
+  new_matches: number;
+  lapsing_soon: number;
+  awaiting_response: number;
+}
+
+interface DeclarationRow {
   id: string;
   direction: "offer" | "seek";
   headline: string;
@@ -48,49 +72,45 @@ interface DashboardDeclaration {
   lapsing: boolean;
 }
 
-interface DashboardMatch {
+interface MatchRow {
   id: string;
   title: string;
-  direction: string;
+  direction: "offer" | "seek";
   place: string;
   place_name: string;
   sector: string | null;
   score: number;
-  reasons: string[] | null;
-  /** The member's own declaration headline, so a match says why it arrived. */
+  reasons: string[];
   because: string;
   state: string;
 }
 
-interface DashboardEngagement {
+interface EngagementRow {
   id: string;
   title: string;
   state: string;
   state_name: string;
-  place: string;
   place_name: string;
   participants: number;
   opened_at: string;
-  review_due_at: string | null;
+  review_due_at: string;
   held_until: string | null;
-  note: string | null;
 }
 
-interface DashboardWatch {
+interface WatchingRow {
   slug: string;
   name: string;
-  type: string;
-  url_path: string | null;
+  url_path: string;
   notify: boolean;
   postings: number;
   last_activity: string | null;
 }
 
-interface DashboardPerk {
+interface PerkRow {
   id: string;
   slug: string;
   title: string;
-  summary: string | null;
+  summary: string;
   type: string;
   starts_at: string | null;
   place_name: string | null;
@@ -101,64 +121,21 @@ interface DashboardPerk {
 }
 
 interface DashboardData {
-  member_id: string | null;
-  declarations: DashboardDeclaration[];
-  matches: DashboardMatch[];
-  engagements: DashboardEngagement[];
-  watching: DashboardWatch[];
-  perks: DashboardPerk[];
+  ladder: Ladder;
+  attention: Attention;
+  declarations: DeclarationRow[];
+  matches: MatchRow[];
+  engagements: EngagementRow[];
+  watching: WatchingRow[];
+  perks: PerkRow[];
 }
-
-/**
- * The house date and money locale.
- *
- * The copy is British English and dates are written "14 March 2027" wherever
- * they appear. Intl's bare "en" renders the American order, so the region is
- * named rather than left to the runtime. This mirrors `DATE_LOCALE` in
- * `lib/foundingWindow.ts` and `lib/email/welcome.ts`.
- */
-const DATE_LOCALE: Record<string, string> = { en: "en-GB" };
-
-function formatDay(iso: string, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(DATE_LOCALE[locale] ?? locale, {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    }).format(new Date(iso));
-  } catch {
-    return iso.slice(0, 10);
-  }
-}
-
-function formatMoney(amount: number, currency: string, locale: string): string {
-  try {
-    return new Intl.NumberFormat(DATE_LOCALE[locale] ?? locale, {
-      style: "currency",
-      currency,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount}`;
-  }
-}
-
-const SECTION: React.CSSProperties = { marginTop: "var(--space-10)" };
-const SUBTITLE: React.CSSProperties = { font: "var(--type-subtitle)" };
-const MUTED: React.CSSProperties = { color: "var(--text-muted)" };
-const STACK: React.CSSProperties = { marginTop: "var(--space-4)", display: "grid", gap: "var(--space-4)" };
-const META: React.CSSProperties = {
-  marginTop: "var(--space-2)",
-  fontSize: "var(--text-body-sm)",
-  color: "var(--text-muted)",
-};
 
 function HomePage() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
+
   const [member, setMember] = useState<MemberRow | null>(null);
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [dashboardFailed, setDashboardFailed] = useState(false);
+  const [dash, setDash] = useState<DashboardData | null>(null);
   const [cutoff, setCutoff] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -179,22 +156,15 @@ function HomePage() {
       setMember(current);
       setCutoff(await fetchFoundingCutoff());
 
-      // `member_dashboard()` returns jsonb, so supabase-js types it as Json.
-      // The shape is the function's own jsonb_build_object, which the generated
-      // types cannot describe; the interfaces above are that shape.
-      const { data: rows, error } = await supabase.rpc("member_dashboard");
-      if (error || !rows) setDashboardFailed(true);
-      else setDashboard(rows as unknown as DashboardData);
-
+      const { data: dashboard } = await supabase.rpc("member_dashboard");
+      if (dashboard) setDash(dashboard as unknown as DashboardData);
       setLoading(false);
 
       // The welcome email's safety net. /verify fires the send the moment a
       // record activates, but that call is made by a browser, and a browser
       // that is closed a second later never makes it. The send is claimed once
       // on the record, so this is a no-op for every member who already has
-      // theirs: it returns already_sent without touching Resend. It costs one
-      // request on a page that is already making three, and it is the
-      // difference between a member missing their credential email and not.
+      // theirs: it returns already_sent without touching Resend.
       if (current.status === "active") {
         void sendWelcomeEmail({ data: { locale } }).catch(() => undefined);
       }
@@ -244,31 +214,57 @@ function HomePage() {
   const pending = member.status === "pending_verification" || !member.email_verified_at;
   const name = member.first_name ?? t("join.issued.fallbackName");
 
-  const declarations = dashboard?.declarations ?? [];
-  const matches = dashboard?.matches ?? [];
-  const engagements = dashboard?.engagements ?? [];
-  const watching = dashboard?.watching ?? [];
-  const perks = dashboard?.perks ?? [];
+  const declarations = dash?.declarations ?? [];
+  const matches = dash?.matches ?? [];
+  const engagements = dash?.engagements ?? [];
+  const watching = dash?.watching ?? [];
+  const perks = dash?.perks ?? [];
+  const attention = dash?.attention;
 
-  // Nothing declared is the one state that blocks everything downstream: the
-  // engine cannot see a member who holds no declaration. It is asked for before
-  // the credential, and only once the address is confirmed.
-  const nothingDeclared = !pending && dashboard !== null && declarations.length === 0;
+  // Quiet members lead with the places they follow, never with four zeros. A
+  // dashboard should not open as a list of things you have not done.
+  const waiting = attention
+    ? attention.new_matches +
+      attention.awaiting_response +
+      attention.lapsing_soon +
+      attention.unread_notifications
+    : 0;
 
-  // The watching heading turns on whether anything is actually waiting. A
-  // member with quiet regions reads what is moving rather than a list of things
-  // they have not done.
-  const anythingWaiting = watching.some((w) => w.postings > 0);
+  const daysUntil = (iso: string) => {
+    const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
+    return days <= 0 ? 0 : days;
+  };
 
-  /** How long a live declaration has left, in the words that length deserves. */
-  const lapseNote = (d: DashboardDeclaration): string | null => {
-    if (d.state === "dormant") return t("home.declarationDormant");
-    if (d.state !== "active") return t("home.declarationLapsed");
-    if (d.days_left < 0) return t("home.declarationLapsed");
-    if (!d.lapsing) return null;
-    if (d.days_left === 0) return t("home.declarationLapsingToday");
+  const daysSince = (iso: string | null) => {
+    if (!iso) return null;
+    return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  };
+
+  /*
+    Counts below pick a key rather than interpolate into one. `translate.ts` is
+    a placeholder substitution with no plural rule in it, so "{days} days" is
+    "1 days" the day before a declaration lapses. Every counted string on this
+    page therefore has a one and a zero of its own.
+  */
+
+  /** How long a declaration has left, in the words that length deserves. */
+  const declarationNote = (d: DeclarationRow) => {
+    if (!d.lapsing) {
+      return d.days_left === 1
+        ? t("home.declarationRunsOne")
+        : t("home.declarationRuns", { days: d.days_left });
+    }
+    if (d.days_left <= 0) return t("home.declarationLapsingToday");
     if (d.days_left === 1) return t("home.declarationLapsingOne");
     return t("home.declarationLapsing", { days: d.days_left });
+  };
+
+  /** The answer Region 17 owes, and when. */
+  const reviewNote = (e: EngagementRow) => {
+    const days = daysUntil(e.review_due_at);
+    if (days === 0) return t("home.inReviewBodyToday");
+    if (days === 1) return t("home.inReviewBodyOne");
+    return t("home.inReviewBody", { days });
   };
 
   return (
@@ -296,7 +292,7 @@ function HomePage() {
             role="status"
             style={{ marginTop: "var(--space-6)", textAlign: "left" }}
           >
-            <h2 style={SUBTITLE}>{t("home.pendingHeading")}</h2>
+            <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.pendingHeading")}</h2>
             <p style={{ marginTop: "var(--space-2)" }}>{t("home.pendingBody")}</p>
             <p style={{ marginTop: "var(--space-3)" }}>
               <Link to={localePath(locale, "/verify")} style={{ borderBottom: "none" }}>
@@ -306,13 +302,14 @@ function HomePage() {
           </div>
         ) : null}
 
-        {nothingDeclared ? (
+        {/* Nothing declared yet: the engine cannot see this member at all. */}
+        {!pending && declarations.length === 0 ? (
           <div
             className="r17-notice"
             role="status"
             style={{ marginTop: "var(--space-6)", textAlign: "left" }}
           >
-            <h2 style={SUBTITLE}>{t("home.declareHeading")}</h2>
+            <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.declareHeading")}</h2>
             <p style={{ marginTop: "var(--space-2)" }}>{t("home.declareBody")}</p>
             <p style={{ marginTop: "var(--space-3)" }}>
               <Link to={localePath(locale, "/declare")} style={{ borderBottom: "none" }}>
@@ -327,7 +324,7 @@ function HomePage() {
           padding="var(--space-8) var(--space-6)"
           style={{ marginTop: "var(--space-8)", textAlign: "center" }}
         >
-          <h2 className="r17-eyebrow" style={MUTED}>
+          <h2 className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
             {t("home.credentialHeading")}
           </h2>
           <Credential
@@ -357,201 +354,219 @@ function HomePage() {
             </Button>
           </p>
           {downloadFailed ? (
-            <p className="r17-notice" data-tone="alert" role="alert" style={{ marginTop: "var(--space-3)" }}>
+            <p
+              className="r17-notice"
+              data-tone="alert"
+              role="alert"
+              style={{ marginTop: "var(--space-3)" }}
+            >
               {t("home.downloadFailed")}
             </p>
           ) : null}
         </Card>
 
-        {dashboardFailed ? (
-          <p
-            className="r17-notice"
-            data-tone="alert"
-            role="alert"
-            style={{ marginTop: "var(--space-8)", textAlign: "left" }}
-          >
-            {t("home.dashboardFailed")}
-          </p>
-        ) : null}
-
         {/*
-          Matches sit above everything else on the page because they are the
-          only thing here that asks something of the member. A region has posted
-          something their declaration fits, and it waits until they answer.
+          Matches. The one thing on this page that asks something of the member,
+          so it sits above everything except their standing. `because` and
+          `reasons` come from the database: a member who cannot see why they
+          were matched will not trust the next one.
         */}
         {matches.length > 0 ? (
-          <section style={SECTION}>
-            <h2 style={SUBTITLE}>{t("home.matchesHeading")}</h2>
-            <p style={{ marginTop: "var(--space-2)", ...MUTED }}>{t("home.matchesLede")}</p>
-            <div style={STACK}>
+          <section style={{ marginTop: "var(--space-10)" }}>
+            <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.matchesHeading")}</h2>
+            <div style={{ marginTop: "var(--space-4)", display: "grid", gap: "var(--space-4)" }}>
               {matches.map((m) => (
-                <Card key={m.id} elevation={0} padding="var(--space-5)">
-                  <h3 style={SUBTITLE}>{m.title}</h3>
-                  <p style={META}>{m.place_name}</p>
+                <Card key={m.id} elevation={0} padding="var(--space-6)">
+                  <p className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
+                    {m.place_name} ·{" "}
+                    {m.direction === "seek" ? t("home.matchAsking") : t("home.matchOffering")}
+                  </p>
+                  <h3 style={{ font: "var(--type-subtitle)", marginTop: "var(--space-2)" }}>
+                    {m.title}
+                  </h3>
                   <p style={{ marginTop: "var(--space-3)" }}>
                     {t("home.matchBecause", { headline: m.because })}
                   </p>
-                  {m.reasons && m.reasons.length > 0 ? (
-                    <p style={META}>{t("home.matchReasons", { list: m.reasons.join(", ") })}</p>
-                  ) : null}
-                </Card>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {engagements.length > 0 ? (
-          <section style={SECTION}>
-            <h2 style={SUBTITLE}>{t("home.engagementsHeading")}</h2>
-            <div style={STACK}>
-              {engagements.map((e) => (
-                <Card key={e.id} elevation={0} padding="var(--space-5)">
-                  <div
+                  <ul
+                    className="r17-cite"
                     style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      justifyContent: "space-between",
-                      gap: "var(--space-3)",
-                      flexWrap: "wrap",
+                      marginTop: "var(--space-3)",
+                      color: "var(--text-muted)",
+                      listStyle: "none",
+                      padding: 0,
                     }}
                   >
-                    <h3 style={SUBTITLE}>{e.title}</h3>
-                    {/* The state's name comes from `engagement_states`, so a new
-                        state is a row and this reads it rather than a constant. */}
-                    <Badge tone="navy">{e.state_name}</Badge>
-                  </div>
-                  <p style={META}>
-                    {e.place_name}
-                    {" — "}
-                    {e.participants === 1
-                      ? t("home.engagementParticipantsOne")
-                      : t("home.engagementParticipants", { count: e.participants })}
-                  </p>
-                  {e.review_due_at ? (
-                    <p style={META}>
-                      {t("home.engagementReviewDue", { date: formatDay(e.review_due_at, locale) })}
-                    </p>
-                  ) : null}
-                  {e.held_until ? (
-                    <p style={META}>
-                      {t("home.engagementHeldUntil", { date: formatDay(e.held_until, locale) })}
-                    </p>
-                  ) : null}
-                  {e.note ? <p style={{ marginTop: "var(--space-3)" }}>{e.note}</p> : null}
+                    {m.reasons.map((r) => (
+                      <li key={r}>{r}</li>
+                    ))}
+                  </ul>
                 </Card>
               ))}
             </div>
           </section>
         ) : null}
 
+        {/*
+          Engagements in review. The copy states the promise the database is
+          already holding: three exits, none of them a bare no.
+        */}
+        {engagements.length > 0 ? (
+          <section style={{ marginTop: "var(--space-10)" }}>
+            <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.underwayHeading")}</h2>
+            <div style={{ marginTop: "var(--space-4)", display: "grid", gap: "var(--space-4)" }}>
+              {engagements.map((e) => (
+                <Card key={e.id} elevation={0} padding="var(--space-6)">
+                  <p className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
+                    {e.place_name} · {e.state_name}
+                  </p>
+                  <h3 style={{ font: "var(--type-subtitle)", marginTop: "var(--space-2)" }}>
+                    {e.title}
+                  </h3>
+                  {e.state === "in-review" ? (
+                    <p style={{ marginTop: "var(--space-3)" }}>{reviewNote(e)}</p>
+                  ) : null}
+                </Card>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Declarations, replacing the member_intent ask and offer. */}
         {declarations.length > 0 ? (
-          <section style={SECTION}>
-            <h2 style={SUBTITLE}>{t("home.declarationsHeading")}</h2>
-            <dl style={STACK}>
-              {declarations.map((d) => {
-                const note = lapseNote(d);
-                return (
-                  <div key={d.id}>
-                    <dt className="r17-eyebrow" style={MUTED}>
-                      {d.direction === "seek" ? t("home.askLabel") : t("home.offerLabel")}
-                    </dt>
-                    <dd style={{ margin: "var(--space-2) 0 0" }}>
-                      {d.headline}
-                      <span style={{ display: "block", ...META }}>
-                        {t("home.declarationsMeta", { pathway: d.pathway, place: d.place_name })}
-                      </span>
-                      {d.visibility === "members" && member.handle ? (
-                        <span style={{ display: "block", ...META }}>
-                          {t("home.declarationVisible", { member: member.handle })}
-                        </span>
-                      ) : null}
-                      {note ? (
-                        <span style={{ display: "block", ...META }} data-tone="alert">
-                          {note}
-                        </span>
-                      ) : null}
-                    </dd>
-                  </div>
-                );
-              })}
+          <section style={{ marginTop: "var(--space-10)" }}>
+            <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.declarationsHeading")}</h2>
+            <dl style={{ marginTop: "var(--space-4)", display: "grid", gap: "var(--space-5)" }}>
+              {declarations.map((d) => (
+                <div key={d.id}>
+                  <dt className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
+                    {d.direction === "offer" ? t("home.offerLabel") : t("home.askLabel")} ·{" "}
+                    {d.place_name}
+                  </dt>
+                  <dd style={{ margin: "var(--space-2) 0 0" }}>{d.headline}</dd>
+                  <p
+                    className="r17-cite"
+                    style={{ color: "var(--text-muted)", marginTop: "var(--space-2)" }}
+                  >
+                    {declarationNote(d)}
+                  </p>
+                </div>
+              ))}
             </dl>
-            <p style={{ marginTop: "var(--space-5)" }}>
+            <p style={{ marginTop: "var(--space-4)" }}>
               <Link to={localePath(locale, "/declare")} style={{ borderBottom: "none" }}>
                 <Button size="lg" variant="secondary">
-                  {t("home.declarationsAdd")}
+                  {t("home.declareAnother")}
                 </Button>
               </Link>
             </p>
           </section>
         ) : null}
 
+        {/* Where they are watching. Leads when nothing is waiting on them. */}
         {watching.length > 0 ? (
-          <section style={SECTION}>
-            <h2 style={SUBTITLE}>
-              {anythingWaiting ? t("home.watchingHeading") : t("home.watchingHeadingQuiet")}
+          <section style={{ marginTop: "var(--space-10)" }}>
+            <h2 style={{ font: "var(--type-subtitle)" }}>
+              {waiting === 0 ? t("home.watchingLeadHeading") : t("home.watchingHeading")}
             </h2>
-            <dl style={STACK}>
-              {watching.map((w) => (
-                <div key={w.slug}>
-                  <dt style={{ font: "var(--type-body)" }}>{w.name}</dt>
-                  <dd style={{ margin: "var(--space-1) 0 0", ...META }}>
-                    {w.postings === 0
-                      ? t("home.watchingQuiet")
-                      : w.postings === 1
-                        ? t("home.watchingPostingsOne")
-                        : t("home.watchingPostings", { count: w.postings })}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <ul
+              style={{
+                marginTop: "var(--space-4)",
+                display: "grid",
+                gap: "var(--space-3)",
+                listStyle: "none",
+                padding: 0,
+              }}
+            >
+              {watching.map((w) => {
+                const days = daysSince(w.last_activity);
+                const open =
+                  w.postings === 0
+                    ? t("home.watchingPostingsNone")
+                    : w.postings === 1
+                      ? t("home.watchingPostingsOne")
+                      : t("home.watchingPostings", { count: w.postings });
+                const moved =
+                  days === null
+                    ? null
+                    : days === 0
+                      ? t("home.watchingLastActivityToday")
+                      : days === 1
+                        ? t("home.watchingLastActivityOne")
+                        : t("home.watchingLastActivity", { days });
+                return (
+                  <li key={w.slug}>
+                    {/*
+                      The place's name, not a link to it. `places.url_path` is a
+                      full path ("greater-accra/accra-metropolitan") and there is
+                      no route that serves one yet, so a link here would be a
+                      404 on every row. This becomes a Link the day the place
+                      route lands; nothing else about the row changes.
+                    */}
+                    {w.name}
+                    <span
+                      className="r17-cite"
+                      style={{ color: "var(--text-muted)", marginLeft: "var(--space-3)" }}
+                    >
+                      {open}
+                      {moved === null ? "" : ` · ${moved}`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
         ) : null}
 
+        {/* What membership is worth. Free to join, free to keep; perks are the price difference. */}
         {perks.length > 0 ? (
-          <section style={SECTION}>
-            <h2 style={SUBTITLE}>{t("home.perksHeading")}</h2>
-            <div style={STACK}>
-              {perks.map((p) => (
-                <Card key={p.id} elevation={0} padding="var(--space-5)">
-                  <h3 style={SUBTITLE}>{p.title}</h3>
-                  {p.summary ? <p style={{ marginTop: "var(--space-2)" }}>{p.summary}</p> : null}
-                  <p style={META}>
-                    {p.place_name ? <>{p.place_name} </> : null}
-                    {p.starts_at ? t("home.perkStarts", { date: formatDay(p.starts_at, locale) }) : null}
-                  </p>
-                  {/*
-                    The perk line states only what the database holds. The
-                    member price is a column on `offering_perks` that
-                    `member_dashboard()` does not return, so nothing here
-                    computes one: a discount is shown as the discount it is.
-                  */}
-                  {p.perk_kind === "free" ? (
-                    <p style={{ marginTop: "var(--space-2)" }}>
-                      <Badge tone="gold">{t("home.perkFree")}</Badge>
+          <section style={{ marginTop: "var(--space-10)" }}>
+            <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.perksHeading")}</h2>
+            <div style={{ marginTop: "var(--space-4)", display: "grid", gap: "var(--space-4)" }}>
+              {perks.map((p) => {
+                const memberPrice =
+                  p.perk_kind === "free"
+                    ? t("home.perkFree")
+                    : p.perk_kind === "member-only"
+                      ? t("home.perkMemberOnly")
+                      : p.discount_percent && p.list_price
+                        ? `${p.currency} ${Math.round(p.list_price * (1 - p.discount_percent / 100))}`
+                        : p.list_price
+                          ? `${p.currency} ${p.list_price}`
+                          : null;
+                return (
+                  <Card key={p.id} elevation={0} padding="var(--space-6)">
+                    <p className="r17-eyebrow" style={{ color: "var(--text-muted)" }}>
+                      {p.type}
+                      {p.place_name ? ` · ${p.place_name}` : ""}
                     </p>
-                  ) : p.discount_percent ? (
-                    <p style={{ marginTop: "var(--space-2)" }}>
-                      <Badge tone="gold">
-                        {t("home.perkDiscount", { count: p.discount_percent })}
-                      </Badge>
-                      {p.list_price != null && p.currency ? (
-                        <span style={{ marginLeft: "var(--space-2)", ...MUTED }}>
-                          {t("home.perkPrice", {
-                            amount: formatMoney(p.list_price, p.currency, locale),
-                          })}
-                        </span>
-                      ) : null}
+                    <h3 style={{ font: "var(--type-subtitle)", marginTop: "var(--space-2)" }}>
+                      {p.title}
+                    </h3>
+                    <p style={{ marginTop: "var(--space-2)", color: "var(--text-muted)" }}>
+                      {p.summary}
                     </p>
-                  ) : null}
-                </Card>
-              ))}
+                    {memberPrice ? (
+                      <p className="r17-cite" style={{ marginTop: "var(--space-3)" }}>
+                        {p.list_price
+                          ? t("home.perkPrice", {
+                              list: `${p.currency} ${Math.round(p.list_price)}`,
+                              member: memberPrice,
+                            })
+                          : memberPrice}
+                      </p>
+                    ) : null}
+                  </Card>
+                );
+              })}
             </div>
           </section>
         ) : null}
 
-        <section style={SECTION}>
-          <h2 style={SUBTITLE}>{t("home.townhallHeading")}</h2>
-          <p style={{ marginTop: "var(--space-3)", ...MUTED }}>{t("home.townhallBody")}</p>
+        <section style={{ marginTop: "var(--space-10)" }}>
+          <h2 style={{ font: "var(--type-subtitle)" }}>{t("home.townhallHeading")}</h2>
+          <p style={{ marginTop: "var(--space-3)", color: "var(--text-muted)" }}>
+            {t("home.townhallBody")}
+          </p>
         </section>
 
         {/* Safety control, not decoration. Its wording is fixed. */}
