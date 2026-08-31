@@ -21,6 +21,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as LocaleVerifyRouteImport } from './routes/$locale/verify'
 import { Route as LocaleSigninRouteImport } from './routes/$locale/signin'
 import { Route as LocaleHomeRouteImport } from './routes/$locale/home'
+import { Route as LocaleDeclareRouteImport } from './routes/$locale/declare'
 import { Route as LocaleJoinIndexRouteImport } from './routes/$locale/join/index'
 import { Route as Char91__mockupChar93PreviewSplatRouteImport } from './routes/[__mockup].preview.$'
 import { Route as Char91__componentChar93PreviewSplatRouteImport } from './routes/[__component].preview.$'
@@ -90,6 +91,11 @@ const LocaleHomeRoute = LocaleHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => LocaleRouteRoute,
 } as any)
+const LocaleDeclareRoute = LocaleDeclareRouteImport.update({
+  id: '/declare',
+  path: '/declare',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
 const LocaleJoinIndexRoute = LocaleJoinIndexRouteImport.update({
   id: '/join/',
   path: '/join/',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/$locale': typeof LocaleRouteRouteWithChildren
   '/mcp': typeof McpRoute
   '/register': typeof RegisterRoute
+  '/$locale/declare': typeof LocaleDeclareRoute
   '/$locale/home': typeof LocaleHomeRoute
   '/$locale/signin': typeof LocaleSigninRoute
   '/$locale/verify': typeof LocaleVerifyRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
   '/register': typeof RegisterRoute
+  '/$locale/declare': typeof LocaleDeclareRoute
   '/$locale/home': typeof LocaleHomeRoute
   '/$locale/signin': typeof LocaleSigninRoute
   '/$locale/verify': typeof LocaleVerifyRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/$locale': typeof LocaleRouteRouteWithChildren
   '/mcp': typeof McpRoute
   '/register': typeof RegisterRoute
+  '/$locale/declare': typeof LocaleDeclareRoute
   '/$locale/home': typeof LocaleHomeRoute
   '/$locale/signin': typeof LocaleSigninRoute
   '/$locale/verify': typeof LocaleVerifyRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/$locale'
     | '/mcp'
     | '/register'
+    | '/$locale/declare'
     | '/$locale/home'
     | '/$locale/signin'
     | '/$locale/verify'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/'
     | '/mcp'
     | '/register'
+    | '/$locale/declare'
     | '/$locale/home'
     | '/$locale/signin'
     | '/$locale/verify'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/$locale'
     | '/mcp'
     | '/register'
+    | '/$locale/declare'
     | '/$locale/home'
     | '/$locale/signin'
     | '/$locale/verify'
@@ -347,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleHomeRouteImport
       parentRoute: typeof LocaleRouteRoute
     }
+    '/$locale/declare': {
+      id: '/$locale/declare'
+      path: '/declare'
+      fullPath: '/$locale/declare'
+      preLoaderRoute: typeof LocaleDeclareRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
     '/$locale/join/': {
       id: '/$locale/join/'
       path: '/join'
@@ -393,6 +412,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface LocaleRouteRouteChildren {
+  LocaleDeclareRoute: typeof LocaleDeclareRoute
   LocaleHomeRoute: typeof LocaleHomeRoute
   LocaleSigninRoute: typeof LocaleSigninRoute
   LocaleVerifyRoute: typeof LocaleVerifyRoute
@@ -402,6 +422,7 @@ interface LocaleRouteRouteChildren {
 }
 
 const LocaleRouteRouteChildren: LocaleRouteRouteChildren = {
+  LocaleDeclareRoute: LocaleDeclareRoute,
   LocaleHomeRoute: LocaleHomeRoute,
   LocaleSigninRoute: LocaleSigninRoute,
   LocaleVerifyRoute: LocaleVerifyRoute,
