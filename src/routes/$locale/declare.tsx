@@ -190,7 +190,10 @@ function DeclarePage() {
       return;
     }
 
-    void navigate({ to: localePath(locale, "/dashboard") });
+    // /home is the dashboard. There has never been a /dashboard route, so this
+    // landed a member on a 404 at the one moment the platform had something to
+    // show them: the declaration they had just made.
+    void navigate({ to: localePath(locale, "/home") });
   };
 
   const setConsent = (slug: string, next: boolean) =>

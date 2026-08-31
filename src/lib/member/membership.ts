@@ -65,21 +65,6 @@ function classifyActivationError(code: string, message: string): VerificationOut
   return { status: "failed", message };
 }
 
-export interface MemberIntent {
-  ask: string | null;
-  offer: string | null;
-}
-
-export async function fetchIntent(memberId: string): Promise<MemberIntent> {
-  const { data, error } = await supabase
-    .from("member_intent")
-    .select("current_ask, current_offer")
-    .eq("member_id", memberId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return { ask: data?.current_ask ?? null, offer: data?.current_offer ?? null };
-}
-
 /** The founding-window cutoff, so the credential states a date it did not invent. */
 export async function fetchFoundingCutoff(): Promise<Date | null> {
   const { data, error } = await supabase
