@@ -41,7 +41,8 @@ other regions' names.
 ## 2. `page_built`
 
 **Decided: a new `boolean` column on `public.places`, emitted per district by
-`region_payload`, defaulting to false, flipped by a named function.**
+`region_payload`, defaulting to false, flipped by hand as `service_role` until
+an operations console owns it.**
 
 It is not `depth_slug` and must never be derived from it. Depth is how far
 Region 17 has got with the district (listed, profiled, partnered). `page_built`
@@ -49,21 +50,31 @@ is whether the district's own page exists and is safe to send a reader to. A
 partnered district can have no page; a listed one can have a page written for
 it. They are independent facts and the schema keeps them apart.
 
-The migration is `supabase/migrations/*_places_page_built.sql`. It carries the
-column, its comment, an additive `page_built` key on each district in
-`region_payload` (contract `region-payload/3`), and
-`set_place_page_built(p_slug, p_built)` as the one auditable way to flip it,
-granted to `service_role` only. `places` has no write grant for `anon` or
-`authenticated` and this does not add one.
+The migration is `supabase/migrations/20260901145041_places_page_built.sql`,
+applied to production on 2026-09-01. It carries the column, its comment, and an
+additive `page_built` key on each district in `region_payload`, whose contract
+string moves to `region-payload/3`.
+
+**No setter function.** One was proposed and dropped: `page_built` will be
+flipped by hand perhaps twice before a real operations console exists, and that
+does not justify a standalone `SECURITY DEFINER` function and its grant surface
+shipped ahead of the thing that would call it. Flip it with a plain `UPDATE` as
+`service_role` in the SQL editor, the same way every other one-off edit to
+`places` already happens. When the operations console is built, a named
+`ops_set_page_built()` belongs there, with the console that owns it.
+
+`places` has no write grant for `anon` or `authenticated` and this does not add
+one.
 
 The client reads `page_built` through `src/lib/region/payload.ts`, which accepts
 both `region-payload/2` and `/3` and treats an absent key as false. The page
 therefore works either side of the migration.
 
 **Do not flip `page_built` for a district before the district route exists.**
-True with no route is a 404 for every reader who clicks through. All eighteen
-Volta districts are false today, which is correct: the spotlight sheet shows its
-not-yet-built state for all of them.
+True with no route is a 404 for every reader who clicks through. Confirmed after
+applying: false for all 280 places, including all eighteen Volta districts, and
+true nowhere. The spotlight sheet shows its not-yet-built state for all of them,
+which is the honest state until the district route decision is acted on.
 
 ## 3. District ids
 
