@@ -200,7 +200,7 @@ function JoinStory() {
               ))}
             </ul>
 
-            <Plate image={CHARTER_IMAGES.seated} index={8} />
+            <Plate image={CHARTER_IMAGES.seated} index={8} effect="ken-burns" />
 
             <p className="charter-lede charter-fade" style={{ "--charter-i": 9 } as CSSProperties}>
               {t("charter.branches.close")}
