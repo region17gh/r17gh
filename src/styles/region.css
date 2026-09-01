@@ -1,0 +1,199 @@
+/* Region page layout.
+
+   The design export is a 1440px canvas with no responsive rules in it: fixed
+   two- and three-column grids, a 640px map, a 40% media rail in the spotlight
+   sheet, and 70% page gutters. On a 390px screen that collapses the map to
+   nothing and cuts the district list in half, and a large share of members are
+   mobile-first on metered or unreliable connections.
+
+   So the layout that has to change with width lives here, written mobile-first
+   with the design's desktop values restored at the breakpoints. Above 1000px
+   the page renders exactly as the design settled it; the visual design is
+   untouched, only the widths at which it applies. Everything that does not
+   change with viewport stays inline in the components, as the rest of this
+   codebase does it. */
+
+/* The section nav in the sticky region bar jumps to #explore, #happening and
+   the rest. Without a scroll margin the bar lands on top of each heading, so
+   every jump arrives mid-section. One rule rather than a scroll offset in JS,
+   so it also holds for a deep link pasted into the address bar. */
+#explore,
+#happening,
+#toyou,
+#building,
+#needs,
+#who,
+#who-rcc,
+#join {
+  scroll-margin-top: calc(var(--r17-region-bar-height) + var(--space-6));
+}
+
+:root {
+  --r17-region-bar-height: 60px;
+}
+
+/* Page gutters. Two widths: the reading measure, and the wide one the
+   explorer and the card bands use. */
+.r17-region-width,
+.r17-region-width-wide {
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 1000px) {
+  .r17-region-width {
+    width: 70%;
+  }
+  .r17-region-width-wide {
+    width: calc(100% - 96px);
+  }
+}
+
+/* The sticky region bar. On a narrow screen the section nav scrolls sideways
+   on its own row rather than wrapping into four, which would leave the sticky
+   bar eating a third of the viewport. */
+.r17-region-bar-nav {
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+
+.r17-region-bar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.r17-region-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+@media (min-width: 1000px) {
+  .r17-region-bar-actions {
+    margin-left: auto;
+  }
+}
+
+/* Explore: map, list, spotlight. */
+.r17-explore-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.r17-explore-map {
+  height: 420px;
+}
+
+/* The schematic fallback is an SVG with its own aspect ratio, so it sizes
+   itself rather than sitting in a fixed box with white space under it. */
+.r17-explore-map[data-mode="fallback"] {
+  height: auto;
+}
+
+.r17-explore-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1000px) {
+  .r17-explore-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    overflow-x: hidden;
+  }
+  .r17-explore-grid[data-spotlight="open"] {
+    grid-template-columns: minmax(200px, 0.85fr) minmax(120px, 0.42fr) minmax(370px, 1.5fr);
+  }
+  .r17-explore-map,
+  .r17-explore-map[data-mode="fallback"] {
+    height: 640px;
+  }
+  .r17-explore-list {
+    height: 640px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+}
+
+/* The spotlight sheet stacks its media above its text until there is room for
+   the rail. */
+.r17-spotlight {
+  height: auto;
+  max-height: none;
+}
+
+.r17-spotlight-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.r17-spotlight-media {
+  width: 100%;
+  height: 220px;
+  flex: none;
+  position: relative;
+}
+
+@media (min-width: 1000px) {
+  .r17-spotlight {
+    height: 640px;
+  }
+  .r17-spotlight-body {
+    flex: 1;
+    flex-direction: row;
+  }
+  .r17-spotlight-media {
+    width: 40%;
+    height: auto;
+  }
+}
+
+/* Needs and activity sit side by side once there is room for two readable
+   columns; below that they stack rather than becoming two 130px gutters. */
+.r17-spotlight-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 700px) {
+  .r17-spotlight-split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* The building section's text-and-photo split. */
+.r17-building-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-10);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .r17-building-grid {
+    grid-template-columns: 1.3fr 1fr;
+  }
+}
+
+/* Card bands. `min()` keeps the track from being wider than its container on a
+   narrow screen, which a bare minmax() floor does not. */
+.r17-card-grid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.r17-card-grid-wide {
+  display: grid;
+  gap: var(--space-12);
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  align-items: start;
+}
