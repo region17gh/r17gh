@@ -47,6 +47,8 @@ export function Media({
       // Only a real photograph gets the Ken Burns breath and the parallax; the
       // placeholder has nothing to move.
       data-charter-parallax=""
+      data-charter-effect={effect}
+
       // Everything below the opening screen waits until it is near the viewport.
       loading={image.eager ? "eager" : "lazy"}
       decoding="async"
