@@ -103,6 +103,18 @@ env:
   # pinning it. Do not "fix" a red build by editing this to match the run.
   EXPECTED_PASS: "71"
 
+  # Supabase creates the preview branch when the pull request opens and then
+  # provisions a database for it, which takes minutes. This workflow starts on
+  # the same event, so it routinely arrives first and asks for credentials that
+  # do not exist yet. That is a race, not a verdict, and resolving once turned
+  # it into a red build whose outcome depended on runner scheduling.
+  #
+  # These bound the wait. They do not soften the gate: when the deadline passes
+  # the same errors are raised as before, and a branch that is genuinely absent
+  # on a schema-changing PR still fails the build.
+  PREVIEW_WAIT_SECONDS: "600"
+  PREVIEW_POLL_SECONDS: "20"
+
 jobs:
   invariants:
     name: Register invariants
@@ -205,15 +217,46 @@ jobs:
             # than interpolated into this script: it is contributor-controlled
             # text and does not belong in a shell command line.
             echo "Resolving the preview branch named '$GITHUB_HEAD_REF'."
-            if ! env_out="$(supabase branches get "$GITHUB_HEAD_REF" --project-ref "$PROJECT_REF" -o env 2>"$RUNNER_TEMP/branches.err")"; then
+
+            # Wait the branch out rather than racing it. Two CLI failures mean
+            # "not ready yet" rather than "not there": 'branch not found' before
+            # Supabase has registered the branch, and 'primary database not
+            # found' while its database is still coming up. Both are retried
+            # until PREVIEW_WAIT_SECONDS is spent; every other failure is final
+            # and breaks out immediately, so a real misconfiguration is still
+            # reported in seconds rather than after a ten-minute wait.
+            deadline=$(( SECONDS + PREVIEW_WAIT_SECONDS ))
+            attempt=0
+            env_out=""
+            while :; do
+              attempt=$(( attempt + 1 ))
+              if env_out="$(supabase branches get "$GITHUB_HEAD_REF" --project-ref "$PROJECT_REF" -o env 2>"$RUNNER_TEMP/branches.err")"; then
+                break
+              fi
+              env_out=""
+
+              # No preview branch and no SQL in the diff: the two agree, and
+              # there is genuinely no schema delta for the harness to check.
+              # Decided on the first pass; waiting would not change it.
               if grep -qiE 'branch not found|404' "$RUNNER_TEMP/branches.err" && [ "${SCHEMA_TOUCHED:-}" = "0" ]; then
-                # No preview branch and no SQL in the diff: the two agree, and
-                # there is genuinely no schema delta for the harness to check.
                 # Recorded as an explicit non-run, not as a verification.
                 echo "No preview branch, and this pull request changes nothing under supabase/. Nothing to verify here."
                 echo "HARNESS_SKIPPED=1" >> "$GITHUB_ENV"
                 exit 0
               fi
+
+              if ! grep -qiE 'branch not found|404|primary database not found|not ready|still being created|provisioning' "$RUNNER_TEMP/branches.err"; then
+                break
+              fi
+              if [ "$SECONDS" -ge "$deadline" ]; then
+                echo "::warning title=Preview branch never became reachable::Waited ${PREVIEW_WAIT_SECONDS}s over ${attempt} attempts for the preview branch to come up, and it did not."
+                break
+              fi
+              echo "Attempt ${attempt}: preview branch is not ready yet. Waiting ${PREVIEW_POLL_SECONDS}s."
+              sleep "$PREVIEW_POLL_SECONDS"
+            done
+
+            if [ -z "$env_out" ]; then
               # Either the CLI failed for some other reason, or -- worse --
               # this PR changes SQL and still has no preview branch.
               if [ "${SCHEMA_TOUCHED:-0}" = "1" ]; then
