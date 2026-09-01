@@ -12,10 +12,14 @@ import { fallbackSrc, srcSet, type CharterImage } from "@/lib/charter/assets";
 export function Media({
   image,
   className,
+  effect,
 }: {
   image: CharterImage;
   className?: string;
+  /** Named scroll-stage effect. "ken-burns" adds a slow, continuous zoom-in. */
+  effect?: "ken-burns";
 }) {
+
   const { t } = useI18n();
   const alt = t(image.altKey);
 
