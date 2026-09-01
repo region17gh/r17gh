@@ -531,5 +531,165 @@
       "western": "Takoradi's oil, gas, and harbour; Nzulezu standing on stilts; beaches running to the border. Where Ghana's energy economy meets the sea.",
       "western-north": "Deep-forest cocoa heartland around Sefwi Wiawso, source of much of the chocolate the world eats, and home to one of Africa's most unexpected communities of faith."
     }
+  },
+  "region": {
+    "loadFailed": "This region page could not be loaded. Reload the page, or try again shortly.",
+    "follow": "Follow {region}",
+    "following": "Following",
+    "hero": {
+      "eyebrow": "{region} region · Ghana",
+      "lede": "Ghana's eastern edge, where the lake meets the border and the looms have been running for two hundred years.",
+      "explore": "Explore the region",
+      "photoBrief": "Hero photo · Lake Volta at the Kpando crossing · 2400px wide"
+    },
+    "bar": {
+      "country": "Ghana",
+      "navLabel": "Sections of this page",
+      "explore": "Explore",
+      "happening": "Happening",
+      "building": "Building",
+      "needs": "Needs",
+      "join": "Join",
+      "forTheRegion": "For the region itself"
+    },
+    "glance": {
+      "districts": "Districts",
+      "zones": "Zones",
+      "capital": "Capital",
+      "sectors": "Priority sectors",
+      "watching": "Members watching",
+      "postings": "Postings open",
+      "mockSource": "Placeholder figure, not from the register"
+    },
+    "zone": {
+      "southern-coastal": "Southern coastal",
+      "capital-central": "Capital and central",
+      "highland-border": "Highland and border"
+    },
+    "explore": {
+      "eyebrow": "Explore {region}",
+      "heading": "{districts} districts, {zones} zones",
+      "lede": "Hover the map or the list; click either to open a district.",
+      "zoneFilterLabel": "Filter districts by zone",
+      "allZones": "All zones",
+      "zoneUnassigned": "Not yet zoned",
+      "districtCount": "{count} districts",
+      "districtCountOne": "1 district",
+      "lakeVolta": "Lake Volta",
+      "mapCredit": "© Mapbox © OpenStreetMap. District boundaries: geoBoundaries gbOpen, CC BY 4.0."
+    },
+    "spotlight": {
+      "regionLabel": "District spotlight: {district}",
+      "header": "District spotlight · {zone}",
+      "live": "Live",
+      "close": "Close the district spotlight",
+      "photoBrief": "District photo · {district}",
+      "noVideo": "No video for this district yet. Video arrives with cleared media.",
+      "tabPhoto": "Photo",
+      "tabVideo": "Video",
+      "notBuilt": "{district}'s dedicated page isn't built yet. Here's what we know so far, and here's how to be first to hear when it is.",
+      "backToOverview": "Back to overview",
+      "noSource": "Source not recorded",
+      "statNeeds": "Needs",
+      "statActivity": "Activity",
+      "statPopulation": "Population",
+      "statLandArea": "Land area",
+      "withheld": "Withheld: the sources conflict and a conflicted figure cannot be published.",
+      "needsHeading": "What this district needs",
+      "noNeeds": "No needs documented yet. Needs enter this page through the district assembly's development plan.",
+      "seeUnderNeeds": "See it under what the region needs",
+      "happeningHeading": "What is happening here",
+      "nothingPosted": "Nothing posted yet. This district appears in the feed as its assembly posts.",
+      "carriesHeading": "What it carries",
+      "waysInHeading": "Ways in",
+      "wayIn": {
+        "visit": "Visit",
+        "teach": "Teach",
+        "invest": "Invest",
+        "volunteer": "Volunteer"
+      },
+      "watch": "Watch this district",
+      "watching": "Watching this district",
+      "open": "Open {district}",
+      "openNote": "{district}'s page opens as Region 17 establishes district representation with local partners. Follow the region and we'll tell you when it does."
+    },
+    "feed": {
+      "eyebrow": "What is happening in {region}",
+      "heading": "Events, programmes and stories",
+      "filterLabel": "Filter the feed",
+      "filter": {
+        "all": "All",
+        "events": "Events",
+        "programmes": "Programmes",
+        "resources": "Resources",
+        "stories": "Stories"
+      },
+      "category": {
+        "event": "Event",
+        "programme": "Programme",
+        "resource": "Resource",
+        "story": "Story",
+        "service": "Service"
+      }
+    },
+    "sheet": {
+      "close": "Close",
+      "closeBackdrop": "Close this panel"
+    },
+    "story": {
+      "eyebrow": "Story",
+      "listen": "Listen · {minutes} min",
+      "pause": "Pause",
+      "progress": "1:38 / {minutes}:00"
+    },
+    "service": {
+      "eyebrow": "Service",
+      "receiveHeading": "What you receive",
+      "contactHeading": "Not ready to pay? Get in touch",
+      "email": "Your email",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "location": "Location",
+      "locationPlaceholder": "City, country",
+      "message": "What can we help you with?",
+      "messagePlaceholder": "The parcel, the district, and what you already hold.",
+      "send": "Send",
+      "replyNote": "We reply within 72 hours.",
+      "notConnected": "This enquiry form is not connected yet, so nothing was sent."
+    },
+    "reciprocal": {
+      "eyebrow": "{region}, to you",
+      "heading": "What the region holds for you",
+      "lede": "Whether you arrive with capital, skills, curiosity or a plan to visit."
+    },
+    "building": {
+      "eyebrow": "What {region} is building",
+      "heading": "A priority industrial corridor",
+      "lede": "Ghana has named the Volta River Basin a priority industrial corridor: irrigation across the basin, agro-industrial parks, and tourism clusters on the lake.",
+      "note": "Priority sectors are drafted by Region 17 from published material and not yet confirmed by the region. Confirming them is the representative's first act.",
+      "photoBrief": "Photo · the Volta River Basin corridor"
+    },
+    "needs": {
+      "eyebrow": "What {region} needs",
+      "heading": "Documented, costed, waiting",
+      "lede": "Each figure carries its source and a confidence flag. Nothing here is the region's word until an assembly posts it.",
+      "documentedCost": "Documented cost",
+      "assembliesEyebrow": "From the assemblies",
+      "assembliesBody": "Most of these come from published plans. Ho Municipal's is the exception, posted directly by its assembly, which is what partnered means in practice."
+    },
+    "who": {
+      "eyebrow": "Who is here",
+      "heading": "The seventeenth region, counting itself",
+      "chartHeading": "Members watching, month by month",
+      "chartPoint": "{month} {value}",
+      "rccEyebrow": "For the region itself",
+      "rccBody": "Are you with the {region} Regional Coordinating Council, or one of the {districts} district assemblies? This page is yours to correct and extend.",
+      "rccAction": "Correct or extend this page",
+      "ledgerHeading": "What has moved"
+    },
+    "join": {
+      "heading": "{region} has put its needs on the page. Put your name next to one.",
+      "action": "Become a member"
+    }
   }
 }

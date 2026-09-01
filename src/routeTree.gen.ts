@@ -27,6 +27,7 @@ import { Route as Char91__mockupChar93PreviewSplatRouteImport } from './routes/[
 import { Route as Char91__componentChar93PreviewSplatRouteImport } from './routes/[__component].preview.$'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as LocaleRegionsRegionRouteImport } from './routes/$locale/regions/$region'
 import { Route as LocaleJoinRegisterRouteImport } from './routes/$locale/join/register'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -124,6 +125,11 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocaleRegionsRegionRoute = LocaleRegionsRegionRouteImport.update({
+  id: '/regions/$region',
+  path: '/regions/$region',
+  getParentRoute: () => LocaleRouteRoute,
+} as any)
 const LocaleJoinRegisterRoute = LocaleJoinRegisterRouteImport.update({
   id: '/join/register',
   path: '/join/register',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/$locale/': typeof LocaleIndexRoute
   '/join/': typeof JoinIndexRoute
   '/$locale/join/register': typeof LocaleJoinRegisterRoute
+  '/$locale/regions/$region': typeof LocaleRegionsRegionRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/$locale': typeof LocaleIndexRoute
   '/join': typeof JoinIndexRoute
   '/$locale/join/register': typeof LocaleJoinRegisterRoute
+  '/$locale/regions/$region': typeof LocaleRegionsRegionRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/$locale/': typeof LocaleIndexRoute
   '/join/': typeof JoinIndexRoute
   '/$locale/join/register': typeof LocaleJoinRegisterRoute
+  '/$locale/regions/$region': typeof LocaleRegionsRegionRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/$locale/'
     | '/join/'
     | '/$locale/join/register'
+    | '/$locale/regions/$region'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/$locale'
     | '/join'
     | '/$locale/join/register'
+    | '/$locale/regions/$region'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/$locale/'
     | '/join/'
     | '/$locale/join/register'
+    | '/$locale/regions/$region'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
@@ -401,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/regions/$region': {
+      id: '/$locale/regions/$region'
+      path: '/regions/$region'
+      fullPath: '/$locale/regions/$region'
+      preLoaderRoute: typeof LocaleRegionsRegionRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
     '/$locale/join/register': {
       id: '/$locale/join/register'
       path: '/join/register'
@@ -418,6 +437,7 @@ interface LocaleRouteRouteChildren {
   LocaleVerifyRoute: typeof LocaleVerifyRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
   LocaleJoinRegisterRoute: typeof LocaleJoinRegisterRoute
+  LocaleRegionsRegionRoute: typeof LocaleRegionsRegionRoute
   LocaleJoinIndexRoute: typeof LocaleJoinIndexRoute
 }
 
@@ -428,6 +448,7 @@ const LocaleRouteRouteChildren: LocaleRouteRouteChildren = {
   LocaleVerifyRoute: LocaleVerifyRoute,
   LocaleIndexRoute: LocaleIndexRoute,
   LocaleJoinRegisterRoute: LocaleJoinRegisterRoute,
+  LocaleRegionsRegionRoute: LocaleRegionsRegionRoute,
   LocaleJoinIndexRoute: LocaleJoinIndexRoute,
 }
 
