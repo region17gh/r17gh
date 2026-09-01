@@ -208,7 +208,7 @@
 /* ---------- the pinned opening ---------- */
 
 .charter-pin {
-  height: 460vh;
+  height: 300vh;
   position: relative;
 }
 .charter-pin-stage {
@@ -399,7 +399,7 @@
 /* ---------- the ledger: sixteen, then the seventeenth ---------- */
 
 .charter-ledger {
-  height: 340vh;
+  height: 230vh;
   position: relative;
 }
 .charter-ledger-stage {
@@ -1059,10 +1059,10 @@
     --charter-gutter: 7vw;
   }
   .charter-pin {
-    height: 280vh;
+    height: 200vh;
   }
   .charter-ledger {
-    height: 220vh;
+    height: 160vh;
   }
   .charter-grid16 {
     grid-template-columns: repeat(2, 1fr);
