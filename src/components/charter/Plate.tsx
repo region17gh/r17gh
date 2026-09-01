@@ -48,8 +48,8 @@ export function Media({
       // placeholder has nothing to move.
       data-charter-parallax=""
       data-charter-effect={effect}
-
       // Everything below the opening screen waits until it is near the viewport.
+
       loading={image.eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={image.eager ? "high" : "auto"}
