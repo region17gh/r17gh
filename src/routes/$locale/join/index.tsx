@@ -123,15 +123,6 @@ function JoinStory() {
               <p className="charter-sub">{t("charter.stanza3.sub")}</p>
             </div>
 
-            {/* The way out is the way back in: once the third stanza lets go,
-                the opening claim returns and holds until the pin releases, so
-                the track never ends on empty paper. Decorative repeat of the
-                h1, hence aria-hidden. */}
-            <div className="charter-stanza charter-stanza-return" data-charter-return aria-hidden="true">
-              <p>{t("charter.stanza1.line1")}</p>
-              <p className="charter-lift">{t("charter.stanza1.line2")}</p>
-            </div>
-
             <p className="charter-hint" data-charter-hint aria-hidden="true">
               {t("charter.hint")}
               <span />

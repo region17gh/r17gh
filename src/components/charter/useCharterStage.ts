@@ -42,7 +42,6 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
     const fieldContext = field?.getContext("2d") ?? null;
     const pin = host.querySelector<HTMLElement>("[data-charter-pin]");
     const stanzas = Array.from(host.querySelectorAll<HTMLElement>("[data-charter-stanza]"));
-    const returnStanza = host.querySelector<HTMLElement>("[data-charter-return]");
     const hint = host.querySelector<HTMLElement>("[data-charter-hint]");
     const portrait = host.querySelector<HTMLElement>("[data-charter-portrait]");
     const ledger = host.querySelector<HTMLElement>("[data-charter-ledger]");
@@ -141,19 +140,18 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
 
     /* Hero: three stanzas cross-dissolving across the pinned track. Each owns
        an equal slice; the fades occupy the outer 26% of a slice so the slices
-       never overlap and a flick cannot land between two of them. The last 14%
-       of the track belongs to the return: the opening words come back once the
-       third stanza has let go, and hold until the pin releases. */
-    const RETURN_FROM = 0.86;
-
+       never overlap and a flick cannot land between two of them. The last
+       stanza closes the track: once it has fully arrived it holds until the
+       pin releases, so the opening never ends on empty paper. */
     function paintHero() {
       if (!pin || stanzas.length === 0) return;
       const progress = trackProgress(pin);
-      const slice = RETURN_FROM / stanzas.length;
-      const p = Math.min(progress, RETURN_FROM);
+      const slice = 1 / stanzas.length;
 
       stanzas.forEach((stanza, index) => {
-        const local = (p - index * slice) / slice;
+        const raw = (progress - index * slice) / slice;
+        // Capping the last stanza short of its fade-out is what makes it hold.
+        const local = index === stanzas.length - 1 ? Math.min(raw, 0.74) : raw;
         let opacity: number;
         let offset: number;
 
@@ -180,22 +178,12 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
         stanza.style.opacity = opacity.toFixed(3);
         stanza.style.setProperty("--charter-dy", `${offset.toFixed(1)}px`);
 
-        // The portrait belongs to the last stanza and rides its fade, held
-        // under full strength so the type over it stays the loudest thing.
+        // The portrait belongs to the last stanza and rides it in, then holds
+        // with it, under full strength so the type stays the loudest thing.
         if (portrait && index === stanzas.length - 1) {
           portrait.style.opacity = (opacity * 0.9).toFixed(3);
         }
       });
-
-      /* The return: rises over the first 60% of its share, then holds. It
-         starts exactly where stanza three's fade ends, so the two never
-         share a frame. */
-      if (returnStanza) {
-        const back = clamp((progress - RETURN_FROM) / (1 - RETURN_FROM), 0, 1);
-        const opacity = clamp(back / 0.6, 0, 1);
-        returnStanza.style.opacity = opacity.toFixed(3);
-        returnStanza.style.setProperty("--charter-dy", `${((1 - opacity) * lift).toFixed(1)}px`);
-      }
 
       if (hint) hint.style.opacity = clamp(1 - progress * 6, 0, 1).toFixed(3);
     }
