@@ -12,10 +12,14 @@ import { fallbackSrc, srcSet, type CharterImage } from "@/lib/charter/assets";
 export function Media({
   image,
   className,
+  effect,
 }: {
   image: CharterImage;
   className?: string;
+  /** Named scroll-stage effect. "ken-burns" adds a slow, continuous zoom-in. */
+  effect?: "ken-burns";
 }) {
+
   const { t } = useI18n();
   const alt = t(image.altKey);
 
@@ -43,7 +47,9 @@ export function Media({
       // Only a real photograph gets the Ken Burns breath and the parallax; the
       // placeholder has nothing to move.
       data-charter-parallax=""
+      data-charter-effect={effect}
       // Everything below the opening screen waits until it is near the viewport.
+
       loading={image.eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={image.eager ? "high" : "auto"}
@@ -55,7 +61,15 @@ export function Media({
  * The plate: a 16:9 photograph with its credit sitting on a text-shadow rather
  * than on a gradient bar, so nothing dims the image to make type legible.
  */
-export function Plate({ image, index }: { image: CharterImage; index: number }) {
+export function Plate({
+  image,
+  index,
+  effect,
+}: {
+  image: CharterImage;
+  index: number;
+  effect?: "ken-burns";
+}) {
   const { t } = useI18n();
 
   return (
@@ -63,7 +77,8 @@ export function Plate({ image, index }: { image: CharterImage; index: number }) 
       className="charter-plate charter-plate-wide charter-fade"
       style={{ "--charter-i": index } as React.CSSProperties}
     >
-      <Media image={image} />
+      <Media image={image} effect={effect} />
+
       {image.creditKey ? (
         <figcaption className="charter-cred">{t(image.creditKey)}</figcaption>
       ) : null}

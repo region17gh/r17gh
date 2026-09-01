@@ -238,8 +238,21 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
     }
 
     /* Parallax and a slow breath on every photograph. The scale headroom is
-       always larger than the parallax travel, so the frame never shows. */
+       always larger than the parallax travel, so the frame never shows.
+
+       A plate marked data-charter-effect="ken-burns" gets a named effect
+       instead of the shared breath: a slow, continuous zoom-in that runs only
+       while the plate is in view, eased so it never reads as a loop. Time in
+       view is accumulated per element, so leaving and returning resumes rather
+       than restarting. */
+    const KEN_BURNS_MS = 16000;
+    const KEN_BURNS_ZOOM = 0.14;
+    const seen = new WeakMap<HTMLElement, number>();
+    let previous = 0;
+
     function paintParallax(time: number) {
+      const step = previous ? Math.min(time - previous, 64) : 0;
+      previous = time;
       const middle = window.innerHeight / 2;
       for (let i = 0; i < media.length; i++) {
         const element = media[i];
@@ -250,11 +263,24 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
         const distance = (box.top + box.height / 2 - middle) / middle;
         const bleed = host.classList.contains("charter-bleed");
         const base = bleed ? 1.015 : 1.05;
-        const amplitude = bleed ? 0.015 : 0.012;
-        const scale = base + amplitude * Math.sin(time * 0.00008 + i * 2.2);
+        let scale: number;
+
+        if (element.dataset.charterEffect === "ken-burns") {
+          const onscreen = box.bottom > 0 && box.top < window.innerHeight;
+          const elapsed = (seen.get(element) ?? 0) + (onscreen ? step : 0);
+          seen.set(element, Math.min(elapsed, KEN_BURNS_MS));
+          const t = clamp(elapsed / KEN_BURNS_MS, 0, 1);
+          // Ease out: fastest at the start, settling rather than stopping.
+          scale = base + KEN_BURNS_ZOOM * (1 - Math.pow(1 - t, 3));
+        } else {
+          const amplitude = bleed ? 0.015 : 0.012;
+          scale = base + amplitude * Math.sin(time * 0.00008 + i * 2.2);
+        }
+
         element.style.transform = `translateY(${(distance * parallaxTravel).toFixed(1)}px) scale(${scale.toFixed(4)})`;
       }
     }
+
 
     function frame(time: number) {
       const scrolled = window.scrollY || 0;
