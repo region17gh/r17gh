@@ -1151,10 +1151,6 @@
     transform: none !important;
     margin-bottom: var(--space-20);
   }
-  /* The return is a second copy of stanza one; unrolled, it would repeat. */
-  .charter-stanza-return {
-    display: none;
-  }
   .charter-hint {
     display: none;
   }
