@@ -1,39 +1,12 @@
--- places.page_built — whether a place's own page exists and is safe to link to.
---
--- Deliberately NOT depth_slug, and never derived from it. Depth is how far
--- Region 17 has got with the place itself: listed, profiled, partnered.
--- page_built is whether the page a reader would be sent to exists. A partnered
--- place can have no page yet; a listed one can have a page written for it.
--- Two independent facts, kept apart on purpose.
---
--- Defaults false, which is the truthful state for all 277 places today: no
--- route serves a place path yet. The Volta region page reads this through
--- region_payload and shows its not-yet-built state for every district.
---
--- No new write grant. `places` is SELECT-only for anon and authenticated and
--- stays that way; page_built is flipped as service_role, by hand, the same way
--- every other one-off edit to this table already happens. A named setter
--- belongs to the operations console when that exists, not shipped standalone
--- ahead of the thing that would call it.
-
-alter table public.places
-  add column if not exists page_built boolean not null default false;
-
-comment on column public.places.page_built is
-  'Whether this place''s own page is built and safe to navigate to. Independent of depth_slug: a partnered place can have no page, and a listed one can have a page written for it. Never infer either from the other. Do not set true before a route actually serves the place''s url_path, or every reader who follows the link gets a 404.';
-
--- region_payload: emit page_built per district. Additive, so the only other
--- change is the contract string, which the client already accepts at /2 or /3
--- and reads an absent page_built as false.
-
 create or replace function public.region_payload(p_slug text)
- returns jsonb
- language sql
- stable
- set search_path to ''
-as $function$
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
   select jsonb_build_object(
-    'contract', 'region-payload/3',
+    'contract', 'region-payload/2',
     'generated_at', now(),
     'region', (
       select jsonb_build_object(
@@ -80,7 +53,6 @@ as $function$
         'url_path', d.url_path,
         'summary', d.summary,
         'depth', d.depth_slug,
-        'page_built', d.page_built,
         'data_confidence', d.data_confidence,
         'reference_source', d.reference_source,
         'reference_verified', d.reference_verified
@@ -125,4 +97,9 @@ as $function$
       'activity: subscriptions, declarations and engagements not built. No counts are real.'
     )
   );
-$function$;
+$$;
+
+comment on function public.region_payload(text) is
+  'Single source for the region page contract. Runs security invoker so RLS applies: an unpublished or Conflicted place is invisible to anon and authenticated exactly as it is on the page. Keys under not_yet_backed have no table behind them yet and must render as empty, never as placeholder data.';
+
+grant execute on function public.region_payload(text) to anon, authenticated;
