@@ -158,8 +158,10 @@ export function useCharterStage(root: RefObject<HTMLElement | null>, still: bool
         let offset: number;
 
         if (index === 0) {
-          // Stanza one is already on screen at load: it only ever fades out.
-          opacity = local >= 1 ? 0 : local > 0.74 ? (1 - local) / 0.26 : 1;
+          // Stanza one is already on screen at load: it only ever fades out,
+          // and it starts almost immediately, so the first scroll gesture
+          // produces visible movement instead of a full screen of dead track.
+          opacity = local >= 0.5 ? 0 : local > 0.08 ? (0.5 - local) / 0.42 : 1;
           offset = -(1 - opacity) * lift;
         } else if (local <= 0 || local >= 1) {
           opacity = 0;
