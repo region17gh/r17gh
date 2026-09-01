@@ -3255,6 +3255,7 @@ export type Database = {
           depth_slug: string
           is_published: boolean
           name: string
+          page_built: boolean
           reference_source: string | null
           reference_verified: string | null
           slug: string
@@ -3273,6 +3274,7 @@ export type Database = {
           depth_slug?: string
           is_published?: boolean
           name: string
+          page_built?: boolean
           reference_source?: string | null
           reference_verified?: string | null
           slug: string
@@ -3291,6 +3293,7 @@ export type Database = {
           depth_slug?: string
           is_published?: boolean
           name?: string
+          page_built?: boolean
           reference_source?: string | null
           reference_verified?: string | null
           slug?: string
