@@ -42,10 +42,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
 });
 
+/**
+ * The deployment injects the Supabase binding into the server runtime only, so
+ * a browser build can end up with no `VITE_SUPABASE_*` values at all. Reading
+ * the server env during SSR and writing it into the document is what keeps the
+ * browser client constructible. `import.meta.env.SSR` is statically false in
+ * the client bundle, so this branch never ships to the browser.
+ */
+function serverSupabaseConfig(): { url: string; publishableKey: string } | null {
+  if (!import.meta.env.SSR) return null;
+  const url = process.env["SUPABASE_URL"];
+  const publishableKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
+}
+
 function RootShell({ children }: { children: ReactNode }) {
+  const config = serverSupabaseConfig();
+
   return (
     <html lang="en">
       <head>
+        {config ? (
+          <script
+            // Only the publishable (anon) key is written here. It is public by
+            // design and is protected by row level security, not by secrecy.
+            dangerouslySetInnerHTML={{
+              __html: `window.__SUPABASE_RUNTIME_CONFIG__=${JSON.stringify(config)}`,
+            }}
+          />
+        ) : null}
         <HeadContent />
       </head>
       <body>
@@ -55,6 +81,7 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
+
 
 // Keep this root providers-only: canvas preview routes (/__mockup,
 // /__component) render inside it, so any chrome leaks into every frame.
