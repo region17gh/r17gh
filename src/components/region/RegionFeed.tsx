@@ -175,7 +175,7 @@ function FeedCard({ card, onOpen }: { card: MockFeedItem; onOpen?: () => void })
           )}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
 
