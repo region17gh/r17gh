@@ -84,11 +84,43 @@ export interface RegionPayload {
 
 export class RegionPayloadError extends Error {}
 
-export async function fetchRegionPayload(slug: string): Promise<RegionPayload> {
-  const { data, error } = await supabase.rpc("region_payload", { p_slug: slug });
-  if (error) throw new RegionPayloadError(error.message);
+/**
+ * Everything that can go wrong reaching the RPC, as one readable line.
+ *
+ * The call has three failure surfaces and they are easy to confuse from the
+ * outside: the Supabase client can fail to construct at all (a build with no
+ * `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` throws on first use, and
+ * that throw comes out of the property access on `supabase`, not out of the
+ * request); the request itself can fail in the browser (offline, blocked, CORS);
+ * or PostgREST can answer with an error. They land in the same catch and, until
+ * this existed, reached the page as an unlabelled boolean. Naming which surface
+ * failed is the whole difference between reading the cause and guessing at it.
+ */
+function describe(err: unknown): string {
+  if (err instanceof Error) return `${err.name}: ${err.message}`;
+  return String(err);
+}
 
-  const payload = data as unknown as RegionPayload | null;
+export async function fetchRegionPayload(slug: string): Promise<RegionPayload> {
+  let data: unknown;
+  let error: { message: string; code?: string } | null;
+
+  try {
+    ({ data, error } = await supabase.rpc("region_payload", { p_slug: slug }));
+  } catch (err) {
+    // Client construction and transport both throw rather than return `error`.
+    throw new RegionPayloadError(`region_payload could not be called — ${describe(err)}`, {
+      cause: err,
+    });
+  }
+
+  if (error) {
+    throw new RegionPayloadError(
+      `region_payload failed${error.code ? ` (${error.code})` : ""}: ${error.message}`,
+    );
+  }
+
+  const payload = data as RegionPayload | null;
   if (!payload || !payload.region) {
     throw new RegionPayloadError(`region_payload returned no region for "${slug}"`);
   }
