@@ -77,9 +77,9 @@ export function RegionFeed({ regionName }: { regionName: string }) {
                 onClick={() => setFilter(f)}
                 style={{
                   font: "var(--type-ui)",
-                  fontSize: "14.5px",
-                  fontWeight: 500,
-                  minHeight: "48px",
+                  fontSize: "var(--text-body-sm)",
+                  fontWeight: "var(--weight-medium)",
+                  minHeight: "var(--control-lg)",
                   padding: "0 20px",
                   borderRadius: "var(--radius-pill)",
                   cursor: "pointer",
