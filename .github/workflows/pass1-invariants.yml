@@ -101,7 +101,7 @@ env:
   # 0 SKIP / 1 INFO). A PR that adds or removes a harness case must update
   # this number and that line in the same commit -- that is the point of
   # pinning it. Do not "fix" a red build by editing this to match the run.
-  EXPECTED_PASS: "71"
+  EXPECTED_PASS: "83"
 
   # Supabase creates the preview branch when the pull request opens and then
   # provisions a database for it, which takes minutes. This workflow starts on
