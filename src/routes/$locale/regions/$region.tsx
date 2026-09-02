@@ -197,7 +197,7 @@ function RegionPage() {
               fontWeight: 400,
               fontSize: "clamp(64px,8vw,104px)",
               lineHeight: 1.02,
-              letterSpacing: "-0.018em",
+              letterSpacing: "var(--tracking-display)",
               color: "var(--paper-000)",
               margin: "14px 0 0",
             }}
@@ -279,7 +279,7 @@ function RegionPage() {
                 background: `var(${region.ink_token})`,
               }}
             />
-            <span style={{ fontFamily: "var(--font-display)", fontSize: "19px", color: "var(--navy-700)" }}>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-title-3)", color: "var(--navy-700)" }}>
               {region.name}
             </span>
           </span>
