@@ -10,6 +10,8 @@ import {
   ConfidenceFlag,
   Icon,
   Seal,
+  SectionHeader,
+  Statistic,
 } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { useI18n } from "@/i18n";
 import { toDistrictViews } from "@/lib/region/districtView";
