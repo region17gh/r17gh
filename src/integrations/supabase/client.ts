@@ -29,9 +29,33 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 
 /**
+ * The publishable pair, committed to the repository.
+ *
+ * Both values are public by design. The URL is a hostname, and the publishable
+ * key is the browser-side key that row level security exists to constrain --
+ * every table in `public` has RLS enabled, so this key grants exactly what the
+ * policies grant and nothing more. Any build that succeeds already serves both
+ * to every visitor inside the client bundle, so committing them discloses
+ * nothing that loading the site does not.
+ *
+ * They are committed because the deployment is the part that keeps failing.
+ * When the build receives no `VITE_SUPABASE_*` values and the server runtime
+ * receives no `SUPABASE_*` values, every other source below is empty at the
+ * same time and the client throws in the browser -- the failure that reached
+ * production twice. A constant cannot be absent. Environment variables still
+ * take precedence, so local development, preview branches and staging keep
+ * pointing wherever their own configuration says.
+ *
+ * Rotating the publishable key, or moving the app to another project, means
+ * editing these two lines.
+ */
+const COMMITTED_SUPABASE_URL = 'https://idmxottsjqeiatgiudvt.supabase.co';
+const COMMITTED_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_eSSdqR_j7NkOf-1TFIO6Jg_wDrNKCAs';
+
+/**
  * Written into the document head during SSR (see `src/routes/__root.tsx`) so a
  * browser build that received no `VITE_SUPABASE_*` values at build time can
- * still construct a client. Publishable key only.
+ * still pick up whatever the server runtime holds. Publishable key only.
  */
 function runtimeInjectedConfig(): { url?: string; publishableKey?: string } {
   const injected = (globalThis as { __SUPABASE_RUNTIME_CONFIG__?: unknown })
@@ -40,28 +64,33 @@ function runtimeInjectedConfig(): { url?: string; publishableKey?: string } {
   return injected as { url?: string; publishableKey?: string };
 }
 
+/**
+ * `process` is not defined in every browser bundle. Reading it unguarded turns
+ * a merely absent value into a ReferenceError thrown from module scope, which
+ * is a harder failure than the one it was meant to report.
+ */
+function serverEnv(name: string): string | undefined {
+  if (typeof process === 'undefined' || !process.env) return undefined;
+  return process.env[name];
+}
+
 function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering), then to the
-  // SSR-injected runtime config for browsers with no build-time values.
+  // Precedence, most specific first: the value Vite substitutes at build time,
+  // the server runtime's own value during SSR, the value SSR wrote into the
+  // document for the browser, and finally the committed pair above -- which is
+  // always present, so a deployment that injects nothing still produces a
+  // working client rather than a thrown error.
   const injected = runtimeInjectedConfig();
   const SUPABASE_URL =
-    import.meta.env['VITE_SUPABASE_URL'] || process.env['SUPABASE_URL'] || injected.url;
+    import.meta.env['VITE_SUPABASE_URL'] ||
+    serverEnv('SUPABASE_URL') ||
+    injected.url ||
+    COMMITTED_SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] ||
-    process.env['SUPABASE_PUBLISHABLE_KEY'] ||
-    injected.publishableKey;
-
-
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
-  }
+    serverEnv('SUPABASE_PUBLISHABLE_KEY') ||
+    injected.publishableKey ||
+    COMMITTED_SUPABASE_PUBLISHABLE_KEY;
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
@@ -85,4 +114,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-
