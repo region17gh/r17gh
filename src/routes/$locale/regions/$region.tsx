@@ -340,48 +340,54 @@ function RegionPage() {
             gap: "var(--space-6)",
           }}
         >
-          <Glance
+          <Statistic
             value={String(districts.length)}
             label={t("region.glance.districts")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(region.data_confidence)}
+            confidence={confidenceLevel(region.data_confidence)}
             source={region.reference_source}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={String(zoneCount)}
             label={t("region.glance.zones")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(region.data_confidence)}
+            confidence={confidenceLevel(region.data_confidence)}
             source={region.reference_source}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={region.capital ?? "—"}
             label={t("region.glance.capital")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(region.data_confidence)}
+            confidence={confidenceLevel(region.data_confidence)}
             source={region.reference_source}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={String(payload.priority_sectors.length)}
             label={t("region.glance.sectors")}
             year={payload.priority_sectors[0]?.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(payload.priority_sectors[0]?.data_confidence)}
+            confidence={confidenceLevel(payload.priority_sectors[0]?.data_confidence)}
             source={payload.priority_sectors[0]?.reference_source ?? null}
+            size="sm"
           />
           {/* Mock: no registry counts are derived from rows yet. */}
-          <Glance
+          <Statistic
             value={MOCK_GLANCE.membersWatching}
             label={t("region.glance.watching")}
             year={MOCK_GLANCE.year}
-            level="estimate"
+            confidence="estimate"
             source={t("region.glance.mockSource")}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={MOCK_GLANCE.postingsOpen}
             label={t("region.glance.postings")}
             year={MOCK_GLANCE.year}
-            level="estimate"
+            confidence="estimate"
             source={t("region.glance.mockSource")}
+            size="sm"
           />
         </div>
       </div>
