@@ -133,17 +133,7 @@ export function RegionFeed({ regionName }: { regionName: string }) {
 function FeedCard({ card, onOpen }: { card: MockFeedItem; onOpen?: () => void }) {
   const { t } = useI18n();
   return (
-    <article
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        border: "1px solid var(--border-hairline)",
-        borderRadius: "var(--radius-card)",
-        background: "var(--surface-card)",
-        overflow: "hidden",
-      }}
-    >
+    <Card elevation={0} padding="none" style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       <PhotoSlot brief={card.imageHint} style={{ height: "180px", border: "none" }} />
       <div
         style={{
