@@ -403,23 +403,12 @@ function RegionPage() {
         style={{ borderTop: "1px solid var(--border-hairline)", padding: "var(--space-20) 0" }}
       >
         <div className="r17-region-width" style={{ padding: "0 var(--gutter-lg)" }}>
-          <Eyebrow>{t("region.reciprocal.eyebrow", { region: region.name })}</Eyebrow>
-          <h2
+          <SectionHeader
+            eyebrow={t("region.reciprocal.eyebrow", { region: region.name })}
+            title={t("region.reciprocal.heading")}
+            lede={t("region.reciprocal.lede")}
             id="toyou-heading"
-            style={{ font: "var(--type-section)", fontSize: "44px", color: "var(--text-strong)", margin: "14px 0 0" }}
-          >
-            {t("region.reciprocal.heading")}
-          </h2>
-          <p
-            style={{
-              font: "var(--type-body-lg)",
-              color: "var(--text-body)",
-              margin: "var(--space-4) 0 0",
-              maxWidth: "var(--measure-prose)",
-            }}
-          >
-            {t("region.reciprocal.lede")}
-          </p>
+          />
         </div>
         <ul className="r17-region-width-wide r17-card-grid" style={{ marginTop: "var(--space-10)" }}>
           {MOCK_RECIPROCAL.map((item) => (
