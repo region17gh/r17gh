@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { Badge } from "@/design-system/region-17-ghana-design-system-e3e62f";
+import { Badge, SectionHeader } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { useI18n } from "@/i18n";
 import {
   groupByZone,
