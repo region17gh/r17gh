@@ -345,7 +345,7 @@ function RegionPage() {
             label={t("region.glance.districts")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
             confidence={confidenceLevel(region.data_confidence)}
-            source={region.reference_source}
+            source={region.reference_source ?? undefined}
             size="sm"
           />
           <Statistic
@@ -353,7 +353,7 @@ function RegionPage() {
             label={t("region.glance.zones")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
             confidence={confidenceLevel(region.data_confidence)}
-            source={region.reference_source}
+            source={region.reference_source ?? undefined}
             size="sm"
           />
           <Statistic
@@ -361,7 +361,7 @@ function RegionPage() {
             label={t("region.glance.capital")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
             confidence={confidenceLevel(region.data_confidence)}
-            source={region.reference_source}
+            source={region.reference_source ?? undefined}
             size="sm"
           />
           <Statistic
@@ -369,7 +369,7 @@ function RegionPage() {
             label={t("region.glance.sectors")}
             year={payload.priority_sectors[0]?.reference_verified?.slice(0, 4) ?? ""}
             confidence={confidenceLevel(payload.priority_sectors[0]?.data_confidence)}
-            source={payload.priority_sectors[0]?.reference_source ?? null}
+            source={payload.priority_sectors[0]?.reference_source ?? undefined}
             size="sm"
           />
           {/* Mock: no registry counts are derived from rows yet. */}
