@@ -78,35 +78,60 @@ function RegionPage() {
   const { t, locale } = useI18n();
   const { region: regionSlug } = Route.useParams();
   const [payload, setPayload] = useState<RegionPayload | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [following, setFollowing] = useState(false);
 
   useEffect(() => {
     let live = true;
     setPayload(null);
-    setFailed(false);
+    setFailure(null);
     void fetchRegionPayload(regionSlug)
       .then((p) => {
         if (live) setPayload(p);
       })
-      .catch(() => {
-        if (live) setFailed(true);
+      .catch((err: unknown) => {
+        // Say it out loud. This screen used to be reachable with nothing in the
+        // console behind it, which made a build-configuration problem and a
+        // database problem look identical from a phone. Whoever opens devtools
+        // on a failed region page should find the cause already written down.
+        console.error(`[region] ${regionSlug}: region payload failed to load`, err);
+        if (live) setFailure(err instanceof Error ? err.message : String(err));
       });
     return () => {
       live = false;
     };
-  }, [regionSlug]);
+  }, [regionSlug, attempt]);
 
   const districts = useMemo(
     () => (payload ? toDistrictViews(payload.districts) : []),
     [payload],
   );
 
-  if (failed) {
+  if (failure !== null) {
     return (
       <main style={{ padding: "var(--space-20) var(--gutter)", textAlign: "center" }}>
         <p className="r17-notice" role="alert">
           {t("region.loadFailed")}
+        </p>
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
+            {t("region.loadRetry")}
+          </Button>
+        </div>
+        {/* The reason, in the page rather than only in the console: the reader
+            who reports this is on a phone and cannot open devtools, and the
+            first line of it is usually the whole diagnosis. */}
+        <p
+          style={{
+            margin: "var(--space-6) auto 0",
+            maxWidth: "68ch",
+            font: "var(--type-meta)",
+            color: "var(--text-muted)",
+            wordBreak: "break-word",
+          }}
+        >
+          {failure}
         </p>
       </main>
     );

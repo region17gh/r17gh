@@ -534,6 +534,7 @@
   },
   "region": {
     "loadFailed": "This region page could not be loaded. Reload the page, or try again shortly.",
+    "loadRetry": "Try again",
     "follow": "Follow {region}",
     "following": "Following",
     "hero": {
