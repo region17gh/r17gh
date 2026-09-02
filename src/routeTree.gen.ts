@@ -23,7 +23,6 @@ import { Route as LocaleSigninRouteImport } from './routes/$locale/signin'
 import { Route as LocaleHomeRouteImport } from './routes/$locale/home'
 import { Route as LocaleDeclareRouteImport } from './routes/$locale/declare'
 import { Route as LocaleJoinIndexRouteImport } from './routes/$locale/join/index'
-import { Route as ApiPublicEnvCheckRouteImport } from './routes/api/public/env-check'
 import { Route as Char91__mockupChar93PreviewSplatRouteImport } from './routes/[__mockup].preview.$'
 import { Route as Char91__componentChar93PreviewSplatRouteImport } from './routes/[__component].preview.$'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -103,11 +102,6 @@ const LocaleJoinIndexRoute = LocaleJoinIndexRouteImport.update({
   path: '/join/',
   getParentRoute: () => LocaleRouteRoute,
 } as any)
-const ApiPublicEnvCheckRoute = ApiPublicEnvCheckRouteImport.update({
-  id: '/api/public/env-check',
-  path: '/api/public/env-check',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const Char91__mockupChar93PreviewSplatRoute =
   Char91__mockupChar93PreviewSplatRouteImport.update({
     id: '/__mockup/preview/$',
@@ -162,7 +156,6 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
   '/__mockup/preview/$': typeof Char91__mockupChar93PreviewSplatRoute
-  '/api/public/env-check': typeof ApiPublicEnvCheckRoute
   '/$locale/join/': typeof LocaleJoinIndexRoute
 }
 export interface FileRoutesByTo {
@@ -184,7 +177,6 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
   '/__mockup/preview/$': typeof Char91__mockupChar93PreviewSplatRoute
-  '/api/public/env-check': typeof ApiPublicEnvCheckRoute
   '/$locale/join': typeof LocaleJoinIndexRoute
 }
 export interface FileRoutesById {
@@ -208,7 +200,6 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/__component/preview/$': typeof Char91__componentChar93PreviewSplatRoute
   '/__mockup/preview/$': typeof Char91__mockupChar93PreviewSplatRoute
-  '/api/public/env-check': typeof ApiPublicEnvCheckRoute
   '/$locale/join/': typeof LocaleJoinIndexRoute
 }
 export interface FileRouteTypes {
@@ -233,7 +224,6 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
     | '/__mockup/preview/$'
-    | '/api/public/env-check'
     | '/$locale/join/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -255,7 +245,6 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
     | '/__mockup/preview/$'
-    | '/api/public/env-check'
     | '/$locale/join'
   id:
     | '__root__'
@@ -278,7 +267,6 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/__component/preview/$'
     | '/__mockup/preview/$'
-    | '/api/public/env-check'
     | '/$locale/join/'
   fileRoutesById: FileRoutesById
 }
@@ -295,7 +283,6 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   Char91__componentChar93PreviewSplatRoute: typeof Char91__componentChar93PreviewSplatRoute
   Char91__mockupChar93PreviewSplatRoute: typeof Char91__mockupChar93PreviewSplatRoute
-  ApiPublicEnvCheckRoute: typeof ApiPublicEnvCheckRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -398,13 +385,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleJoinIndexRouteImport
       parentRoute: typeof LocaleRouteRoute
     }
-    '/api/public/env-check': {
-      id: '/api/public/env-check'
-      path: '/api/public/env-check'
-      fullPath: '/api/public/env-check'
-      preLoaderRoute: typeof ApiPublicEnvCheckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/__mockup/preview/$': {
       id: '/__mockup/preview/$'
       path: '/__mockup/preview/$'
@@ -491,7 +471,6 @@ const rootRouteChildren: RootRouteChildren = {
   Char91__componentChar93PreviewSplatRoute:
     Char91__componentChar93PreviewSplatRoute,
   Char91__mockupChar93PreviewSplatRoute: Char91__mockupChar93PreviewSplatRoute,
-  ApiPublicEnvCheckRoute: ApiPublicEnvCheckRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
