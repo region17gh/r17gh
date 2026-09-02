@@ -10,6 +10,8 @@ import {
   ConfidenceFlag,
   Icon,
   Seal,
+  SectionHeader,
+  Statistic,
 } from "@/design-system/region-17-ghana-design-system-e3e62f";
 import { useI18n } from "@/i18n";
 import { toDistrictViews } from "@/lib/region/districtView";
@@ -338,48 +340,54 @@ function RegionPage() {
             gap: "var(--space-6)",
           }}
         >
-          <Glance
+          <Statistic
             value={String(districts.length)}
             label={t("region.glance.districts")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(region.data_confidence)}
-            source={region.reference_source}
+            confidence={confidenceLevel(region.data_confidence)}
+            source={region.reference_source ?? undefined}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={String(zoneCount)}
             label={t("region.glance.zones")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(region.data_confidence)}
-            source={region.reference_source}
+            confidence={confidenceLevel(region.data_confidence)}
+            source={region.reference_source ?? undefined}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={region.capital ?? "—"}
             label={t("region.glance.capital")}
             year={region.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(region.data_confidence)}
-            source={region.reference_source}
+            confidence={confidenceLevel(region.data_confidence)}
+            source={region.reference_source ?? undefined}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={String(payload.priority_sectors.length)}
             label={t("region.glance.sectors")}
             year={payload.priority_sectors[0]?.reference_verified?.slice(0, 4) ?? ""}
-            level={confidenceLevel(payload.priority_sectors[0]?.data_confidence)}
-            source={payload.priority_sectors[0]?.reference_source ?? null}
+            confidence={confidenceLevel(payload.priority_sectors[0]?.data_confidence)}
+            source={payload.priority_sectors[0]?.reference_source ?? undefined}
+            size="sm"
           />
           {/* Mock: no registry counts are derived from rows yet. */}
-          <Glance
+          <Statistic
             value={MOCK_GLANCE.membersWatching}
             label={t("region.glance.watching")}
             year={MOCK_GLANCE.year}
-            level="estimate"
+            confidence="estimate"
             source={t("region.glance.mockSource")}
+            size="sm"
           />
-          <Glance
+          <Statistic
             value={MOCK_GLANCE.postingsOpen}
             label={t("region.glance.postings")}
             year={MOCK_GLANCE.year}
-            level="estimate"
+            confidence="estimate"
             source={t("region.glance.mockSource")}
+            size="sm"
           />
         </div>
       </div>
@@ -395,23 +403,12 @@ function RegionPage() {
         style={{ borderTop: "1px solid var(--border-hairline)", padding: "var(--space-20) 0" }}
       >
         <div className="r17-region-width" style={{ padding: "0 var(--gutter-lg)" }}>
-          <Eyebrow>{t("region.reciprocal.eyebrow", { region: region.name })}</Eyebrow>
-          <h2
+          <SectionHeader
+            eyebrow={t("region.reciprocal.eyebrow", { region: region.name })}
+            title={t("region.reciprocal.heading")}
+            lede={t("region.reciprocal.lede")}
             id="toyou-heading"
-            style={{ font: "var(--type-section)", fontSize: "44px", color: "var(--text-strong)", margin: "14px 0 0" }}
-          >
-            {t("region.reciprocal.heading")}
-          </h2>
-          <p
-            style={{
-              font: "var(--type-body-lg)",
-              color: "var(--text-body)",
-              margin: "var(--space-4) 0 0",
-              maxWidth: "var(--measure-prose)",
-            }}
-          >
-            {t("region.reciprocal.lede")}
-          </p>
+          />
         </div>
         <ul className="r17-region-width-wide r17-card-grid" style={{ marginTop: "var(--space-10)" }}>
           {MOCK_RECIPROCAL.map((item) => (
@@ -480,28 +477,13 @@ function RegionPage() {
         <div className="r17-region-width" style={{ padding: "var(--space-20) var(--gutter-lg)" }}>
           <div className="r17-building-grid">
             <div>
-              <Eyebrow inverse>{t("region.building.eyebrow", { region: region.name })}</Eyebrow>
-              <h2
+              <SectionHeader
+                eyebrow={t("region.building.eyebrow", { region: region.name })}
+                title={t("region.building.heading")}
+                lede={t("region.building.lede")}
+                inverse
                 id="building-heading"
-                style={{
-                  font: "var(--type-section)",
-                  fontSize: "44px",
-                  color: "var(--text-on-inverse)",
-                  margin: "14px 0 0",
-                }}
-              >
-                {t("region.building.heading")}
-              </h2>
-              <p
-                style={{
-                  font: "var(--type-body-lg)",
-                  color: "var(--navy-100)",
-                  margin: "var(--space-4) 0 0",
-                  maxWidth: "var(--measure-prose)",
-                }}
-              >
-                {t("region.building.lede")}
-              </p>
+              />
               {payload.priority_sectors[0] ? (
                 <div
                   style={{
@@ -965,46 +947,3 @@ function Eyebrow({ children, inverse }: { children: React.ReactNode; inverse?: b
   );
 }
 
-function Glance({
-  value,
-  label,
-  year,
-  level,
-  source,
-}: {
-  value: string;
-  label: string;
-  year: string;
-  level: "verified" | "estimate" | "projected" | "disputed";
-  source: string | null;
-}) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <span style={{ font: "var(--type-figure)", fontSize: "26px", color: "var(--navy-700)" }}>{value}</span>
-      <span style={{ font: "var(--type-ui)", fontSize: "14px", color: "var(--text-body)" }}>{label}</span>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap" }}>
-        {year ? (
-          <span className="r17-cite" style={{ color: "var(--text-cite)" }}>
-            {year}
-          </span>
-        ) : null}
-        <ConfidenceFlag level={level} compact />
-        {source ? (
-          <span
-            className="r17-cite"
-            title={source}
-            style={{
-              color: "var(--text-faint)",
-              maxWidth: "18ch",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {source}
-          </span>
-        ) : null}
-      </span>
-    </div>
-  );
-}
