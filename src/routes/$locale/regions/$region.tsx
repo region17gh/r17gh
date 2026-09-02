@@ -477,28 +477,13 @@ function RegionPage() {
         <div className="r17-region-width" style={{ padding: "var(--space-20) var(--gutter-lg)" }}>
           <div className="r17-building-grid">
             <div>
-              <Eyebrow inverse>{t("region.building.eyebrow", { region: region.name })}</Eyebrow>
-              <h2
+              <SectionHeader
+                eyebrow={t("region.building.eyebrow", { region: region.name })}
+                title={t("region.building.heading")}
+                lede={t("region.building.lede")}
+                inverse
                 id="building-heading"
-                style={{
-                  font: "var(--type-section)",
-                  fontSize: "44px",
-                  color: "var(--text-on-inverse)",
-                  margin: "14px 0 0",
-                }}
-              >
-                {t("region.building.heading")}
-              </h2>
-              <p
-                style={{
-                  font: "var(--type-body-lg)",
-                  color: "var(--navy-100)",
-                  margin: "var(--space-4) 0 0",
-                  maxWidth: "var(--measure-prose)",
-                }}
-              >
-                {t("region.building.lede")}
-              </p>
+              />
               {payload.priority_sectors[0] ? (
                 <div
                   style={{
