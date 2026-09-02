@@ -97,6 +97,8 @@ DECLARE
   tmp text;
   cnt integer;
   t text;
+  blocked boolean;
+  sqlst text;
 BEGIN
   -- [service_role] fixtures: every number_reservations row the whole harness
   -- needs. number_reservations has RLS enabled with NO POLICIES at all --
@@ -814,6 +816,258 @@ BEGIN
   ELSE
     log := log || E'\nPASS  reserve_test_member_number is service_role only';
   END IF;
+
+
+  -- 17. D-078 reserved-slug guard --------------------------------------------
+  -- Merged from pass1_invariants_section_D078.sql. The guard is 20260902203812
+  -- plus its completions migration 20260902204231, both already applied to
+  -- production. This is the regression guard going forward.
+  --
+  -- Three changes were made to the handed-over section, each because the
+  -- assertion as written did not test the thing it named. All three are the
+  -- recurring bug shape this file's header describes, and this is the fifth
+  -- instance:
+  --
+  --   a. It lived in standalone `do $$` blocks appended after
+  --      `SELECT pg_temp.run_register_invariants();`. CI runs this file with
+  --      `-v ON_ERROR_STOP=1`, and that SELECT always ends in a RAISE, so psql
+  --      stops there. Anything below it never executes. Twelve assertions
+  --      would have reported nothing while the build went green. Folded into
+  --      the harness function instead, ahead of the closing RAISE, which also
+  --      makes their results count: the workflow's verdict is a grep for
+  --      PASS and FAIL lines against a pinned EXPECTED_PASS, and a
+  --      `raise notice` line matches neither.
+  --
+  --   b. D078.3 and D078.4 omitted `places.name`, which is NOT NULL with no
+  --      default. PostgreSQL checks NOT NULL before CHECK, so both inserts
+  --      raised 23502 and never reached the slug constraints they exist to
+  --      prove. Confirmed by probe against production on 2026-09-02:
+  --      sqlstate 23502 without `name`, 23514 with it. Worse than a false
+  --      pass, `when check_violation` does not catch 23502, so both would
+  --      have aborted the whole run. `name` is now supplied.
+  --
+  --   c. D078.9, D078.10 and D078.11 ran under whatever role was current.
+  --      `places` has RLS with a single `places_select_published` SELECT
+  --      policy, and exactly one row is unpublished: `agotime`, at
+  --      `traditional/agotime`. That row is the only reason the synthetic
+  --      root `traditional` exists, so D078.11 -- the assertion written
+  --      specifically to catch an unreserved synthetic root -- could not see
+  --      the case it was built for and would have passed vacuously forever.
+  --      All three now run as service_role, and that is the point of them.
+  --
+  -- Role discipline is otherwise unchanged: the guard is a trigger, not RLS,
+  -- so it must fire identically under service_role and authenticated, and
+  -- both are asserted.
+
+  -- D078.1  A reserved word is rejected as a place slug (service_role).
+  PERFORM set_config('role', 'service_role', true);
+  blocked := false;
+  BEGIN
+    INSERT INTO public.places (slug, type_slug, url_path, name, depth_slug)
+    VALUES ('programs', 'district', 'volta/programs', 'Harness probe', 'listed');
+  EXCEPTION WHEN check_violation THEN
+    blocked := true;
+  END;
+  IF blocked THEN
+    log := log || E'\nPASS  D078.1 reserved slug refused as service_role';
+  ELSE
+    log := log || E'\nFAIL  D078.1 reserved slug accepted as service_role';
+  END IF;
+
+  -- D078.2  Same rejection under authenticated.
+  -- `when others` rather than `when check_violation`, and the sqlstate is
+  -- recorded rather than assumed: authenticated is stopped by RLS (42501)
+  -- before the trigger is ever consulted, so this proves the write is refused,
+  -- not which mechanism refused it. D078.1 is what proves the guard fires.
+  PERFORM set_config('role', 'authenticated', true);
+  blocked := false;
+  sqlst := NULL;
+  BEGIN
+    INSERT INTO public.places (slug, type_slug, url_path, name, depth_slug)
+    VALUES ('settings', 'district', 'volta/settings', 'Harness probe', 'listed');
+  EXCEPTION WHEN others THEN
+    GET STACKED DIAGNOSTICS sqlst = RETURNED_SQLSTATE;
+    blocked := true;
+  END;
+  IF blocked THEN
+    log := log || E'\nPASS  D078.2 reserved slug refused as authenticated (sqlstate ' || sqlst || ')';
+  ELSE
+    log := log || E'\nFAIL  D078.2 reserved slug accepted as authenticated';
+  END IF;
+
+  -- D078.3  A two-character slug is rejected, protecting locale prefixes.
+  -- The constraint name is asserted, not just the error class: `url_path` and
+  -- `slug` both carry format checks, and a probe that trips the wrong one
+  -- still raises 23514 and still reads as a pass.
+  PERFORM set_config('role', 'service_role', true);
+  blocked := false;
+  sqlst := NULL;
+  BEGIN
+    INSERT INTO public.places (slug, type_slug, url_path, name, depth_slug)
+    VALUES ('fr', 'district', 'volta/fr', 'Harness probe', 'listed');
+  EXCEPTION WHEN check_violation THEN
+    GET STACKED DIAGNOSTICS sqlst = CONSTRAINT_NAME;
+    blocked := true;
+  END;
+  IF blocked AND sqlst = 'places_slug_min_length_chk' THEN
+    log := log || E'\nPASS  D078.3 two-character slug refused by places_slug_min_length_chk';
+  ELSIF blocked THEN
+    log := log || E'\nFAIL  D078.3 two-character slug refused, but by ' || coalesce(sqlst, '(a trigger)') || ', not the length check';
+  ELSE
+    log := log || E'\nFAIL  D078.3 two-character slug accepted';
+  END IF;
+
+  -- D078.4  A malformed slug is rejected.
+  -- `url_path` is kept legal on purpose so the slug format check is what
+  -- fires. The original probe used `volta/Ho_Municipal`, which violates
+  -- places_url_path_format as well and would have reported a pass whether or
+  -- not the slug was ever examined.
+  blocked := false;
+  sqlst := NULL;
+  BEGIN
+    INSERT INTO public.places (slug, type_slug, url_path, name, depth_slug)
+    VALUES ('Ho_Municipal', 'district', 'volta/ho-municipal-harness-probe', 'Harness probe', 'listed');
+  EXCEPTION WHEN check_violation THEN
+    GET STACKED DIAGNOSTICS sqlst = CONSTRAINT_NAME;
+    blocked := true;
+  END;
+  IF blocked AND sqlst IN ('places_slug_format', 'places_slug_format_chk') THEN
+    log := log || E'\nPASS  D078.4 malformed slug refused by ' || sqlst;
+  ELSIF blocked THEN
+    log := log || E'\nFAIL  D078.4 malformed slug refused, but by ' || coalesce(sqlst, '(a trigger)') || ', not a slug format check';
+  ELSE
+    log := log || E'\nFAIL  D078.4 malformed slug accepted';
+  END IF;
+
+  -- D078.5  Renaming a live place onto a reserved word is rejected.
+  -- The guard trigger is `before insert or update of slug`, so an UPDATE path
+  -- exercises a different code path from D078.1 and is worth its own case.
+  --
+  -- The target row's existence is checked first, and is not incidental. A
+  -- zero-row UPDATE raises nothing and succeeds trivially, so without this
+  -- check a missing `adaklu` would leave `blocked` false and report a guard
+  -- failure that never happened -- bug shape 3 from this file's header, the
+  -- one sections 8 and 9 were originally written with. The two outcomes are
+  -- reported separately so a rename of the fixture can never be read as the
+  -- guard breaking.
+  SELECT count(*) INTO cnt FROM public.places WHERE slug = 'adaklu';
+  IF cnt <> 1 THEN
+    log := log || E'\nFAIL  D078.5 fixture place `adaklu` is missing, so the rename case did not run';
+  ELSE
+    blocked := false;
+    BEGIN
+      UPDATE public.places SET slug = 'events' WHERE slug = 'adaklu';
+    EXCEPTION WHEN check_violation THEN
+      blocked := true;
+    END;
+    IF blocked THEN
+      log := log || E'\nPASS  D078.5 rename onto a reserved word refused';
+    ELSE
+      log := log || E'\nFAIL  D078.5 rename onto a reserved word accepted';
+    END IF;
+  END IF;
+
+  -- D078.6  Reserving a word a live place already occupies is rejected.
+  -- The other half of the bidirectional guard. Without it, whichever side is
+  -- written second is the only one enforced.
+  blocked := false;
+  BEGIN
+    INSERT INTO public.reserved_slugs (word, reason)
+    VALUES ('volta', 'should never be accepted');
+  EXCEPTION WHEN check_violation THEN
+    blocked := true;
+  END;
+  IF blocked THEN
+    log := log || E'\nPASS  D078.6 reserving a word held by a live place refused';
+  ELSE
+    log := log || E'\nFAIL  D078.6 reserved a word held by a live place';
+  END IF;
+
+  -- D078.7  Reference data reads under authenticated and anon.
+  -- The trigger function is SECURITY INVOKER and reads reserved_slugs, so a
+  -- role that cannot see the table would sail straight past the guard.
+  PERFORM set_config('role', 'authenticated', true);
+  SELECT count(*) INTO cnt FROM public.reserved_slugs;
+  IF cnt > 0 THEN
+    log := log || E'\nPASS  D078.7 reserved_slugs readable as authenticated (' || cnt || ' words)';
+  ELSE
+    log := log || E'\nFAIL  D078.7 reserved_slugs unreadable as authenticated';
+  END IF;
+
+  PERFORM set_config('role', 'anon', true);
+  SELECT count(*) INTO cnt FROM public.reserved_slugs;
+  IF cnt > 0 THEN
+    log := log || E'\nPASS  D078.7 reserved_slugs readable as anon (' || cnt || ' words)';
+  ELSE
+    log := log || E'\nFAIL  D078.7 reserved_slugs unreadable as anon';
+  END IF;
+
+  -- D078.8  authenticated cannot write reference data.
+  -- reserved_slugs has RLS on and deliberately no insert/update/delete policy.
+  PERFORM set_config('role', 'authenticated', true);
+  blocked := false;
+  sqlst := NULL;
+  BEGIN
+    INSERT INTO public.reserved_slugs (word, reason)
+    VALUES ('somethingnew', 'should never be accepted');
+  EXCEPTION WHEN others THEN
+    GET STACKED DIAGNOSTICS sqlst = RETURNED_SQLSTATE;
+    blocked := true;
+  END;
+  IF blocked THEN
+    log := log || E'\nPASS  D078.8 authenticated cannot write reserved_slugs (sqlstate ' || sqlst || ')';
+  ELSE
+    log := log || E'\nFAIL  D078.8 authenticated wrote to reserved_slugs';
+  END IF;
+
+  -- [service_role] for the three census assertions below. This is not
+  -- convenience: `places` has RLS with a single published-only SELECT policy,
+  -- and the one unpublished row is `agotime` at `traditional/agotime` -- the
+  -- only row that creates a synthetic root at all. Run as authenticated,
+  -- D078.11 cannot see the case it exists to catch.
+  PERFORM set_config('role', 'service_role', true);
+
+  -- D078.9  No live place currently collides with the reserved namespace.
+  SELECT count(*) INTO cnt
+    FROM public.places p
+    JOIN public.reserved_slugs r ON r.word = lower(p.slug);
+  IF cnt = 0 THEN
+    log := log || E'\nPASS  D078.9 no live place collides with a reserved word';
+  ELSE
+    log := log || E'\nFAIL  D078.9 ' || cnt || ' live place(s) collide with a reserved word';
+  END IF;
+
+  -- D078.10  url_path stays locale-free. No stored path may carry a prefix.
+  -- D-078 produces the prefix at render time in localePath(). Storing one
+  -- would mean re-seeding every row for each new language.
+  SELECT count(*) INTO cnt
+    FROM public.places
+   WHERE url_path ~ '^[a-z]{2}(-[a-z]{2})?/';
+  IF cnt = 0 THEN
+    log := log || E'\nPASS  D078.10 no url_path carries a locale prefix';
+  ELSE
+    log := log || E'\nFAIL  D078.10 ' || cnt || ' url_path(s) carry a locale prefix; the prefix is a render concern and must never be stored';
+  END IF;
+
+  -- D078.11  Every synthetic root segment is reserved.
+  -- A url_path root that is not itself a place slug (currently `traditional`,
+  -- which fronts agotime at traditional/agotime) has no row protecting it. If
+  -- it is not in reserved_slugs, a future place can take that slug and shadow
+  -- the whole subtree. This fails automatically the next time someone
+  -- introduces a synthetic root without reserving it, which is exactly how
+  -- the original seed missed `traditional`.
+  SELECT string_agg(root, ', ') INTO t
+    FROM (SELECT DISTINCT split_part(url_path, '/', 1) AS root FROM public.places) roots
+   WHERE NOT EXISTS (SELECT 1 FROM public.places p WHERE p.slug = roots.root)
+     AND NOT EXISTS (SELECT 1 FROM public.reserved_slugs r WHERE r.word = roots.root);
+  IF t IS NULL THEN
+    log := log || E'\nPASS  D078.11 every synthetic url_path root is reserved';
+  ELSE
+    log := log || E'\nFAIL  D078.11 synthetic url_path root(s) not reserved: ' || t;
+  END IF;
+
+  -- Back to the file's default role.
+  PERFORM set_config('role', 'authenticated', true);
 
   ----------------------------------------------------------------------------
   -- Always abort. The results ride out on the exception message.
