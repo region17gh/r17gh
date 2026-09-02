@@ -105,34 +105,12 @@ export function DistrictExplorer({
         transition: "width 220ms cubic-bezier(.2,0,.2,1)",
       }}
     >
-      <span
-        className="r17-eyebrow"
-        style={{
-          color: "var(--gold-700)",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "10px",
-        }}
-      >
-        <span style={{ width: "28px", height: "2px", background: "var(--gold-500)", display: "inline-block" }} />
-        {t("region.explore.eyebrow", { region: regionName })}
-      </span>
-      <h2
+      <SectionHeader
+        eyebrow={t("region.explore.eyebrow", { region: regionName })}
+        title={t("region.explore.heading", { districts: districts.length, zones: zonesPresent.length })}
+        lede={t("region.explore.lede")}
         id="explore-heading"
-        style={{ font: "var(--type-section)", fontSize: "44px", color: "var(--text-strong)", margin: "14px 0 0" }}
-      >
-        {t("region.explore.heading", { districts: districts.length, zones: zonesPresent.length })}
-      </h2>
-      <p
-        style={{
-          font: "var(--type-body-lg)",
-          color: "var(--text-body)",
-          margin: "var(--space-4) 0 0",
-          maxWidth: "var(--measure-prose)",
-        }}
-      >
-        {t("region.explore.lede")}
-      </p>
+      />
 
       <div
         role="group"
