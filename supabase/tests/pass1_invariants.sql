@@ -942,16 +942,29 @@ BEGIN
   -- D078.5  Renaming a live place onto a reserved word is rejected.
   -- The guard trigger is `before insert or update of slug`, so an UPDATE path
   -- exercises a different code path from D078.1 and is worth its own case.
-  blocked := false;
-  BEGIN
-    UPDATE public.places SET slug = 'events' WHERE slug = 'adaklu';
-  EXCEPTION WHEN check_violation THEN
-    blocked := true;
-  END;
-  IF blocked THEN
-    log := log || E'\nPASS  D078.5 rename onto a reserved word refused';
+  --
+  -- The target row's existence is checked first, and is not incidental. A
+  -- zero-row UPDATE raises nothing and succeeds trivially, so without this
+  -- check a missing `adaklu` would leave `blocked` false and report a guard
+  -- failure that never happened -- bug shape 3 from this file's header, the
+  -- one sections 8 and 9 were originally written with. The two outcomes are
+  -- reported separately so a rename of the fixture can never be read as the
+  -- guard breaking.
+  SELECT count(*) INTO cnt FROM public.places WHERE slug = 'adaklu';
+  IF cnt <> 1 THEN
+    log := log || E'\nFAIL  D078.5 fixture place `adaklu` is missing, so the rename case did not run';
   ELSE
-    log := log || E'\nFAIL  D078.5 rename onto a reserved word accepted';
+    blocked := false;
+    BEGIN
+      UPDATE public.places SET slug = 'events' WHERE slug = 'adaklu';
+    EXCEPTION WHEN check_violation THEN
+      blocked := true;
+    END;
+    IF blocked THEN
+      log := log || E'\nPASS  D078.5 rename onto a reserved word refused';
+    ELSE
+      log := log || E'\nFAIL  D078.5 rename onto a reserved word accepted';
+    END IF;
   END IF;
 
   -- D078.6  Reserving a word a live place already occupies is rejected.
