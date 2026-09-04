@@ -602,6 +602,39 @@ describe("the challenge that stands in front of a member number", () => {
     expect(widget).toContain("import.meta.env.DEV");
   });
 
+  test("a production build cannot ship without a site key", () => {
+    // The failure this catches has reached production twice: `.env` stopped
+    // being tracked (295bae4), the build received no VITE_TURNSTILE_SITE_KEY,
+    // the widget was never rendered, and every visitor to /join/register was
+    // shown the unavailable notice on load. The deployment injects nothing
+    // into the build, so the key cannot depend on an environment variable
+    // alone. A constant cannot be absent.
+    const contract = readSource("src/lib/security/turnstile.ts");
+    expect(contract).toMatch(/const COMMITTED_TURNSTILE_SITE_KEY = "0x[A-Za-z0-9_-]+"/);
+    // The environment still takes precedence, and development still falls
+    // through to the empty string so the stub keeps working.
+    const resolution = contract.slice(contract.indexOf("export const TURNSTILE_SITE_KEY"));
+    expect(resolution).toContain('import.meta.env["VITE_TURNSTILE_SITE_KEY"]');
+    expect(resolution).toContain("COMMITTED_TURNSTILE_SITE_KEY");
+    expect(resolution.indexOf("VITE_TURNSTILE_SITE_KEY")).toBeLessThan(
+      resolution.indexOf("COMMITTED_TURNSTILE_SITE_KEY"),
+    );
+    expect(resolution).toMatch(/import\.meta\.env\.DEV \? ""/);
+  });
+
+  test("a widget that never rendered answers at once instead of timing out", () => {
+    // Waiting the full token timeout on a widget that was never rendered
+    // spends half a minute reaching an answer already known, and then reports
+    // it as "expired" -- a check that ran out of time -- when no check ever
+    // started. Both the wait and the wrong word are the member's experience of
+    // a deployment fault, so neither is acceptable.
+    expect(widget).toContain("deadRef");
+    const token = widget.slice(widget.indexOf("token: async () =>"));
+    const dead = token.indexOf("if (deadRef.current)");
+    expect(dead).toBeGreaterThan(-1);
+    expect(dead).toBeLessThan(token.indexOf("TOKEN_WAIT_MS"));
+  });
+
   test("every path that is not an explicit success refuses", () => {
     // A missing secret, an unreachable Cloudflare, and an unparseable response
     // all fail closed. A challenge that cannot be checked has not been passed.
