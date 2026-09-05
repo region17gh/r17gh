@@ -94,6 +94,12 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
   const apiRef = useRef<TurnstileApi | null>(null);
   const widgetIdRef = useRef<string | undefined>(undefined);
   const tokenRef = useRef<string | null>(null);
+  /**
+   * Set when no token will ever arrive: the widget was never rendered, so
+   * there is nothing running that could produce one and nothing to reset.
+   * Distinct from a challenge that ran and refused, which is retryable.
+   */
+  const deadRef = useRef(false);
   /** Callers of token() parked until the widget produces one. */
   const waitingRef = useRef<((token: string | null) => void)[]>([]);
   const onProblemRef = useRef(onProblem);
@@ -122,6 +128,7 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
         "[turnstile] VITE_TURNSTILE_SITE_KEY is empty in a production build. No challenge can " +
           "run and no member number can be issued until it is set.",
       );
+      deadRef.current = true;
       onProblemRef.current("unavailable");
       settle(null);
       return;
@@ -134,6 +141,7 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
       if (!api || !container) {
         // Blocked, offline, or an extension took it out. Nothing will arrive,
         // so anyone waiting is told now rather than left on a spinner.
+        deadRef.current = true;
         onProblemRef.current("unavailable");
         settle(null);
         return;
@@ -192,6 +200,14 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
       token: async () => {
         if (STUBBED) return TURNSTILE_STUB_TOKEN;
         if (tokenRef.current) return tokenRef.current;
+        if (deadRef.current) {
+          // No widget is running, so waiting the full timeout would spend half
+          // a minute to reach an answer already known, and would then report it
+          // as "expired" -- a check that ran out of time -- when what happened
+          // is that no check ever started. Said correctly, and said at once.
+          onProblemRef.current("unavailable");
+          return null;
+        }
         return new Promise<string | null>((resolve) => {
           let done = false;
           const finish = (token: string | null) => {
@@ -211,6 +227,10 @@ export function Challenge({ handle, onProblem }: ChallengeProps) {
       },
       reset: () => {
         tokenRef.current = null;
+        // Clearing the notice on a widget that was never rendered would hide a
+        // standing fault behind a button that cannot fix it: the notice would
+        // blink away and come straight back. It stays, which is the true state.
+        if (deadRef.current) return;
         onProblemRef.current(null);
         // Undoes the hide from a prior success: a fresh check may yet need to
         // interact with this member, and it cannot if the widget stays hidden.
